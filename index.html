@@ -86,6 +86,14 @@
         
         .v-header { display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 25px; }
         #q-text { font-size: 17px; line-height: 1.6; font-weight: 100; max-width: 320px; }
+        
+        /* Стили для новых слов */
+        .sync-word { 
+            position: absolute; cursor: pointer; color: var(--neon); 
+            transition: 0.3s; opacity: 0.7; letter-spacing: 2px; 
+            user-select: none;
+        }
+        .sync-word:active { color: var(--oracle); opacity: 1; transform: scale(1.1); }
     </style>
 </head>
 <body>
@@ -134,6 +142,19 @@
         <div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 280px; gap: 12px;"></div>
     </div>
 
+    <div id="b-sync" class="screen">
+        <div class="briefing">
+            <h2>ФАЗА III: ВЕКТОР</h2>
+            <p>Определение семантических доминант. Выберите два приоритетных узла в потоке данных.</p>
+        </div>
+        <button class="btn" onclick="startSyncTest()">ПРОДОЛЖИТЬ</button>
+    </div>
+
+    <div id="s-sync" class="screen">
+        <div id="sync-status" style="font-size: 9px; opacity: 0.3; margin-bottom: 30px; letter-spacing: 6px;">AWAITING_SELECTION...</div>
+        <div id="words-container" style="position: relative; width: 100%; height: 65vh; width: 100vw;"></div>
+    </div>
+
     <div id="v-card">
         <div class="v-header">
             <h1 id="v-type" style="margin: 0; letter-spacing: 10px; font-size: 20px; font-weight: 100;"></h1>
@@ -151,8 +172,8 @@
         let aCtx, masterGain, thrillerFilter, lfo;
         let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
         let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
+        let selectedWordsCount = 0;
 
-        // ПОЛНОЦЕННЫЙ АУДИО-ДВИЖЕК ВОССТАНОВЛЕН
         function startAudioEngine() {
             if (aCtx) return;
             try {
@@ -160,22 +181,16 @@
                 masterGain = aCtx.createGain();
                 masterGain.gain.value = 0.15;
                 masterGain.connect(aCtx.destination);
-
-                const osc1 = aCtx.createOscillator();
-                const osc2 = aCtx.createOscillator();
-                thrillerFilter = aCtx.createBiquadFilter();
-                lfo = aCtx.createOscillator();
+                const osc1 = aCtx.createOscillator(); const osc2 = aCtx.createOscillator();
+                thrillerFilter = aCtx.createBiquadFilter(); lfo = aCtx.createOscillator();
                 const lfoGain = aCtx.createGain();
-
                 osc1.type = 'sawtooth'; osc1.frequency.value = 42;
                 osc2.type = 'square'; osc2.frequency.value = 42.2;
                 thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180; thrillerFilter.Q.value = 10;
                 lfo.type = 'sine'; lfo.frequency.value = 0.08; lfoGain.gain.value = 100;
-
                 lfo.connect(lfoGain); lfoGain.connect(thrillerFilter.frequency);
                 osc1.connect(thrillerFilter); osc2.connect(thrillerFilter);
-                thrillerFilter.connect(masterGain);
-                osc1.start(); osc2.start(); lfo.start();
+                thrillerFilter.connect(masterGain); osc1.start(); osc2.start(); lfo.start();
             } catch(e) { console.error("Audio fail"); }
         }
 
@@ -208,6 +223,16 @@
             {q: "Твоя цель: абсолютный контроль или мощь?", o: [{t: "Контроль", a: "АРХИТЕКТОР"}, {t: "Мощь", a: "ОПЕРАТОР"}]}
         ];
 
+        const SYNC_WORDS = [
+            {t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "∞", a: "АРХИТЕКТОР"},
+            {t: "СКОРОСТЬ", a: "ОПЕРАТОР"}, {t: "⚡", a: "ОПЕРАТОР"}, {t: "Δ", a: "ОПЕРАТОР"},
+            {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ø", a: "АНАЛИТИК"}, {t: "Ω", a: "АНАЛИТИК"},
+            {t: "СКАНЕР", a: "СКАНЕР"}, {t: "Ψ", a: "СКАНЕР"}, {t: "Ξ", a: "СКАНЕР"},
+            {t: "КОНТРОЛЬ", a: "АРХИТЕКТОР"}, {t: "СИСТЕМА", a: "АНАЛИТИК"}, {t: "ИМПУЛЬС", a: "ОПЕРАТОР"},
+            {t: "ТЕНЬ", a: "СКАНЕР"}, {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "ПОТОК", a: "ОПЕРАТОР"},
+            {t: "СБОЙ", a: "СКАНЕР"}, {t: "λ", a: "АРХИТЕКТОР"}
+        ];
+
         function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('s-psych'); renderQ(); }
 
@@ -224,6 +249,7 @@
         function startReactTest() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); updateAttLabel(); renderReactGrid(); startTimer(); }
         function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - reactStartTime) / 1000).toFixed(3); }, 41); }
         function updateAttLabel() { document.getElementById('att-label').innerText = "[ " + "■ ".repeat(attempts) + "□ ".repeat(3-attempts) + "]"; }
+        
         function renderReactGrid() {
             document.getElementById('target-label').innerText = `СЛЕДУЮЩИЙ: ${target}`;
             const g = document.getElementById('react-grid'); g.innerHTML = "";
@@ -251,10 +277,29 @@
             for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); playSound(1000, 0.08); cells[id].style.borderColor = "var(--oracle)"; cells[id].style.background = "rgba(0, 204, 255, 0.3)"; await new Promise(r => setTimeout(r, 400)); cells[id].style.borderColor = "rgba(255,255,255,0.15)"; cells[id].style.background = "rgba(0,0,0,0.85)"; }
             isMemPlaying = false; memIdx = 0;
         }
+
         function handleMemClick(id, el) {
             if(isMemPlaying) return;
-            if(id === memSeq[memIdx]) { playSound(1200, 0.04); el.style.borderColor = "var(--neon)"; memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) setTimeout(nextMemRound, 800); else finalize(); } }
-            else { playSound(60, 0.5, 'sawtooth'); finalize(); }
+            if(id === memSeq[memIdx]) { playSound(1200, 0.04); el.style.borderColor = "var(--neon)"; memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) setTimeout(nextMemRound, 800); else sw('b-sync'); } }
+            else { playSound(60, 0.5, 'sawtooth'); sw('b-sync'); }
+        }
+
+        function startSyncTest() {
+            sw('s-sync'); selectedWordsCount = 0;
+            const container = document.getElementById('words-container'); container.innerHTML = "";
+            SYNC_WORDS.sort(() => Math.random() - 0.5).forEach((word, i) => {
+                const w = document.createElement('div'); w.className = "sync-word"; w.innerText = word.t;
+                w.style.left = Math.random() * 75 + 5 + "%"; w.style.top = Math.random() * 85 + 5 + "%";
+                w.style.fontSize = (Math.random() * 5 + 13) + "px";
+                w.onclick = () => {
+                    if(w.style.color === "rgb(0, 204, 255)") return;
+                    playSound(600 + i*20, 0.1, 'sine', 0.05);
+                    w.style.color = "var(--oracle)"; w.style.opacity = "1";
+                    score[word.a] = (score[word.a] || 0) + 2; selectedWordsCount++;
+                    if(selectedWordsCount === 2) setTimeout(finalize, 700);
+                };
+                container.appendChild(w);
+            });
         }
 
         function finalize() {
@@ -274,12 +319,7 @@
         function backToHub() { document.getElementById('v-card').classList.remove('open'); document.getElementById('waiting-tag').style.display = 'none'; document.getElementById('id-tag').innerText = currentProfile; document.getElementById('id-tag').style.display = 'block'; document.getElementById('hub-oracle-btn').style.display = 'block'; sw('s-main'); renderHubAvatar(currentProfile); }
         function showStoredProfile() { if(isDone) document.getElementById('v-card').classList.add('open'); }
         function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
-
-        function oracleSpeak() {
-            if(!currentProfile) return;
-            const msg = new SpeechSynthesisUtterance(PROFILES[currentProfile].oracle);
-            msg.lang = 'ru-RU'; msg.pitch = 0.5; msg.rate = 0.8; window.speechSynthesis.speak(msg);
-        }
+        function oracleSpeak() { if(!currentProfile) return; const msg = new SpeechSynthesisUtterance(PROFILES[currentProfile].oracle); msg.lang = 'ru-RU'; msg.pitch = 0.5; msg.rate = 0.8; window.speechSynthesis.speak(msg); }
 
         function renderHubAvatar(type) {
             const c = document.getElementById('hub-canvas'); const ctx = c.getContext('2d');
@@ -296,7 +336,6 @@
             animate();
         }
 
-        // МАТРИЦА - ИСПРАВЛЕНА
         const mc = document.getElementById('m-bg'); const mx = mc.getContext('2d');
         let mw = mc.width = window.innerWidth, mh = mc.height = window.innerHeight;
         const drops = Array(Math.floor(mw/20)).fill(1);
