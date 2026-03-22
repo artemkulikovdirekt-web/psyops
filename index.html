@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PSY-OPS CORE v.20.1</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        :root { --neon: #00ff41; --bg: #050505; --oracle: #00ccff; --red: #ff4444; }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; overflow: hidden; display: flex; justify-content: center; align-items: center; user-select: none; touch-action: manipulation; }
+        canvas#m { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; z-index: 0; pointer-events: none; }
+        .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; }
+        .active { display: flex; }
+        .terminal-hub { width: 280px; height: 280px; border: 1px solid var(--neon); background: rgba(0,20,0,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 30px; position: relative; }
+        #avatar-canvas { width: 200px; height: 200px; }
+        .btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 18px 25px; cursor: pointer; text-transform: uppercase; font-family: inherit; font-weight: bold; width: 300px; transition: 0.2s; letter-spacing: 1px; margin: 6px; border-radius: 0; }
+        .btn:active { background: var(--neon); color: #000; }
+        #v-card { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: #000; border: 2px solid var(--neon); padding: 30px; box-sizing: border-box; z-index: 1000; display: none; flex-direction: column; box-shadow: 0 0 40px #000; }
+        #v-card.open { display: flex; }
+        .stat-bar { width: 100%; height: 6px; background: #111; margin: 8px 0 18px; border: 1px solid #222; }
+        .stat-fill { height: 100%; background: var(--neon); width: 0%; transition: 2s cubic-bezier(0.1, 0, 0, 1); }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 300px; }
+        .cell { aspect-ratio: 1; background: rgba(0,255,65,0.05); border: 1px solid #111; display: flex; align-items: center; justify-content: center; color: var(--neon); cursor: pointer; font-size: 22px; }
+        .cell.err-flash { background: var(--red) !important; }
+        .badge { border: 1px solid var(--neon); padding: 8px; font-size: 10px; margin: 5px 0; cursor: pointer; text-align: center; }
+        .info-text { display: none; font-size: 11px; color: #888; padding: 10px; border-left: 1px solid var(--neon); margin-bottom: 10px; }
+    </style>
+</head>
+<body onclick="initAudioOnce()">
+    <canvas id="m"></canvas>
+
+    <div id="s-main" class="screen active">
+        <div class="terminal-hub" id="t-hub" onclick="showProfile()">
+            <canvas id="avatar-canvas"></canvas>
+            <div id="p-label" style="display:none; margin-top:15px; font-weight:bold; letter-spacing:5px;"></div>
+        </div>
+        <button class="btn" onclick="startSequence()">ИНИЦИАЦИЯ</button>
+        <button id="btn-oracle" class="btn" style="display:none; border-color:var(--oracle); color:var(--oracle);" onclick="oracleSpeak()">ОРАКУЛ</button>
+    </div>
+
+    <div id="s-test" class="screen">
+        <div style="text-align:center; max-width:450px; padding: 20px;">
+            <p id="q-text" style="font-size:18px; line-height:1.5; min-height:100px; color:#fff;"></p>
+            <div id="options-list" style="display:flex; flex-direction:column; gap:12px; align-items:center;"></div>
+            <p id="q-counter" style="margin-top:20px; font-size:10px; opacity:0.5;"></p>
+        </div>
+    </div>
+
+    <div id="s-game" class="screen">
+        <div id="target-hint" style="font-size:28px; margin-bottom:10px;">ПОИСК: 1</div>
+        <div id="g-grid" class="grid"></div>
+        <div id="att-bar" style="margin-top:20px; color:var(--red);">[ ■ ■ ■ ]</div>
+    </div>
+
+    <div id="v-card">
+        <h1 id="d-title" style="margin:0; letter-spacing:5px;"></h1>
+        <div style="margin: 20px 0;">
+            ЛОГИКА <div class="stat-bar"><div id="b-log" class="stat-fill"></div></div>
+            РЕАКЦИЯ <div class="stat-bar"><div id="b-react" class="stat-fill" style="background:var(--red)"></div></div>
+            ПАМЯТЬ <div class="stat-bar"><div id="b-mem" class="stat-fill" style="background:var(--oracle)"></div></div>
+        </div>
+        <div class="badge" onclick="tgl('pi')">СПОСОБНОСТЬ</div><div id="pi" class="info-text"></div>
+        <div class="badge" onclick="tgl('di')" style="border-color:var(--red); color:var(--red)">ДЕБАФФ</div><div id="di" class="info-text"></div>
+        <button class="btn" style="width:100%; margin-top:20px;" onclick="closeProfile()">ЗАКРЫТЬ</button>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        let aCtx, sc={}, target=1, curQ=0, attempts=3, isDone=false, fType, sTime;
+        
+        function initAudioOnce() {
+            if (aCtx) return;
+            aCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const bufferSize = 2 * aCtx.sampleRate, noiseBuffer = aCtx.createBuffer(1, bufferSize, aCtx.sampleRate), output = noiseBuffer.getChannelData(0);
+            for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+            const noise = aCtx.createBufferSource(); noise.buffer = noiseBuffer; noise.loop = true;
+            const filter = aCtx.createBiquadFilter(); filter.type = 'lowpass'; filter.frequency.value = 150;
+            const gain = aCtx.createGain(); gain.gain.value = 0.02;
+            noise.connect(filter); filter.connect(gain); gain.connect(aCtx.destination); noise.start();
+        }
+
+        function beep(f=800, d=0.1, type='triangle') {
+            if(!aCtx) return;
+            const o=aCtx.createOscillator(), g=aCtx.createGain();
+            o.type=type; o.frequency.setValueAtTime(f, aCtx.currentTime);
+            g.gain.setValueAtTime(0.1, aCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, aCtx.currentTime+d);
+            o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime+d);
+        }
+
+        const DATA = {
+            "АРХИТЕКТОР": { log:95, pi:"Векторное мышление и планирование.", di:"Трудно адаптируется к хаосу.", oracle:"Мир — это чертеж. Не допускай лишних линий." },
+            "ОПЕРАТОР": { log:40, pi:"Мгновенное принятие решений в стрессе.", di:"Быстрое выгорание.", oracle:"Действие важнее раздумий. Скорость — это жизнь." },
+            "АНАЛИТИК": { log:90, pi:"Синтез данных и поиск скрытых связей.", di:"Склонность к самоизоляции.", oracle:"Смотри на цифры. Они никогда не лгут." },
+            "СКАНЕР": { log:80, pi:"Выявление рисков и чужих намерений.", di:"Фоновое недоверие к системе.", oracle:"Ничто не защищено. Найди уязвимость первым." },
+            "ТЕХНО-МЕДИУМ": { log:60, pi:"Интуитивное понимание сложных процессов.", di:"Размытие личных границ.", oracle:"Растворись в потоке данных. Чувствуй ритм." }
+        };
+
+        const qs = [
+            {q:"Вы видите конфликт двух коллег. Ваше действие?", o:[{t:"Разработать план примирения", a:"АРХИТЕКТОР"},{t:"Использовать ситуацию для себя", a:"СКАНЕР"}]},
+            {q:"Вам нужно решить задачу, которую никто никогда не делал:", o:[{t:"Искать логические закономерности", a:"АНАЛИТИК"},{t:"Пробовать всё подряд на ходу", a:"ОПЕРАТОР"}]},
+            {q:"Что вас больше всего раздражает?", o:[{t:"Непоследовательность и глупость", a:"АРХИТЕКТОР"},{t:"Медлительность окружающих", a:"ОПЕРАТОР"}]},
+            {q:"Ваш идеальный отдых — это:", o:[{t:"Изучение чего-то нового в тишине", a:"АНАЛИТИК"},{t:"Полная смена обстановки и драйв", a:"ОПЕРАТОР"}]},
+            {q:"Вы заходите в незнакомое помещение. На что смотрите первым?", o:[{t:"На выходы и подозрительные детали", a:"СКАНЕР"},{t:"На общую планировку и логику пространства", a:"АРХИТЕКТОР"}]},
+            {q:"Как вы принимаете важные решения?", o:[{t:"Доверяю внутреннему чутью", a:"ТЕХНО-МЕДИУМ"},{t:"Строю таблицу за и против", a:"АНАЛИТИК"}]},
+            {q:"Что для вас важнее в работе?", o:[{t:"Четкий алгоритм и порядок", a:"АРХИТЕКТОР"},{t:"Возможность импровизировать", a:"ТЕХНО-МЕДИУМ"}]},
+            {q:"Вы замечаете, что кто-то вам врет:", o:[{t:"Промолчу, но зафиксирую брешь", a:"СКАНЕР"},{t:"Сразу укажу на нестыковку в фактах", a:"АНАЛИТИК"}]},
+            {q:"В экстремальной ситуации вы:", o:[{t:"Действуете на рефлексах", a:"ОПЕРАТОР"},{t:"Замираете, анализируя варианты", a:"АРХИТЕКТОР"}]},
+            {q:"Ваше отношение к правилам?", o:[{t:"Это фундамент безопасности", a:"АРХИТЕКТОР"},{t:"Это ограничения, которые можно обойти", a:"СКАНЕР"}]},
+            {q:"Вам предлагают рискнуть всем ради великой цели:", o:[{t:"Это нерационально", a:"АНАЛИТИК"},{t:"Риск оправдан азартом", a:"ОПЕРАТОР"}]},
+            {q:"Как вы чувствуете себя в большой толпе?", o:[{t:"Вижу структуру и потоки движения", a:"ТЕХНО-МЕДИУМ"},{t:"Ищу потенциальные угрозы", a:"СКАНЕР"}]},
+            {q:"Ваш главный талант?", o:[{t:"Умение видеть суть вещей", a:"АНАЛИТИК"},{t:"Умение управлять хаосом", a:"ТЕХНО-МЕДИУМ"}]},
+            {q:"Если система сломалась, вы:", o:[{t:"Будете чинить по инструкции", a:"АРХИТЕКТОР"},{t:"Создадите временное решение из костылей", a:"ОПЕРАТОР"}]},
+            {q:"Ваш девиз?", o:[{t:"Знание — это контроль", a:"СКАНЕР"},{t:"Гармония в расчете", a:"ТЕХНО-МЕДИУМ"}]}
+        ];
+
+        function sw(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+        function startSequence() { beep(400); curQ=0; sc={}; renderQ(); sw('s-test'); }
+        function renderQ() {
+            const q = qs[curQ]; document.getElementById('q-text').innerText = q.q;
+            document.getElementById('q-counter').innerText = `ВОПРОС ${curQ+1} ИЗ ${qs.length}`;
+            const box = document.getElementById('options-list'); box.innerHTML = "";
+            q.o.forEach(o => {
+                const b = document.createElement('button'); b.className = "btn"; b.innerText = o.t;
+                b.onclick = () => { beep(1000); sc[o.a]=(sc[o.a]||0)+1; curQ++; if(curQ<qs.length) renderQ(); else startReaction(); };
+                box.appendChild(b);
+            });
+        }
+        function startReaction() { target=1; attempts=3; renderG(); sw('s-game'); sTime=Date.now(); }
+        function renderG() {
+            document.getElementById('target-hint').innerText = `ПОИСК: ${target}`;
+            const g = document.getElementById('g-grid'); g.innerHTML = "";
+            let ns = Array.from({length:16},(_,i)=>i+1).sort(()=>Math.random()-0.5);
+            ns.forEach(n => {
+                const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
+                c.onclick = () => {
+                    if(n === target) { beep(1200); target++; if(target>16) finalize(); else renderG(); }
+                    else { beep(200, 0.3, 'sawtooth'); attempts--; updateAtt(); c.classList.add('err-flash'); setTimeout(()=>c.classList.remove('err-flash'),200); if(attempts<=0) finalize(); }
+                }
+                g.appendChild(c);
+            });
+        }
+        function updateAtt() { document.getElementById('att-bar').innerText = "[ " + "■ ".repeat(attempts) + "□ ".repeat(3-attempts) + "]"; }
+        function finalize() {
+            fType = Object.keys(sc).reduce((a,b)=>sc[a]>sc[b]?a:b) || "АНАЛИТИК";
+            const d = DATA[fType];
+            document.getElementById('d-title').innerText = fType;
+            document.getElementById('pi').innerText = d.pi; document.getElementById('di').innerText = d.di;
+            document.getElementById('v-card').classList.add('open');
+            setTimeout(() => {
+                document.getElementById('b-log').style.width = d.log + "%";
+                document.getElementById('b-react').style.width = (target*6) + "%";
+                document.getElementById('b-mem').style.width = "85%";
+            }, 500);
+            isDone = true; renderRadar();
+        }
+        let angle = 0;
+        function renderRadar() {
+            const canvas = document.getElementById('avatar-canvas'); const ctx = canvas.getContext('2d');
+            canvas.width = 200; canvas.height = 200;
+            function draw() {
+                if(!isDone) return;
+                ctx.fillStyle = 'rgba(0,5,0,0.1)'; ctx.fillRect(0,0,200,200);
+                ctx.strokeStyle = '#00ff41'; ctx.lineWidth = 1;
+                ctx.beginPath(); ctx.arc(100,100,80,0,Math.PI*2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(100,100); ctx.lineTo(100+Math.cos(angle)*80, 100+Math.sin(angle)*80); ctx.stroke();
+                angle += 0.05; requestAnimationFrame(draw);
+            }
+            draw();
+            document.getElementById('p-label').innerText = fType; document.getElementById('p-label').style.display='block';
+            document.getElementById('btn-oracle').style.display='block';
+        }
+        function tgl(id) { const e = document.getElementById(id); e.style.display = (e.style.display==='block')?'none':'block'; }
+        function closeProfile() { document.getElementById('v-card').classList.remove('open'); sw('s-main'); }
+        function showProfile() { if(isDone) document.getElementById('v-card').classList.add('open'); }
+        function oracleSpeak() { const s = new SpeechSynthesisUtterance(DATA[fType].oracle); s.lang='ru-RU'; s.pitch=0.6; window.speechSynthesis.speak(s); }
+        const mC = document.getElementById('m'), mCtx = mC.getContext('2d');
+        let mW = mC.width = window.innerWidth, mH = mC.height = window.innerHeight;
+        const drops = Array(Math.floor(mW/20)).fill(1);
+        function drawM() { mCtx.fillStyle='rgba(0,0,0,0.1)'; mCtx.fillRect(0,0,mW,mH); mCtx.fillStyle='#0f0'; mCtx.font='15px monospace'; drops.forEach((y,i)=>{ mCtx.fillText(String.fromCharCode(0x30A0+Math.random()*96), i*20, y*20); if(y*20>mH && Math.random()>0.975) drops[i]=0; drops[i]++; }); }
+        setInterval(drawM, 50);
+    </script>
+</body>
+</html>
