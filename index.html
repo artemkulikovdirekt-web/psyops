@@ -93,8 +93,8 @@
             <canvas id="hub-canvas"></canvas>
             <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
         </div>
-        <button class="btn" style="margin-top: 40px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
-        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;" ontouchend="oracleSpeak()" onclick="oracleSpeak()">ОРАКУЛ</button>
+        <button class="btn" style="margin-top: 40px;" onpointerdown="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
+        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;" onpointerdown="oracleSpeak()">ОРАКУЛ</button>
     </div>
 
     <div id="b-intro" class="screen">
@@ -181,6 +181,7 @@
 
         function playSound(f, d, type='sine', v=0.1) {
             if(!aCtx) return;
+            if(aCtx.state === 'suspended') aCtx.resume();
             const o = aCtx.createOscillator(); const g = aCtx.createGain();
             o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime);
             g.gain.setValueAtTime(v, aCtx.currentTime);
@@ -224,10 +225,8 @@
             startAudioEngine(); 
             if (aCtx && aCtx.state === 'suspended') aCtx.resume();
             if ('speechSynthesis' in window) {
-                // Улучшенный прогрев: пустая фраза с нулевым волюмом
-                const p = new SpeechSynthesisUtterance(" ");
-                p.volume = 0;
-                window.speechSynthesis.speak(p);
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance(" ")); 
             }
             curQ = 0; score = {}; sw('b-intro'); 
         }
@@ -328,17 +327,13 @@
         
         function oracleSpeak() { 
             if (aCtx && aCtx.state === 'suspended') aCtx.resume(); 
+            if (!('speechSynthesis' in window)) return;
             window.speechSynthesis.cancel(); 
             const msg = new SpeechSynthesisUtterance(PROFILES[currentProfile].oracle); 
-            msg.lang = 'ru-RU'; 
-            msg.pitch = 0.8;
-            msg.rate = 0.9;
-            
-            // Фикс голоса для мобилок
             const voices = window.speechSynthesis.getVoices();
             const ruVoice = voices.find(v => v.lang.startsWith('ru'));
             if (ruVoice) msg.voice = ruVoice;
-            
+            msg.lang = 'ru-RU'; msg.pitch = 0.8; msg.rate = 0.9;
             window.speechSynthesis.speak(msg); 
         }
 
@@ -351,7 +346,6 @@
                 ctx.strokeStyle = 'rgba(0, 255, 65, 0.4)';
                 ctx.lineWidth = 1; 
                 ctx.beginPath();
-                
                 if(type === "АРХИТЕКТОР") { 
                     for(let i=0; i<6; i++) { 
                         let a = frame + i * Math.PI/3; 
@@ -369,8 +363,7 @@
                 }
                 else if(type === "АНАЛИТИК") {
                     ctx.save(); ctx.translate(95, 95); ctx.rotate(frame);
-                    ctx.rect(-45, -45, 90, 90);
-                    ctx.rect(-30, -30, 60, 60);
+                    ctx.rect(-45, -45, 90, 90); ctx.rect(-30, -30, 60, 60);
                     ctx.restore();
                 }
                 else if(type === "СКАНЕР") {
@@ -378,10 +371,7 @@
                     ctx.moveTo(95 - 40, 95); ctx.lineTo(95 + 40, 95);
                     ctx.moveTo(95, 95 - 40); ctx.lineTo(95, 95 + 40);
                 }
-                
-                ctx.stroke(); 
-                frame += 0.02; 
-                requestAnimationFrame(animate);
+                ctx.stroke(); frame += 0.02; requestAnimationFrame(animate);
             }
             animate();
         }
