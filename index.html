@@ -2,200 +2,392 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>PSY-OPS CORE v.20.2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PSY-OPS CORE v.24.4</title>
     <style>
-        :root { --neon: #00ff41; --bg: #050505; --oracle: #00ccff; --red: #ff4444; }
+        :root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; }
         
-        /* Общие настройки — убираем лишние отступы и фиксим высоту */
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: var(--bg); color: var(--neon); font-family: 'Courier New', monospace; overflow: hidden; display: flex; flex-direction: column; }
+        /* Глобальное облегчение шрифта и устранение свечения */
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            background: var(--bg); color: var(--neon); 
+            font-family: 'Courier New', Courier, monospace; 
+            font-weight: 100;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            overflow: hidden; touch-action: none; 
+            text-shadow: none !important; /* Убираем эффект свечения */
+        }
         
-        canvas#m { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; z-index: 0; pointer-events: none; }
-
-        /* Контейнер экрана — центрирует всё внутри */
-        .screen { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; padding: 20px; text-align: center; }
+        /* Сделали матрицу более видимой */
+        canvas#m-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.5; z-index: 0; pointer-events: none; }
+        
+        .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; text-align: center; padding: 20px; box-sizing: border-box; }
         .active { display: flex; }
 
-        /* Центральный хаб (Радар) */
-        .terminal-hub { width: 70vw; height: 70vw; max-width: 280px; max-height: 280px; border: 1px solid var(--neon); background: rgba(0,20,0,0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 20px; position: relative; }
-        #avatar-canvas { width: 90%; height: 90%; }
+        /* Ультра-тонкие кнопки */
+        .btn { 
+            background: transparent; 
+            border: 1px solid rgba(0, 255, 65, 0.3); 
+            color: var(--neon); 
+            padding: 18px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            font-family: inherit; 
+            font-weight: 100; 
+            font-size: 12px; 
+            letter-spacing: 4px; 
+            width: 100%; 
+            max-width: 280px; 
+            margin: 10px 0; 
+            transition: 0.2s; 
+            position: relative; 
+            outline: none;
+        }
+        .btn:active { background: rgba(0, 255, 65, 0.1); border-color: var(--neon); }
+        .btn-blue { border-color: rgba(0, 204, 255, 0.3); color: var(--oracle); }
 
-        /* Кнопки — теперь они не ломают верстку */
-        .btn { background: transparent; border: 1px solid var(--neon); color: var(--neon); padding: 15px; cursor: pointer; text-transform: uppercase; font-family: inherit; font-weight: bold; width: 100%; max-width: 320px; transition: 0.2s; letter-spacing: 1px; margin: 8px 0; border-radius: 0; font-size: 14px; outline: none; }
-        .btn:active { background: var(--neon); color: #000; }
+        .hub-container { 
+            width: 260px; height: 260px; 
+            border: 1px solid rgba(0, 255, 65, 0.15); 
+            background: rgba(0,0,0,0.4); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            position: relative; cursor: pointer; 
+        }
+        #hub-canvas { width: 180px; height: 180px; }
 
-        /* Вопросы — гибкий размер шрифта */
-        #q-text { font-size: clamp(16px, 4vw, 20px); line-height: 1.4; min-height: 80px; margin-bottom: 20px; color: #fff; width: 100%; max-width: 450px; }
-        #options-list { width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 300px; }
+        .cell { 
+            aspect-ratio: 1; 
+            background: rgba(10, 10, 10, 0.9); /* Сделали более плотными */
+            border: 1px solid rgba(255, 255, 255, 0.1); 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 18px; color: var(--neon); 
+            font-weight: 100;
+            cursor: pointer; transition: 0.1s; 
+        }
+        .cell.err { background: var(--red); color: #fff; border-color: var(--red); }
 
-        /* Игровая сетка 4х4 */
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: 90vw; max-width: 320px; }
-        .cell { aspect-ratio: 1; background: rgba(0,255,65,0.05); border: 1px solid #222; display: flex; align-items: center; justify-content: center; color: var(--neon); cursor: pointer; font-size: 20px; font-weight: bold; }
-        .cell.err-flash { background: var(--red) !important; color: #000; }
+        /* Стили для текстов брифинга */
+        .briefing { max-width: 320px; text-align: left; border-left: 1px solid rgba(0, 255, 65, 0.3); padding-left: 20px; margin-bottom: 40px; }
+        .briefing h2 { 
+            color: var(--oracle); letter-spacing: 6px; 
+            font-weight: 100; text-transform: uppercase; font-size: 16px;
+            margin-bottom: 15px;
+        }
+        .briefing p { font-weight: 100; line-height: 1.8; opacity: 0.8; font-size: 13px; letter-spacing: 0.5px; }
 
-        /* Карточка профиля (V-Card) */
-        #v-card { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 400px; background: #000; border: 2px solid var(--neon); padding: 20px; z-index: 1000; display: none; flex-direction: column; box-shadow: 0 0 50px #000; }
+        /* Тексты вопросов и заголовков */
+        #q-text, #v-type, h1, h2, p, div {
+            font-weight: 100 !important;
+        }
+
+        /* Финальная карточка */
+        #v-card { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 92%; max-width: 360px; background: #000; 
+            border: 1px solid rgba(0, 255, 65, 0.3); 
+            padding: 30px 20px; box-sizing: border-box; z-index: 1000; 
+            display: none; flex-direction: column; align-items: center; 
+            box-shadow: 0 0 100px rgba(0,0,0,1); 
+        }
         #v-card.open { display: flex; }
-        .stat-bar { width: 100%; height: 8px; background: #111; margin: 5px 0 15px; border: 1px solid #222; }
-        .stat-fill { height: 100%; background: var(--neon); width: 0%; transition: 2s cubic-bezier(0.1, 0, 0, 1); }
-        .badge { border: 1px solid var(--neon); padding: 10px; font-size: 12px; margin: 5px 0; cursor: pointer; }
-        .info-text { display: none; font-size: 12px; color: #aaa; padding: 10px; border-left: 1px solid var(--neon); margin-bottom: 10px; text-align: left; }
+
+        .stat-row { width: 100%; margin: 12px 0; font-size: 9px; text-align: left; letter-spacing: 2px; opacity: 0.6; }
+        .bar { width: 100%; height: 2px; background: #111; margin-top: 6px; border: 1px solid rgba(255,255,255,0.05); }
+        .fill { height: 100%; width: 0%; background: var(--neon); transition: 2.5s cubic-bezier(0.1, 0, 0, 1); }
+
+        #timer-display { font-size: 24px; color: var(--oracle); margin-bottom: 8px; letter-spacing: 3px; }
+
+        .ability-badge { 
+            border: 1px solid rgba(0, 204, 255, 0.2); 
+            padding: 14px; font-size: 10px; margin-top: 20px; 
+            cursor: pointer; text-align: center; width: 100%; 
+            box-sizing: border-box; color: var(--oracle); 
+            letter-spacing: 3px; 
+        }
+        .ability-info { 
+            display: none; font-size: 11px; color: #aaa; 
+            margin-top: 15px; line-height: 1.7; text-align: center; 
+            background: rgba(0, 204, 255, 0.02); 
+            padding: 15px; border: 1px solid rgba(0, 204, 255, 0.05); 
+        }
+        
+        .v-header { display: flex; justify-content: space-between; width: 100%; align-items: center; margin-bottom: 25px; }
+        
+        /* Тонкий вопросник */
+        #q-text { font-size: 16px; color: #eee; letter-spacing: 0.3px; }
+        #q-num { font-size: 8px; opacity: 0.3; margin-bottom: 30px; letter-spacing: 5px; }
     </style>
 </head>
-<body onclick="initAudioOnce()">
-    <canvas id="m"></canvas>
+<body>
+    <canvas id="m-bg"></canvas>
 
+    <!-- ГЛАВНЫЙ ХАБ -->
     <div id="s-main" class="screen active">
-        <div class="terminal-hub" id="t-hub" onclick="showProfile()">
-            <canvas id="avatar-canvas"></canvas>
-            <div id="p-label" style="display:none; margin-top:10px; font-weight:bold; letter-spacing:3px; font-size:12px;"></div>
+        <div class="hub-container" id="main-hub-trigger" onclick="showStoredProfile()">
+            <canvas id="hub-canvas"></canvas>
+            <!-- Название профиля (Архитектор и т.д.) теперь максимально тонкое -->
+            <div id="id-tag" style="margin-top: 20px; letter-spacing: 6px; display: none; font-size: 12px; color: var(--neon);"></div>
+            <div id="waiting-tag" style="opacity: 0.2; font-size: 8px; margin-top: 20px; letter-spacing: 4px;">SYSTEM_IDLE</div>
         </div>
-        <button class="btn" onclick="startSequence()">ИНИЦИАЦИЯ</button>
-        <button id="btn-oracle" class="btn" style="display:none; border-color:var(--oracle); color:var(--oracle);" onclick="oracleSpeak()">ОРАКУЛ</button>
+        <button class="btn" style="margin-top: 40px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
+        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;" onclick="oracleSpeak()">ОРАКУЛ</button>
     </div>
 
-    <div id="s-test" class="screen">
-        <p id="q-text"></p>
-        <div id="options-list"></div>
-        <p id="q-counter" style="margin-top:20px; font-size:10px; opacity:0.5; letter-spacing:2px;"></p>
+    <!-- ТЕСТ: ВОПРОСЫ -->
+    <div id="s-psych" class="screen">
+        <div id="q-num">ANALYSIS_CORE_v2</div>
+        <p id="q-text" style="min-height: 100px; max-width: 320px; line-height: 1.6;"></p>
+        <div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%; margin-top: 20px;"></div>
     </div>
 
-    <div id="s-game" class="screen">
-        <div id="target-hint" style="font-size:24px; margin-bottom:15px; letter-spacing:5px;">ПОИСК: 1</div>
-        <div id="g-grid" class="grid"></div>
-        <div id="att-bar" style="margin-top:20px; color:var(--red); letter-spacing:3px;">[ ■ ■ ■ ]</div>
+    <!-- БРИФИНГ: РЕАКЦИЯ -->
+    <div id="b-react" class="screen">
+        <div class="briefing">
+            <h2>ФАЗА I: СКОРОСТЬ</h2>
+            <p>Необходимо зафиксировать последовательность 1-16. Любая задержка снижает коэффициент эффективности.</p>
+        </div>
+        <button class="btn" onclick="startReactTest()">ИНИЦИИРОВАТЬ</button>
     </div>
 
+    <!-- ТЕСТ: РЕАКЦИЯ -->
+    <div id="s-react" class="screen">
+        <div id="timer-display">0.000</div>
+        <div id="target-label" style="font-size: 10px; margin-bottom: 30px; opacity: 0.4; letter-spacing: 4px;">TARGET: 1</div>
+        <div id="react-grid" class="grid"></div>
+        <div id="att-label" style="margin-top: 30px; color: var(--red); letter-spacing: 12px; font-size: 9px; opacity: 0.6;">[ ■ ■ ■ ]</div>
+    </div>
+
+    <!-- БРИФИНГ: ПАМЯТЬ -->
+    <div id="b-mem" class="screen">
+        <div class="briefing">
+            <h2>ФАЗА II: ПАМЯТЬ</h2>
+            <p>Визуальный паттерн будет стерт через 2.4 секунды. Восстановите структуру данных без потерь.</p>
+        </div>
+        <button class="btn" onclick="startMemTest()">НАЧАТЬ</button>
+    </div>
+
+    <!-- ТЕСТ: ПАМЯТЬ -->
+    <div id="s-mem" class="screen">
+        <div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 270px; gap: 12px;"></div>
+    </div>
+
+    <!-- КАРТОЧКА ПРОФИЛЯ -->
     <div id="v-card">
-        <h2 id="d-title" style="margin:0; letter-spacing:4px; text-align:center;"></h2>
-        <div style="margin: 15px 0; font-size:12px;">
-            ЛОГИКА <div class="stat-bar"><div id="b-log" class="stat-fill"></div></div>
-            РЕАКЦИЯ <div class="stat-bar"><div id="b-react" class="stat-fill" style="background:var(--red)"></div></div>
-            ПАМЯТЬ <div class="stat-bar"><div id="b-mem" class="stat-fill" style="background:var(--oracle)"></div></div>
+        <div class="v-header">
+            <h1 id="v-type" style="margin: 0; letter-spacing: 10px; font-size: 18px;"></h1>
+            <div style="font-size: 7px; color: var(--oracle); border: 1px solid rgba(0, 204, 255, 0.2); padding: 3px 8px; letter-spacing: 2px;">SECURE</div>
         </div>
-        <div class="badge" onclick="tgl('pi')">СПОСОБНОСТЬ</div><div id="pi" class="info-text"></div>
-        <div class="badge" onclick="tgl('di')" style="border-color:var(--red); color:var(--red)">ДЕБАФФ</div><div id="di" class="info-text"></div>
-        <button class="btn" style="width:100%; margin-top:15px;" onclick="closeProfile()">ЗАКРЫТЬ</button>
+        
+        <div class="stat-row">ЛОГИКА <div class="bar"><div id="v-bar-log" class="fill"></div></div></div>
+        <div class="stat-row">ОТКЛИК <div class="bar"><div id="v-bar-react" class="fill" style="background:var(--red)"></div></div></div>
+        <div class="stat-row">ПАМЯТЬ <div class="bar"><div id="v-bar-mem" class="fill" style="background:var(--oracle)"></div></div></div>
+
+        <div class="ability-badge" onclick="toggleAbility()">ПРОТОКОЛ: <span id="v-ability-name"></span></div>
+        <div id="v-ability-desc" class="ability-info"></div>
+
+        <button class="btn" style="margin-top: 30px; width: 100%; border-color: rgba(0, 255, 65, 0.4);" onclick="backToHub()">В ТЕРМИНАЛ</button>
     </div>
 
     <script>
-        let aCtx, sc={}, target=1, curQ=0, attempts=3, isDone=false, fType;
-        
-        function initAudioOnce() {
+        let aCtx, masterGain;
+        let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
+        let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
+
+        function startAudioEngine() {
             if (aCtx) return;
-            try {
-                aCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const bS = 2 * aCtx.sampleRate, b = aCtx.createBuffer(1, bS, aCtx.sampleRate), out = b.getChannelData(0);
-                for (let i = 0; i < bS; i++) out[i] = Math.random() * 2 - 1;
-                const n = aCtx.createBufferSource(); n.buffer = b; n.loop = true;
-                const f = aCtx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 150;
-                const g = aCtx.createGain(); g.gain.value = 0.02;
-                n.connect(f); f.connect(g); g.connect(aCtx.destination); n.start();
-            } catch(e) { console.log('Audio init failed'); }
+            aCtx = new (window.AudioContext || window.webkitAudioContext)();
+            masterGain = aCtx.createGain();
+            masterGain.gain.value = 0.1;
+            masterGain.connect(aCtx.destination);
+            
+            // Фоновый гул
+            const osc = aCtx.createOscillator();
+            const filter = aCtx.createBiquadFilter();
+            osc.type = 'sawtooth'; osc.frequency.value = 40;
+            filter.type = 'lowpass'; filter.frequency.value = 150;
+            osc.connect(filter); filter.connect(masterGain);
+            osc.start();
         }
 
-        function beep(f=800, d=0.1, type='triangle') {
+        function playSound(f, d, type='sine', v=0.05) {
             if(!aCtx) return;
-            const o=aCtx.createOscillator(), g=aCtx.createGain();
-            o.type=type; o.frequency.setValueAtTime(f, aCtx.currentTime);
-            g.gain.setValueAtTime(0.1, aCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, aCtx.currentTime+d);
-            o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime+d);
+            const o = aCtx.createOscillator(); const g = aCtx.createGain();
+            o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime);
+            g.gain.setValueAtTime(v, aCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + d);
+            o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
         }
 
-        const DATA = {
-            "АРХИТЕКТОР": { log:95, pi:"Векторное мышление и планирование.", di:"Трудно адаптируется к хаосу.", oracle:"Мир — это чертеж. Не допускай лишних линий." },
-            "ОПЕРАТОР": { log:40, pi:"Мгновенное принятие решений в стрессе.", di:"Быстрое выгорание.", oracle:"Действие важнее раздумий. Скорость — это жизнь." },
-            "АНАЛИТИК": { log:90, pi:"Синтез данных и поиск скрытых связей.", di:"Склонность к самоизоляции.", oracle:"Смотри на цифры. Они никогда не лгут." },
-            "СКАНЕР": { log:80, pi:"Выявление рисков и чужих намерений.", di:"Фоновое недоверие к системе.", oracle:"Ничто не защищено. Найди уязвимость первым." },
-            "ТЕХНО-МЕДИУМ": { log:60, pi:"Интуитивное понимание сложных процессов.", di:"Размытие личных границ.", oracle:"Растворись в потоке данных. Чувствуй ритм." }
+        const PROFILES = {
+            "АРХИТЕКТОР": { log: 95, ability: "СИНТЕЗ", desc: "Способность выстраивать безупречные логические цепи из хаоса.", oracle: "Твой разум — крепость. Не дай чувствам разрушить её фундамент." },
+            "ОПЕРАТОР": { log: 45, ability: "РЕАКТОР", desc: "Нервные окончания интегрированы в поток кода. Действие быстрее мысли.", oracle: "Движение — единственная истина. Не останавливайся." },
+            "АНАЛИТИК": { log: 90, ability: "ПАТТЕРН", desc: "Поиск уязвимостей через наблюдение за шумом системы.", oracle: "Ищи ошибку там, где все видят совершенство." },
+            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Глубокий анализ намерений до их проявления.", oracle: "Они смотрят. Смотри глубже." }
         };
 
-        const qs = [
-            {q:"Конфликт в команде. Ваша стратегия?", o:[{t:"Создать план примирения", a:"АРХИТЕКТОР"},{t:"Использовать ситуацию для выгоды", a:"СКАНЕР"}]},
-            {q:"Сложная задача без инструкций:", o:[{t:"Искать логику и паттерны", a:"АНАЛИТИК"},{t:"Действовать методом проб", a:"ОПЕРАТОР"}]},
-            {q:"Ваш главный раздражитель:", o:[{t:"Хаос и глупость", a:"АРХИТЕКТОР"},{t:"Медлительность", a:"ОПЕРАТОР"}]},
-            {q:"Идеальное состояние:", o:[{t:"Тихий анализ в одиночестве", a:"АНАЛИТИК"},{t:"Драйв и смена событий", a:"ОПЕРАТОР"}]},
-            {q:"В новом месте вы смотрите на:", o:[{t:"Слабые места и выходы", a:"СКАНЕР"},{t:"Общую структуру", a:"АРХИТЕКТОР"}]},
-            {q:"Принятие решений основано на:", o:[{t:"Внутреннем чутье", a:"ТЕХНО-МЕДИУМ"},{t:"Расчете и фактах", a:"АНАЛИТИК"}]},
-            {q:"В работе вы цените:", o:[{t:"Порядок и предсказуемость", a:"АРХИТЕКТОР"},{t:"Гибкость и импровизацию", a:"ТЕХНО-МЕДИУМ"}]},
-            {q:"Обнаружена ложь. Ваша реакция?", o:[{t:"Запомню уязвимость", a:"СКАНЕР"},{t:"Сразу разгромлю фактами", a:"АНАЛИТИК"}]},
-            {q:"В момент кризиса вы:", o:[{t:"Реагируете мгновенно", a:"ОПЕРАТОР"},{t:"Просчитываете варианты", a:"АРХИТЕКТОР"}]},
-            {q:"Правила — это:", o:[{t:"Основа безопасности", a:"АРХИТЕКТОР"},{t:"Инструмент, который можно гнуть", a:"СКАНЕР"}]},
-            {q:"Риск ради большой цели:", o:[{t:"Рационально недопустим", a:"АНАЛИТИК"},{t:"Оправдан азартом", a:"ОПЕРАТОР"}]},
-            {q:"В толпе вы чувствуете:", o:[{t:"Потоки энергии и ритм", a:"ТЕХНО-МЕДИУМ"},{t:"Потенциальную опасность", a:"СКАНЕР"}]},
-            {q:"Сильная сторона:", o:[{t:"Видение сути вещей", a:"АНАЛИТИК"},{t:"Управление хаосом", a:"ТЕХНО-МЕДИУМ"}]},
-            {q:"Поломка системы. Ваш подход:", o:[{t:"Ремонт по регламенту", a:"АРХИТЕКТОР"},{t:"Быстрый костыль", a:"ОПЕРАТОР"}]},
-            {q:"Ваш вектор движения?", o:[{t:"Тотальный контроль", a:"СКАНЕР"},{t:"Гармония в потоке", a:"ТЕХНО-МЕДИУМ"}]}
+        const QUESTIONS = [
+            {q: "Взлом сектора. Твоя реакция?", o: [{t: "Изучить код", a: "АРХИТЕКТОР"}, {t: "Удалить сектор", a: "ОПЕРАТОР"}]},
+            {q: "Предложение стереть личность за доступ к данным. Примешь?", o: [{t: "Анализ рисков", a: "АНАЛИТИК"}, {t: "Усиление защиты", a: "СКАНЕР"}]},
+            {q: "Мир — это порядок или скорость?", o: [{t: "Порядок", a: "АРХИТЕКТОР"}, {t: "Скорость", a: "ОПЕРАТОР"}]},
+            {q: "Чужое присутствие в канале. Действия?", o: [{t: "Наблюдение", a: "АНАЛИТИК"}, {t: "Контратака", a: "СКАНЕР"}]},
+            {q: "Код — это искусство или оружие?", o: [{t: "Искусство", a: "АРХИТЕКТОР"}, {t: "Оружие", a: "ОПЕРАТОР"}]},
+            {q: "Файл из пустоты. Что делать?", o: [{t: "Песочница", a: "СКАНЕР"}, {t: "Метаданные", a: "АНАЛИТИК"}]},
+            {q: "Слабость системы — в человеке или в железе?", o: [{t: "В человеке", a: "АРХИТЕКТОР"}, {t: "В задержке", a: "ОПЕРАТОР"}]},
+            {q: "Истина в данных или в инстинктах?", o: [{t: "В данных", a: "АНАЛИТИК"}, {t: "В инстинктах", a: "СКАНЕР"}]},
+            {q: "Тишина — это покой или угроза?", o: [{t: "Угроза", a: "СКАНЕР"}, {t: "Покой", a: "АРХИТЕКТОР"}]},
+            {q: "Цель: контроль или превосходство?", o: [{t: "Контроль", a: "АРХИТЕКТОР"}, {t: "Превосходство", a: "ОПЕРАТОР"}]}
         ];
 
-        function sw(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-        function startSequence() { beep(400); curQ=0; sc={}; renderQ(); sw('s-test'); }
+        function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+        function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('s-psych'); renderQ(); }
+
         function renderQ() {
-            const q = qs[curQ]; document.getElementById('q-text').innerText = q.q;
-            document.getElementById('q-counter').innerText = `MOD ${curQ+1} / ${qs.length}`;
-            const box = document.getElementById('options-list'); box.innerHTML = "";
+            const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
+            const box = document.getElementById('q-options'); box.innerHTML = "";
             q.o.forEach(o => {
                 const b = document.createElement('button'); b.className = "btn"; b.innerText = o.t;
-                b.onclick = () => { beep(1000); sc[o.a]=(sc[o.a]||0)+1; curQ++; if(curQ<qs.length) renderQ(); else startReaction(); };
+                b.onclick = () => {
+                    playSound(500 + curQ*50, 0.1);
+                    score[o.a] = (score[o.a] || 0) + 1; curQ++;
+                    if(curQ < QUESTIONS.length) renderQ(); else sw('b-react');
+                };
                 box.appendChild(b);
             });
         }
-        function startReaction() { target=1; attempts=3; renderG(); sw('s-game'); }
-        function renderG() {
-            document.getElementById('target-hint').innerText = `ПОИСК: ${target}`;
-            const g = document.getElementById('g-grid'); g.innerHTML = "";
-            let ns = Array.from({length:16},(_,i)=>i+1).sort(()=>Math.random()-0.5);
+
+        function startReactTest() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); updateAttLabel(); renderReactGrid(); startTimer(); }
+        function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { const elapsed = (Date.now() - reactStartTime) / 1000; document.getElementById('timer-display').innerText = elapsed.toFixed(3); }, 50); }
+        function updateAttLabel() { document.getElementById('att-label').innerText = "[ " + "■ ".repeat(attempts) + "□ ".repeat(3-attempts) + "]"; }
+        
+        function renderReactGrid() {
+            document.getElementById('target-label').innerText = `TARGET: ${target}`;
+            const g = document.getElementById('react-grid'); g.innerHTML = "";
+            let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
             ns.forEach(n => {
                 const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
                 c.onclick = () => {
-                    if(n === target) { beep(1200); target++; if(target>16) finalize(); else renderG(); }
-                    else { beep(200, 0.3, 'sawtooth'); attempts--; updateAtt(); c.classList.add('err-flash'); setTimeout(()=>c.classList.remove('err-flash'),200); if(attempts<=0) finalize(); }
-                }
+                    if(n === target) {
+                        playSound(800 + n*20, 0.05); target++;
+                        if(target > 16) { clearInterval(timerInterval); finalReactTime = (Date.now() - reactStartTime)/1000; sw('b-mem'); }
+                        else renderReactGrid();
+                    } else {
+                        playSound(100, 0.2, 'sawtooth'); attempts--; updateAttLabel();
+                        c.classList.add('err'); setTimeout(() => c.classList.remove('err'), 200);
+                        if(attempts <= 0) { clearInterval(timerInterval); finalReactTime = 60; sw('b-mem'); }
+                    }
+                };
                 g.appendChild(c);
             });
         }
-        function updateAtt() { document.getElementById('att-bar').innerText = "[ " + "■ ".repeat(attempts) + "□ ".repeat(3-attempts) + "]"; }
+
+        function startMemTest() { memStep = 0; sw('s-mem'); nextMemRound(); }
+        function nextMemRound() {
+            memSeq = Array.from({length: 4 + memStep}, () => Math.floor(Math.random()*9));
+            const mg = document.getElementById('mem-grid'); mg.innerHTML = "";
+            for(let i=0; i<9; i++) {
+                const c = document.createElement('div'); c.className = "cell";
+                c.onclick = () => handleMemClick(i, c); mg.appendChild(c);
+            }
+            playMemSequence();
+        }
+        let isMemPlaying = false;
+        async function playMemSequence() {
+            isMemPlaying = true; const cells = document.getElementById('mem-grid').children;
+            for(let id of memSeq) {
+                await new Promise(r => setTimeout(r, 600)); playSound(1000, 0.05);
+                cells[id].style.borderColor = "var(--oracle)"; cells[id].style.background = "rgba(0, 204, 255, 0.2)";
+                await new Promise(r => setTimeout(r, 400));
+                cells[id].style.borderColor = "rgba(255,255,255,0.1)"; cells[id].style.background = "rgba(10,10,10,0.9)";
+            }
+            isMemPlaying = false; memIdx = 0;
+        }
+        function handleMemClick(id, el) {
+            if(isMemPlaying) return;
+            if(id === memSeq[memIdx]) {
+                playSound(1200, 0.03); el.style.borderColor = "var(--neon)";
+                memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) setTimeout(nextMemRound, 800); else finalize(); }
+            } else { playSound(60, 0.4, 'square'); finalize(); }
+        }
+
         function finalize() {
-            fType = Object.keys(sc).reduce((a,b)=>sc[a]>sc[b]?a:b) || "АНАЛИТИК";
-            const d = DATA[fType];
-            document.getElementById('d-title').innerText = fType;
-            document.getElementById('pi').innerText = d.pi; document.getElementById('di').innerText = d.di;
+            let type = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "АНАЛИТИК";
+            currentProfile = type; isDone = true;
+            document.getElementById('v-type').innerText = type;
+            document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
+            document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
             document.getElementById('v-card').classList.add('open');
             setTimeout(() => {
-                document.getElementById('b-log').style.width = d.log + "%";
-                document.getElementById('b-react').style.width = (target*6) + "%";
-                document.getElementById('b-mem').style.width = "80%";
+                document.getElementById('v-bar-log').style.width = PROFILES[type].log + "%";
+                document.getElementById('v-bar-react').style.width = Math.max(5, 100 - (finalReactTime*4)) + "%";
+                document.getElementById('v-bar-mem').style.width = (memStep/3 * 100) + "%";
             }, 500);
-            isDone = true; renderRadar();
         }
-        let angle = 0;
-        function renderRadar() {
-            const canvas = document.getElementById('avatar-canvas'); const ctx = canvas.getContext('2d');
-            canvas.width = 200; canvas.height = 200;
-            function draw() {
-                if(!isDone) return;
-                ctx.fillStyle = 'rgba(0,5,0,0.1)'; ctx.fillRect(0,0,200,200);
-                ctx.strokeStyle = '#00ff41'; ctx.lineWidth = 1;
-                ctx.beginPath(); ctx.arc(100,100,80,0,Math.PI*2); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(100,100); ctx.lineTo(100+Math.cos(angle)*80, 100+Math.sin(angle)*80); ctx.stroke();
-                angle += 0.05; requestAnimationFrame(draw);
+
+        function backToHub() {
+            document.getElementById('v-card').classList.remove('open');
+            document.getElementById('waiting-tag').style.display = 'none';
+            document.getElementById('id-tag').innerText = currentProfile;
+            document.getElementById('id-tag').style.display = 'block';
+            document.getElementById('hub-oracle-btn').style.display = 'block';
+            sw('s-main'); renderHubAvatar(currentProfile);
+        }
+
+        function showStoredProfile() { if(isDone) document.getElementById('v-card').classList.add('open'); }
+        function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
+
+        function oracleSpeak() {
+            if(!currentProfile) return;
+            const msg = new SpeechSynthesisUtterance(PROFILES[currentProfile].oracle);
+            msg.lang = 'ru-RU'; msg.pitch = 0.6; msg.rate = 0.8; window.speechSynthesis.speak(msg);
+        }
+
+        function renderHubAvatar(type) {
+            const c = document.getElementById('hub-canvas'); const ctx = c.getContext('2d');
+            c.width = 180; c.height = 180; let frame = 0;
+            function animate() {
+                if(!isDone) return; ctx.clearRect(0, 0, 180, 180);
+                ctx.strokeStyle = (type === "ОПЕРАТОР") ? 'rgba(255, 51, 51, 0.4)' : 'rgba(0, 255, 65, 0.4)';
+                ctx.lineWidth = 1; ctx.beginPath();
+                if(type === "АРХИТЕКТОР") {
+                    for(let i=0; i<6; i++) {
+                        let a = frame + i * Math.PI/3;
+                        ctx.moveTo(90 + Math.cos(a)*60, 90 + Math.sin(a)*60);
+                        ctx.lineTo(90 + Math.cos(a + Math.PI/3)*60, 90 + Math.sin(a + Math.PI/3)*60);
+                    }
+                } else if(type === "ОПЕРАТОР") {
+                    ctx.moveTo(90, 90);
+                    for(let i=0; i<20; i++) {
+                        let r = 5 + i*4; let a = frame * 2 + i*0.4;
+                        ctx.lineTo(90 + Math.cos(a)*r, 90 + Math.sin(a)*r);
+                    }
+                } else {
+                    ctx.arc(90, 90, 50 + Math.sin(frame)*5, 0, Math.PI*2);
+                }
+                ctx.stroke(); frame += 0.02; requestAnimationFrame(animate);
             }
-            draw();
-            document.getElementById('p-label').innerText = fType; document.getElementById('p-label').style.display='block';
-            document.getElementById('btn-oracle').style.display='block';
+            animate();
         }
-        function tgl(id) { const e = document.getElementById(id); e.style.display = (e.style.display==='block')?'none':'block'; }
-        function closeProfile() { document.getElementById('v-card').classList.remove('open'); sw('s-main'); }
-        function showProfile() { if(isDone) document.getElementById('v-card').classList.add('open'); }
-        function oracleSpeak() { const s = new SpeechSynthesisUtterance(DATA[fType].oracle); s.lang='ru-RU'; s.pitch=0.6; window.speechSynthesis.speak(s); }
-        
-        const mC = document.getElementById('m'), mCtx = mC.getContext('2d');
-        let mW = mC.width = window.innerWidth, mH = mC.height = window.innerHeight;
-        const drops = Array(Math.floor(mW/20)).fill(1);
-        function drawM() { mCtx.fillStyle='rgba(0,0,0,0.1)'; mCtx.fillRect(0,0,mW,mH); mCtx.fillStyle='#0f0'; mCtx.font='15px monospace'; drops.forEach((y,i)=>{ mCtx.fillText(String.fromCharCode(0x30A0+Math.random()*96), i*20, y*20); if(y*20>mH && Math.random()>0.975) drops[i]=0; drops[i]++; }); }
-        setInterval(drawM, 50);
-        window.onresize = () => { mW = mC.width = window.innerWidth; mH = mC.height = window.innerHeight; };
+
+        // Матричный код - сделан более видимым
+        const mc = document.getElementById('m-bg'); const mx = mc.getContext('2d');
+        let mw = mc.width = window.innerWidth, mh = mc.height = window.innerHeight;
+        const drops = Array(Math.floor(mw/20)).fill(1);
+        function drawM() {
+            mx.fillStyle = 'rgba(0,0,0,0.15)'; mx.fillRect(0,0,mw,mh);
+            mx.fillStyle = '#00ff41'; // Яркий зеленый без прозрачности в самих буквах
+            mx.font = '15px monospace';
+            drops.forEach((y, i) => {
+                const char = String.fromCharCode(0x30A0 + Math.random()*96);
+                mx.fillText(char, i*20, y*20);
+                if(y*20 > mh && Math.random() > 0.98) drops[i] = 0; drops[i]++;
+            });
+        }
+        setInterval(drawM, 60);
+        window.addEventListener('resize', () => { mw = mc.width = window.innerWidth; mh = mc.height = window.innerHeight; });
     </script>
 </body>
 </html>
+
+ Я сейчас вставлю. Вот это туда, если заработает с музыкой, Значит это ты её сломал в тот раз, когда ты там говоришь оптимизировал, б****. Я ничего не сломал. Если это так то я б****, Сейчас же в моменте, н****, ухожу в кладку.
