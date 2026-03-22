@@ -36,6 +36,7 @@
             max-width: 280px; 
             margin: 10px 0; 
             transition: 0.2s; 
+            touch-action: manipulation;
         }
         .btn:active { background: rgba(0, 255, 65, 0.2); }
         .btn-blue { border-color: rgba(0, 204, 255, 0.4); color: var(--oracle); }
@@ -94,7 +95,7 @@
             <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
         </div>
         <button class="btn" style="margin-top: 40px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
-        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;" ontouchend="oracleSpeak()" onclick="oracleSpeak()">ОРАКУЛ</button>
+        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;" onpointerdown="if(aCtx)aCtx.resume()" ontouchend="oracleSpeak()" onclick="oracleSpeak()">ОРАКУЛ</button>
     </div>
 
     <div id="b-intro" class="screen">
@@ -181,6 +182,7 @@
 
         function playSound(f, d, type='sine', v=0.1) {
             if(!aCtx) return;
+            if(aCtx.state === 'suspended') aCtx.resume();
             const o = aCtx.createOscillator(); const g = aCtx.createGain();
             o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime);
             g.gain.setValueAtTime(v, aCtx.currentTime);
@@ -224,7 +226,8 @@
             startAudioEngine(); 
             if (aCtx && aCtx.state === 'suspended') aCtx.resume();
             if ('speechSynthesis' in window) {
-                window.speechSynthesis.speak(new SpeechSynthesisUtterance("")); // Прогрев для мобилок
+                window.speechSynthesis.cancel();
+                window.speechSynthesis.speak(new SpeechSynthesisUtterance(" ")); // Активация движка
             }
             curQ = 0; score = {}; sw('b-intro'); 
         }
@@ -325,8 +328,16 @@
         
         function oracleSpeak() { 
             if (aCtx && aCtx.state === 'suspended') aCtx.resume(); 
+            if (!('speechSynthesis' in window)) return;
+            
             window.speechSynthesis.cancel(); 
             const msg = new SpeechSynthesisUtterance(PROFILES[currentProfile].oracle); 
+            
+            // Поиск русского голоса
+            const voices = window.speechSynthesis.getVoices();
+            const ruVoice = voices.find(v => v.lang.startsWith('ru'));
+            if (ruVoice) msg.voice = ruVoice;
+            
             msg.lang = 'ru-RU'; 
             msg.pitch = 0.8;
             msg.rate = 0.9;
@@ -388,6 +399,11 @@
             });
         }
         setInterval(drawM, 70);
+        
+        // Предварительная загрузка голосов для Chrome/WebView
+        if (speechSynthesis.onvoiceschanged !== undefined) {
+            speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+        }
     </script>
 </body>
 </html>
