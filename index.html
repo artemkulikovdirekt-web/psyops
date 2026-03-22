@@ -316,16 +316,47 @@
         function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
         function oracleSpeak() { if (aCtx.state === 'suspended') aCtx.resume(); const msg = new SpeechSynthesisUtterance(PROFILES[currentProfile].oracle); msg.lang = 'ru-RU'; window.speechSynthesis.speak(msg); }
 
+        // ОБНОВЛЕННЫЙ МОДУЛЬ АВАТАРОВ
         function renderHubAvatar(type) {
             const c = document.getElementById('hub-canvas'); const ctx = c.getContext('2d');
-            c.width = 190; c.height = 190; let f = 0;
+            c.width = 190; c.height = 190; let frame = 0;
             function animate() {
-                ctx.clearRect(0,0,190,190); ctx.strokeStyle = (type === 'ОПЕРАТОР') ? '#00ff41' : 'rgba(0, 255, 65, 0.8)'; ctx.lineWidth = 1.5; ctx.beginPath();
-                if(type === "АРХИТЕКТОР") { for(let i=0; i<6; i++) { let a = i*Math.PI/3; ctx.lineTo(95+Math.cos(a)*60, 95+Math.sin(a)*60); } ctx.closePath(); }
-                else if(type === "ОПЕРАТОР") { ctx.arc(95, 95, 60 + Math.sin(f*2)*4, 0, Math.PI*2); }
-                else if(type === "АНАЛИТИК") { ctx.save(); ctx.translate(95,95); ctx.rotate(Math.PI/4); ctx.rect(-45,-45,90,90); ctx.restore(); }
-                else if(type === "СКАНЕР") { ctx.rect(55,55,80,80); ctx.moveTo(55,55); ctx.lineTo(135,135); ctx.moveTo(135,55); ctx.lineTo(55,135); }
-                ctx.stroke(); f+=0.04; requestAnimationFrame(animate);
+                if(!isDone) return; 
+                ctx.clearRect(0, 0, 190, 190);
+                ctx.strokeStyle = (type === "ОПЕРАТОР") ? 'rgba(255, 51, 51, 0.4)' : 'rgba(0, 255, 65, 0.4)';
+                ctx.lineWidth = 1; 
+                ctx.beginPath();
+                
+                if(type === "АРХИТЕКТОР") { 
+                    for(let i=0; i<6; i++) { 
+                        let a = frame + i * Math.PI/3; 
+                        ctx.moveTo(95 + Math.cos(a)*65, 95 + Math.sin(a)*65); 
+                        ctx.lineTo(95 + Math.cos(a + Math.PI/3)*65, 95 + Math.sin(a + Math.PI/3)*65); 
+                    } 
+                }
+                else if(type === "ОПЕРАТОР") { 
+                    ctx.moveTo(95, 95); 
+                    for(let i=0; i<25; i++) { 
+                        let r = 5 + i*3.5; 
+                        let a = frame * 2.5 + i*0.4; 
+                        ctx.lineTo(95 + Math.cos(a)*r, 95 + Math.sin(a)*r); 
+                    } 
+                }
+                else if(type === "АНАЛИТИК") {
+                    ctx.save(); ctx.translate(95, 95); ctx.rotate(frame);
+                    ctx.rect(-45, -45, 90, 90);
+                    ctx.rect(-30, -30, 60, 60);
+                    ctx.restore();
+                }
+                else if(type === "СКАНЕР") {
+                    ctx.arc(95, 95, 60 + Math.sin(frame)*8, 0, Math.PI*2);
+                    ctx.moveTo(95 - 40, 95); ctx.lineTo(95 + 40, 95);
+                    ctx.moveTo(95, 95 - 40); ctx.lineTo(95, 95 + 40);
+                }
+                
+                ctx.stroke(); 
+                frame += 0.02; 
+                requestAnimationFrame(animate);
             }
             animate();
         }
