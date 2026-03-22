@@ -36,6 +36,7 @@
             max-width: 280px; 
             margin: 10px 0; 
             transition: 0.2s; 
+            touch-action: manipulation;
         }
         .btn:active { background: rgba(0, 255, 65, 0.2); }
         .btn-blue { border-color: rgba(0, 204, 255, 0.4); color: var(--oracle); }
@@ -93,8 +94,8 @@
             <canvas id="hub-canvas"></canvas>
             <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
         </div>
-        <button class="btn" style="margin-top: 40px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
-        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;" onclick="oracleSpeak()">ОРАКУЛ</button>
+        <button class="btn" style="margin-top: 40px;" onmousedown="startSequence()" ontouchstart="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
+        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;" onmousedown="oracleSpeak()" ontouchstart="oracleSpeak()">ОРАКУЛ</button>
     </div>
 
     <div id="b-intro" class="screen">
@@ -164,30 +165,6 @@
         let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
         let selectedWordsCount = 0, activeWordsOnScreen = 0;
 
-        function startAudioEngine() {
-            if (aCtx) return;
-            aCtx = new (window.AudioContext || window.webkitAudioContext)();
-            masterGain = aCtx.createGain(); masterGain.gain.value = 0.15; masterGain.connect(aCtx.destination);
-            const osc1 = aCtx.createOscillator(); const osc2 = aCtx.createOscillator();
-            thrillerFilter = aCtx.createBiquadFilter(); lfo = aCtx.createOscillator();
-            const lfoGain = aCtx.createGain();
-            osc1.type = 'sawtooth'; osc1.frequency.value = 42; osc2.type = 'square'; osc2.frequency.value = 42.2;
-            thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180; thrillerFilter.Q.value = 10;
-            lfo.type = 'sine'; lfo.frequency.value = 0.08; lfoGain.gain.value = 100;
-            lfo.connect(lfoGain); lfoGain.connect(thrillerFilter.frequency);
-            osc1.connect(thrillerFilter); osc2.connect(thrillerFilter);
-            thrillerFilter.connect(masterGain); osc1.start(); osc2.start(); lfo.start();
-        }
-
-        function playSound(f, d, type='sine', v=0.1) {
-            if(!aCtx) return;
-            const o = aCtx.createOscillator(); const g = aCtx.createGain();
-            o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime);
-            g.gain.setValueAtTime(v, aCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + d);
-            o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
-        }
-
         const PROFILES = {
             "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий.", oracle: "Твой план идеален. Но не забывай про хаос вне системы." },
             "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов пропускной способности нейронного интерфейса.", oracle: "Скорость — твоя единственная броня." },
@@ -218,8 +195,43 @@
             {t: "КАНАЛ", a: "ИМПУЛЬС"}, {t: "ВЗЛОМ", a: "СКАНЕР"}
         ];
 
+        function startAudioEngine() {
+            if (aCtx) return;
+            aCtx = new (window.AudioContext || window.webkitAudioContext)();
+            masterGain = aCtx.createGain(); masterGain.gain.value = 0.15; masterGain.connect(aCtx.destination);
+            const osc1 = aCtx.createOscillator(); const osc2 = aCtx.createOscillator();
+            thrillerFilter = aCtx.createBiquadFilter(); lfo = aCtx.createOscillator();
+            const lfoGain = aCtx.createGain();
+            osc1.type = 'sawtooth'; osc1.frequency.value = 42; osc2.type = 'square'; osc2.frequency.value = 42.2;
+            thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180; thrillerFilter.Q.value = 10;
+            lfo.type = 'sine'; lfo.frequency.value = 0.08; lfoGain.gain.value = 100;
+            lfo.connect(lfoGain); lfoGain.connect(thrillerFilter.frequency);
+            osc1.connect(thrillerFilter); osc2.connect(thrillerFilter);
+            thrillerFilter.connect(masterGain); osc1.start(); osc2.start(); lfo.start();
+            
+            // "Пинок" синтезатора для мобилок
+            if ('speechSynthesis' in window) {
+                const silence = new SpeechSynthesisUtterance("");
+                window.speechSynthesis.speak(silence);
+            }
+        }
+
+        function playSound(f, d, type='sine', v=0.1) {
+            if(!aCtx) return;
+            const o = aCtx.createOscillator(); const g = aCtx.createGain();
+            o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime);
+            g.gain.setValueAtTime(v, aCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + d);
+            o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
+        }
+
         function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-        function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('b-intro'); }
+        
+        function startSequence() { 
+            startAudioEngine(); 
+            if (aCtx && aCtx.state === 'suspended') aCtx.resume();
+            curQ = 0; score = {}; sw('b-intro'); 
+        }
 
         function renderQ() {
             const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
@@ -315,14 +327,15 @@
         function showStoredProfile() { if(isDone) document.getElementById('v-card').classList.add('open'); }
         function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
         
-        // Починка Оракула для мобильных версий
         function oracleSpeak() { 
             if (aCtx && aCtx.state === 'suspended') aCtx.resume(); 
-            window.speechSynthesis.cancel(); // Очистка очереди для мгновенного старта
+            if (!('speechSynthesis' in window)) return;
+            
+            window.speechSynthesis.cancel(); 
             const msg = new SpeechSynthesisUtterance(PROFILES[currentProfile].oracle); 
             msg.lang = 'ru-RU'; 
-            msg.pitch = 0.8;
-            msg.rate = 0.9;
+            msg.pitch = 0.7; // Чуть более низкий, "кибернетический" голос
+            msg.rate = 0.85;
             window.speechSynthesis.speak(msg); 
         }
 
@@ -332,8 +345,7 @@
             function animate() {
                 if(!isDone) return; 
                 ctx.clearRect(0, 0, 190, 190);
-                // Исправлено: Спираль Импульса теперь тоже зеленая
-                ctx.strokeStyle = 'rgba(0, 255, 65, 0.4)';
+                ctx.strokeStyle = 'rgba(0, 255, 65, 0.4)'; // Строго зеленая спираль для Импульса
                 ctx.lineWidth = 1; 
                 ctx.beginPath();
                 
