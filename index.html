@@ -115,19 +115,6 @@
         .ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05); padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); letter-spacing: 1px; }
 
         .sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; font-weight: 100; }
-
-        /* HISTORY MODULE STYLES */
-        #s-history { overflow-y: auto; justify-content: flex-start; padding-top: 60px; }
-        .history-list { width: 100%; max-width: 300px; margin-top: 20px; }
-        .history-item { 
-            border: 1px solid rgba(0, 255, 65, 0.2); 
-            padding: 12px; margin-bottom: 10px; 
-            text-align: left; font-size: 10px; 
-            letter-spacing: 1px; position: relative;
-        }
-        .history-item span { color: var(--oracle); }
-        .history-item.fail { border-color: rgba(255, 51, 51, 0.3); }
-        .history-item b { display: block; margin-bottom: 5px; letter-spacing: 2px; }
     </style>
 </head>
 <body>
@@ -154,7 +141,6 @@
         </div>
 
         <button id="start-btn" class="btn" style="margin-top: 40px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
-        <button id="history-btn" class="btn" style="border-color: rgba(0, 255, 65, 0.2); font-size: 10px;" onclick="showHistory()">ИСТОРИЯ СЕССИЙ</button>
         <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;">ОРАКУЛ</button>
     </div>
 
@@ -218,7 +204,7 @@
 
     <div id="s-focus-res" class="screen">
         <h2 style="letter-spacing:5px;">ЦИКЛ ЗАВЕРШЕН</h2>
-        <button class="btn" style="border-color:var(--neon)" onclick="logFocusResult('SUCCESS')">СИНХРОНИЗАЦИЯ УСПЕШНА</button>
+        <button class="btn" style="border-color:var(--neon)" onclick="logFocus('success')">СИНХРОНИЗАЦИЯ УСПЕШНА</button>
         <button class="btn btn-red" onclick="sw('s-focus-fail')">КРИТИЧЕСКИЙ СБОЙ</button>
     </div>
 
@@ -234,18 +220,11 @@
         <button class="btn" style="margin-top:40px; border-color:rgba(0,255,65,0.2)" onclick="sw('s-main')">ВЕРНУТЬСЯ</button>
     </div>
 
-    <div id="s-history" class="screen">
-        <h2 style="letter-spacing:5px; color:var(--oracle);">LOG_HISTORY</h2>
-        <div id="history-container" class="history-list"></div>
-        <button class="btn" style="margin-top:20px;" onclick="sw('s-main')">НАЗАД</button>
-        <button class="btn btn-red" style="font-size:8px; padding:10px; opacity:0.3; border:none;" onclick="clearHistory()">ОЧИСТИТЬ ЛОГИ</button>
-    </div>
-
     <div id="m-info-1" class="modal">
         <div class="modal-content">
             <h3 style="color:var(--oracle); letter-spacing:2px;">FOCUS_PROTOCOL: INFO [1/2]</h3>
             <p style="text-align:left; line-height:1.6; font-size:12px;">
-                FOCUS_PROTOCOL — это режим принудительной синхронизации когнитивного процесса. Внимание — это единственный конечный ресурс вашей нейронной сети.
+                FOCUS_PROTOCOL — это режим принудительной синхронизации когнитивного процесса. Внимание — это единственный конечный ресурс вашей нейронной сети. Любое внешнее отвлечение вызывает фрагментацию сознания, требуя до 23 минут на восстановление исходной глубины погружения.
             </p>
             <button class="btn" onclick="toggleModal('m-info-1', false); toggleModal('m-info-2', true);">ДАЛЕЕ</button>
         </div>
@@ -255,17 +234,20 @@
         <div class="modal-content">
             <h3 style="color:var(--oracle); letter-spacing:2px;">FOCUS_PROTOCOL: INFO [2/2]</h3>
             <p style="text-align:left; line-height:1.6; font-size:12px;">
-                ДИРЕКТИВА: Устраните цифровые шумы. Любое переключение внимания — критический сбой.
+                ДИРЕКТИВА:<br>
+                1. Устраните цифровые шумы.<br>
+                2. После активации таймера аппарат сознания должен быть замкнут на одной целевой задаче. Любое переключение внимания — критический сбой.<br>
+                3. По завершении цикла подтвердите статус сессии.
             </p>
             <button class="btn" onclick="toggleModal('m-info-2', false)">ПРИНЯТЬ</button>
         </div>
     </div>
 
-    <div id="m-fail-detail" class="modal">
+    <div id="m-fail-detail" class="modal" onclick="toggleModal('m-fail-detail', false)">
         <div class="modal-content" style="border-color:var(--red)">
             <h3 id="fail-title" style="color:var(--red); letter-spacing:2px;"></h3>
             <p id="fail-desc" style="text-align:left; line-height:1.6;"></p>
-            <button class="btn" onclick="logFocusResult(currentFailKey); toggleModal('m-fail-detail', false); sw('s-main');">ЗАФИКСИРОВАТЬ СБОЙ</button>
+            <p style="font-size:10px; opacity:0.5; margin-top:20px;">[ НАЖМИТЕ ДЛЯ ЗАКРЫТИЯ ]</p>
         </div>
     </div>
 
@@ -285,21 +267,20 @@
         let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
         let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
         let selectedWordsCount = 0, activeWordsOnScreen = 0, focusTimerInterval, lockInterval;
-        let currentFailKey = "";
 
         const FAIL_DATA = {
-            'COGNITIVE_ESCAPE': { t: '[ COGNITIVE_ESCAPE ]', d: 'Стремление мозга избежать давления путем переключения на знакомые действия.' },
-            'INTERNAL_LOOP': { t: '[ INTERNAL_LOOP ]', d: 'Потеря фокуса из-за внутренней рефлексии или обдумывания идей.' },
-            'ENV_DISCOMFORT': { t: '[ ENV_DISCOMFORT ]', d: 'Внешние факторы, подрывающие стабильность концентрации.' },
-            'FALSE_URGENCY': { t: '[ FALSE_URGENCY ]', d: 'Иллюзия необходимости решения второстепенных задач.' },
-            'RES_EXHAUSTION': { t: '[ RES_EXHAUSTION ]', d: 'Критическое снижение уровня нейропластичности.' }
+            'COGNITIVE_ESCAPE': { t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу.', d: 'Стремление мозга избежать когнитивного давления путем переключения на знакомые, легкие действия (соцсети, новости).' },
+            'INTERNAL_LOOP': { t: '[ INTERNAL_LOOP ] — Зацикленность на мыслях.', d: 'Потеря фокуса из-за внутренней рефлексии или бесконечного обдумывания побочных идей, не связанных с задачей.' },
+            'ENV_DISCOMFORT': { t: '[ ENV_DISCOMFORT ] — Дискомфорт среды.', d: 'Внешние физические факторы (шум, свет, эргономика), подрывающие стабильность концентрации.' },
+            'FALSE_URGENCY': { t: '[ FALSE_URGENCY ] — Внезапные важные дела.', d: 'Иллюзия необходимости немедленного решения второстепенных задач, возникающая как форма саботажа.' },
+            'RES_EXHAUSTION': { t: '[ RES_EXHAUSTION ] — Истощение ресурса.', d: 'Критическое снижение уровня нейропластичности и глюкозы. Внимание — это единственный конечный ресурс вашей нейронной сети.' }
         };
 
         const PROFILES = {
-            "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей." },
-            "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных." },
-            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов." },
-            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз." }
+            "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий." },
+            "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов." },
+            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме." },
+            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в контурах." }
         };
 
         const QUESTIONS = [
@@ -307,10 +288,15 @@
             {q: "Доступ к сети ценой личности. Согласишься?", o: [{t: "Оценка рисков", a: "АНАЛИТИК"}, {t: "Усиление щитов", a: "СКАНЕР"}]},
             {q: "Что важнее: структура или динамика?", o: [{t: "Структура", a: "АРХИТЕКТОР"}, {t: "Динамика", a: "ИМПУЛЬС"}]},
             {q: "Чужой сигнал в твоем канале. Действия?", o: [{t: "Отслеживание", a: "АНАЛИТИК"}, {t: "Агрессивный ответ", a: "СКАНЕР"}]},
-            {q: "Код — это язык или оружие?", o: [{t: "Язык", a: "АРХИТЕКТОР"}, {t: "Оружие", a: "ИМПУЛЬС"}]}
+            {q: "Код — это язык или оружие?", o: [{t: "Язык", a: "АРХИТЕКТОР"}, {t: "Оружие", a: "ИМПУЛЬС"}]},
+            {q: "Неизвестный файл в карантине. Что делать?", o: [{t: "Изоляция", a: "СКАНЕР"}, {t: "Дешифровка", a: "АНАЛИТИК"}]},
+            {q: "Где корень ошибок: в человеке или в коде?", o: [{t: "В человеке", a: "АРХИТЕКТОР"}, {t: "В коде", a: "ИМПУЛЬС"}]},
+            {q: "Источник силы: данные или чутье?", o: [{t: "Данные", a: "АНАЛИТИК"}, {t: "Чутье", a: "СКАНЕР"}]},
+            {q: "Тишина вызывает покой или тревогу?", o: [{t: "Тревогу", a: "СКАНЕР"}, {t: "Покой", a: "АРХИТЕКТОР"}]},
+            {q: "Твоя цель: абсолютный контроль или мощь?", o: [{t: "Контроль", a: "АРХИТЕКТОР"}, {t: "Мощь", a: "ИМПУЛЬС"}]}
         ];
 
-        const SYNC_WORDS = [{t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ψ", a: "СКАНЕР"}];
+        const SYNC_WORDS = [{t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"}, {t: "Δ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ω", a: "АНАЛИТИК"}, {t: "Ψ", a: "СКАНЕР"}, {t: "КОНТРОЛЬ", a: "АРХИТЕКТОР"}, {t: "ПОТОК", a: "ИМПУЛЬС"}, {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "Ξ", a: "СКАНЕР"}, {t: "ИМПУЛЬС", a: "ИМПУЛЬС"}, {t: "λ", a: "АРХИТЕКТОР"}, {t: "МАТРИЦА", a: "АНАЛИТИК"}, {t: "ВЕКТОР", a: "АРХИТЕКТОР"}, {t: "Ø", a: "АНАЛИТИК"}, {t: "ТЕНЬ", a: "СКАНЕР"}, {t: "КАНАЛ", a: "ИМПУЛЬС"}, {t: "ВЗЛОМ", a: "СКАНЕР"}];
 
         function startAudioEngine() {
             if (aCtx) return;
@@ -318,9 +304,11 @@
             masterGain = aCtx.createGain(); masterGain.gain.value = 0.15; masterGain.connect(aCtx.destination);
             const osc1 = aCtx.createOscillator(); const osc2 = aCtx.createOscillator();
             thrillerFilter = aCtx.createBiquadFilter(); lfo = aCtx.createOscillator();
+            const lfoGain = aCtx.createGain();
             osc1.type = 'sawtooth'; osc1.frequency.value = 42; osc2.type = 'square'; osc2.frequency.value = 42.2;
-            thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180;
-            lfo.type = 'sine'; lfo.frequency.value = 0.08;
+            thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180; thrillerFilter.Q.value = 10;
+            lfo.type = 'sine'; lfo.frequency.value = 0.08; lfoGain.gain.value = 100;
+            lfo.connect(lfoGain); lfoGain.connect(thrillerFilter.frequency);
             osc1.connect(thrillerFilter); osc2.connect(thrillerFilter);
             thrillerFilter.connect(masterGain); osc1.start(); osc2.start(); lfo.start();
         }
@@ -337,25 +325,57 @@
         function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
-        // LOCK SYSTEM
+        // --- CORE LOGIC & PERSISTENCE ---
+
+        window.onload = () => {
+            const savedProfile = localStorage.getItem('psy_profile');
+            const isFinished = localStorage.getItem('psy_done');
+            if (isFinished && savedProfile) {
+                isDone = true; currentProfile = savedProfile;
+                updateUIProfile(savedProfile);
+            }
+            updateLockUI();
+            
+            const activeFocusEnd = localStorage.getItem('focus_end_time');
+            if (activeFocusEnd && Date.now() < activeFocusEnd) {
+                document.getElementById('active-focus-label').style.display = 'block';
+                runFocusUI(parseInt(activeFocusEnd));
+            }
+            initMatrixBG();
+        };
+
+        function setTestLock() {
+            const unlockTime = Date.now() + (6 * 60 * 60 * 1000);
+            localStorage.setItem('test_unlock_time', unlockTime);
+            updateLockUI();
+        }
+
         function updateLockUI() {
             const btn = document.getElementById('start-btn');
             const unlockAt = localStorage.getItem('test_unlock_time');
             if(!unlockAt) return;
+
             clearInterval(lockInterval);
             lockInterval = setInterval(() => {
                 const diff = unlockAt - Date.now();
-                if(diff <= 0) { clearInterval(lockInterval); localStorage.removeItem('test_unlock_time'); btn.disabled = false; btn.innerText = "ЗАПУСТИТЬ ТЕСТ"; }
-                else { btn.disabled = true; const h = Math.floor(diff / 3600000).toString().padStart(2, '0'); const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0'); const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0'); btn.innerText = `БЛОКИРОВКА: ${h}:${m}:${s}`; }
+                if(diff <= 0) {
+                    clearInterval(lockInterval);
+                    localStorage.removeItem('test_unlock_time');
+                    btn.disabled = false;
+                    btn.innerText = "ЗАПУСТИТЬ ТЕСТ";
+                } else {
+                    btn.disabled = true;
+                    const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    btn.innerText = `БЛОКИРОВКА: ${h}:${m}:${s}`;
+                }
             }, 1000);
         }
 
-        // FOCUS & HISTORY LOGIC
         function initFocus(mins) {
-            const duration = mins;
             const endTime = Date.now() + mins * 60 * 1000;
             localStorage.setItem('focus_end_time', endTime);
-            localStorage.setItem('last_focus_duration', duration);
             document.getElementById('active-focus-label').style.display = 'block';
             runFocusUI(endTime);
         }
@@ -364,61 +384,63 @@
             sw('s-focus-timer'); clearInterval(focusTimerInterval);
             focusTimerInterval = setInterval(() => {
                 const diff = endTime - Date.now();
-                if (diff <= 0) { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); document.getElementById('active-focus-label').style.display = 'none'; sw('s-focus-res'); }
-                else { const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0'); const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0'); document.getElementById('focus-countdown').innerText = `00:${m}:${s}`; document.getElementById('active-focus-label').innerText = `00:${m}:${s}`; }
+                if (diff <= 0) { 
+                    clearInterval(focusTimerInterval); 
+                    localStorage.removeItem('focus_end_time'); 
+                    document.getElementById('active-focus-label').style.display = 'none';
+                    sw('s-focus-res'); 
+                } else {
+                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    const timeStr = `00:${m}:${s}`;
+                    document.getElementById('focus-countdown').innerText = timeStr;
+                    document.getElementById('active-focus-label').innerText = timeStr;
+                }
             }, 1000);
         }
 
-        function logFocusResult(status) {
-            const history = JSON.parse(localStorage.getItem('psy_history') || "[]");
-            const duration = localStorage.getItem('last_focus_duration') || "?";
-            const entry = { date: new Date().toLocaleString(), duration: duration + "m", status: status };
-            history.unshift(entry);
-            localStorage.setItem('psy_history', JSON.stringify(history.slice(0, 20)));
-            sw('s-main');
+        function abortFocus() { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); document.getElementById('active-focus-label').style.display = 'none'; sw('s-main'); }
+
+        function selectFail(key) {
+            document.querySelectorAll('.f-circle').forEach(el => el.classList.remove('selected-fail'));
+            document.getElementById('fail-' + key).classList.add('selected-fail');
+            showFailDetail(key);
         }
 
-        function showHistory() {
-            sw('s-history');
-            const container = document.getElementById('history-container');
-            const history = JSON.parse(localStorage.getItem('psy_history') || "[]");
-            container.innerHTML = history.length ? "" : "<p style='opacity:0.3'>ЛОГИ ПУСТЫ</p>";
-            history.forEach(item => {
-                const div = document.createElement('div');
-                div.className = `history-item ${item.status === 'SUCCESS' ? '' : 'fail'}`;
-                div.innerHTML = `<b>${item.date}</b> ДЛИТЕЛЬНОСТЬ: ${item.duration} <br>СТАТУС: <span>${item.status}</span>`;
-                container.appendChild(div);
-            });
+        function showFailDetail(key) {
+            document.getElementById('fail-title').innerText = key;
+            document.getElementById('fail-desc').innerHTML = `<b>${FAIL_DATA[key].t}</b><br><br>${FAIL_DATA[key].d}`;
+            toggleModal('m-fail-detail', true);
         }
 
-        function clearHistory() { if(confirm("УДАЛИТЬ ВСЕ ЛОГИ?")) { localStorage.removeItem('psy_history'); showHistory(); } }
-        function selectFail(key) { currentFailKey = key; document.querySelectorAll('.f-circle').forEach(el => el.classList.remove('selected-fail')); document.getElementById('fail-' + key).classList.add('selected-fail'); showFailDetail(key); }
-        function showFailDetail(key) { document.getElementById('fail-title').innerText = key; document.getElementById('fail-desc').innerHTML = `<b>${FAIL_DATA[key].t}</b><br><br>${FAIL_DATA[key].d}`; toggleModal('m-fail-detail', true); }
-        function abortFocus() { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); document.getElementById('active-focus-label').style.display = 'none'; logFocusResult('ABORTED'); }
+        // --- TEST SEQUENCES ---
 
-        // TEST FLOW
         function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('b-intro'); }
+        
         function renderQ() {
             const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
             const box = document.getElementById('q-options'); box.innerHTML = "";
             q.o.forEach(o => {
                 const b = document.createElement('button'); b.className = "btn"; b.innerText = o.t;
-                b.onclick = () => { score[o.a] = (score[o.a] || 0) + 1; curQ++; if(curQ < QUESTIONS.length) renderQ(); else sw('b-react'); };
+                b.onclick = () => { playSound(400 + curQ*50, 0.1); score[o.a] = (score[o.a] || 0) + 1; curQ++; if(curQ < QUESTIONS.length) renderQ(); else sw('b-react'); };
                 box.appendChild(b);
             });
         }
+
         function startReactTest() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); updateAttLabel(); renderReactGrid(); startTimer(); }
         function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - reactStartTime) / 1000).toFixed(3); }, 41); }
         function updateAttLabel() { document.getElementById('att-label').innerText = "[ " + "■ ".repeat(attempts) + "□ ".repeat(3-attempts) + "]"; }
+        
         function renderReactGrid() {
             const g = document.getElementById('react-grid'); g.innerHTML = "";
             let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
             ns.forEach(n => {
                 const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
-                c.onclick = () => { if(n === target) { target++; if(target > 16) { clearInterval(timerInterval); sw('b-mem'); } else renderReactGrid(); } else { attempts--; updateAttLabel(); if(attempts <= 0) sw('b-mem'); }};
+                c.onclick = () => { if(n === target) { playSound(800 + n*30, 0.05); target++; if(target > 16) { clearInterval(timerInterval); finalReactTime = (Date.now()-reactStartTime)/1000; sw('b-mem'); } else renderReactGrid(); } else { playSound(100, 0.2, 'square'); attempts--; updateAttLabel(); if(attempts <= 0) sw('b-mem'); }};
                 g.appendChild(c);
             });
         }
+
         function startMemTest() { memStep = 0; sw('s-mem'); nextMemRound(); }
         function nextMemRound() {
             memSeq = Array.from({length: 4 + memStep}, () => Math.floor(Math.random()*9));
@@ -428,10 +450,19 @@
         }
         async function playMemSequence() {
             const cells = document.getElementById('mem-grid').children;
-            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); cells[id].style.background = "var(--oracle)"; await new Promise(r => setTimeout(r, 400)); cells[id].style.background = "rgba(0,0,0,0.85)"; }
+            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); playSound(1000, 0.05); cells[id].style.background = "var(--oracle)"; await new Promise(r => setTimeout(r, 400)); cells[id].style.background = "rgba(0,0,0,0.85)"; }
             memIdx = 0;
         }
-        function handleMemClick(id, el) { if(id === memSeq[memIdx]) { el.classList.add('ok'); setTimeout(() => el.classList.remove('ok'), 200); memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); } } else { sw('b-sync'); } }
+        function handleMemClick(id, el) { 
+            playSound(1100, 0.03);
+            if(id === memSeq[memIdx]) { 
+                el.classList.add('ok'); setTimeout(() => el.classList.remove('ok'), 200);
+                memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); } 
+            } else { 
+                playSound(60, 0.4, 'sawtooth'); el.classList.add('err'); setTimeout(() => sw('b-sync'), 300); 
+            } 
+        }
+
         function startSyncTest() {
             sw('s-sync'); selectedWordsCount = 0; activeWordsOnScreen = 0; const container = document.getElementById('words-container'); container.innerHTML = "";
             function spawn() {
@@ -449,54 +480,90 @@
             }
             spawn();
         }
+
         function finalize() {
             let type = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "АНАЛИТИК";
             currentProfile = type; isDone = true;
-            localStorage.setItem('psy_profile', type); localStorage.setItem('psy_done', 'true');
-            const unlockTime = Date.now() + (6 * 60 * 60 * 1000); localStorage.setItem('test_unlock_time', unlockTime);
-            updateLockUI(); updateUIProfile(type); document.getElementById('v-card').classList.add('open'); renderDiagnostic(type);
+            localStorage.setItem('psy_profile', type);
+            localStorage.setItem('psy_done', 'true');
+            setTestLock(); 
+            updateUIProfile(type);
+            document.getElementById('v-card').classList.add('open');
+            renderDiagnostic(type);
         }
+
         function updateUIProfile(type) {
-            document.getElementById('v-type').innerText = type; document.getElementById('v-ability-name').innerText = PROFILES[type].ability; document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
-            document.getElementById('focus-module').style.display = 'block'; document.getElementById('id-tag').innerText = type; document.getElementById('id-tag').style.display = 'block';
-            setTimeout(() => { document.getElementById('v-bar-log').style.width = PROFILES[type].log + "%"; document.getElementById('v-bar-react').style.width = "75%"; document.getElementById('v-bar-mem').style.width = "66%"; }, 500);
+            document.getElementById('v-type').innerText = type;
+            document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
+            document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
+            document.getElementById('focus-module').style.display = 'block';
+            document.getElementById('id-tag').innerText = type;
+            document.getElementById('id-tag').style.display = 'block';
+            document.getElementById('hub-oracle-btn').style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('v-bar-log').style.width = PROFILES[type].log + "%";
+                document.getElementById('v-bar-react').style.width = "75%";
+                document.getElementById('v-bar-mem').style.width = "66%";
+            }, 500);
         }
+
         function backToHub() { document.getElementById('v-card').classList.remove('open'); sw('s-main'); }
         function showStoredProfile() { if(isDone) { document.getElementById('v-card').classList.add('open'); renderDiagnostic(currentProfile); } }
         function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
 
-        // DRAW & BG
+        // --- VISUALS & ANIMATIONS ---
+
         function drawShape(ctx, type, x, y, size, frame, active) {
-            ctx.save(); ctx.translate(x, y); ctx.strokeStyle = active ? '#00ff41' : 'rgba(0, 255, 65, 0.15)'; ctx.lineWidth = active ? 2 : 1; ctx.beginPath();
+            ctx.save(); ctx.translate(x, y);
+            ctx.strokeStyle = active ? '#00ff41' : 'rgba(0, 255, 65, 0.15)';
+            ctx.lineWidth = active ? 2 : 1;
+            ctx.beginPath();
             if(type === "АРХИТЕКТОР") { for(let i=0; i<6; i++) { let a = (active ? frame : 0) + i*Math.PI/3; ctx.lineTo(Math.cos(a)*size, Math.sin(a)*size); } ctx.closePath(); }
             else if(type === "ИМПУЛЬС") { ctx.moveTo(0,0); for(let i=0; i<25; i++){ let r=i*(size/20); let a=(active ? frame*2.5 : 0)+i*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); } }
-            else if(type === "АНАЛИТИК") { if(active) ctx.rotate(frame); ctx.strokeRect(-size/1.2, -size/1.2, size*1.5, size*1.5); }
-            else if(type === "СКАНЕР") { if(active) ctx.rotate(frame); ctx.arc(0,0, size, 0, Math.PI*2); }
+            else if(type === "АНАЛИТИК") { if(active) ctx.rotate(frame); ctx.strokeRect(-size/1.2, -size/1.2, size*1.5, size*1.5); ctx.strokeRect(-size/4, -size/4, size/2, size/2); }
+            else if(type === "СКАНЕР") { if(active) ctx.rotate(frame); ctx.arc(0,0, size, 0, Math.PI*2); ctx.moveTo(-size,0); ctx.lineTo(size,0); ctx.moveTo(0,-size); ctx.lineTo(0,size); }
             ctx.stroke(); ctx.restore();
         }
+
         const hC = document.getElementById('hub-canvas'); const hX = hC.getContext('2d');
         hC.width = 190; hC.height = 190; let hFrame = 0;
         function animateHub() { hX.clearRect(0,0,190,190); if(isDone && currentProfile) drawShape(hX, currentProfile, 95, 95, 60, hFrame, true); hFrame += 0.02; requestAnimationFrame(animateHub); }
         animateHub();
+
+        let diagAnimId;
         function renderDiagnostic(activeType) {
             const c = document.getElementById('diag-canvas'); const ctx = c.getContext('2d');
             c.width = 260; c.height = 260; let dFrame = 0;
             const pts = { "АРХИТЕКТОР": [130, 50], "ИМПУЛЬС": [130, 210], "АНАЛИТИК": [50, 130], "СКАНЕР": [210, 130] };
-            function anim() { if(!document.getElementById('v-card').classList.contains('open')) return; ctx.clearRect(0,0,260,260); Object.keys(pts).forEach(k => drawShape(ctx, k, pts[k][0], pts[k][1], 25, dFrame, k === activeType)); dFrame += 0.02; requestAnimationFrame(anim); }
+            if(diagAnimId) cancelAnimationFrame(diagAnimId);
+            function anim() {
+                if(!document.getElementById('v-card').classList.contains('open')) return;
+                ctx.clearRect(0,0,260,260);
+                Object.keys(pts).forEach(k => drawShape(ctx, k, pts[k][0], pts[k][1], 25, dFrame, k === activeType));
+                ctx.beginPath(); ctx.strokeStyle = 'rgba(0, 255, 65, 0.1)'; ctx.moveTo(130, 50); ctx.lineTo(130, 210); ctx.moveTo(50, 130); ctx.lineTo(210, 130); ctx.stroke();
+                dFrame += 0.02; diagAnimId = requestAnimationFrame(anim);
+            }
             anim();
         }
+
         function initMatrixBG() {
             const c = document.getElementById('m-bg'); const ctx = c.getContext('2d');
             c.width = window.innerWidth; c.height = window.innerHeight;
-            const drops = Array(Math.floor(c.width/10)).fill(1);
-            function draw() { ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; ctx.fillRect(0, 0, c.width, c.height); ctx.fillStyle = "#00ff41"; ctx.font = "10px Courier New"; drops.forEach((y, i) => { ctx.fillText(Math.random() > 0.5 ? "1" : "0", i*10, y*10); if(y*10 > c.height && Math.random() > 0.975) drops[i] = 0; drops[i]++; }); }
+            const chars = "01010101ABCDEF-X".split(""); const fontSize = 10; const columns = c.width / fontSize;
+            const drops = Array(Math.floor(columns)).fill(1);
+            function draw() {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; ctx.fillRect(0, 0, c.width, c.height);
+                ctx.fillStyle = "#00ff41"; ctx.font = fontSize + "px Courier New";
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    if (drops[i] * fontSize > c.height && Math.random() > 0.975) drops[i] = 0;
+                    drops[i]++;
+                }
+            }
             setInterval(draw, 33);
         }
-        window.onload = () => {
-            const saved = localStorage.getItem('psy_profile'); if(saved) { isDone = true; currentProfile = saved; updateUIProfile(saved); }
-            const fEnd = localStorage.getItem('focus_end_time'); if(fEnd && Date.now() < fEnd) runFocusUI(fEnd);
-            updateLockUI(); initMatrixBG();
-        };
     </script>
 </body>
 </html>
