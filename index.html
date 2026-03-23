@@ -62,25 +62,25 @@
         .briefing h2 { color: var(--oracle); letter-spacing: 6px; font-weight: 100; font-size: 16px; margin-bottom: 12px; }
         .briefing p { font-size: 13px; line-height: 1.6; opacity: 0.8; }
 
-        /* ЭКРАН РЕЗУЛЬТАТОВ */
         #v-card { 
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
             width: 92%; max-width: 370px; background: #000; 
-            border: 1px solid rgba(0, 255, 65, 0.4); 
+            border: 1px solid rgba(0, 255, 65, 0.6); 
             padding: 30px 20px; z-index: 1000; 
             display: none; flex-direction: column; align-items: center; 
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
         }
         #v-card.open { display: flex; }
 
-        .diag-container { position: relative; width: 260px; height: 260px; margin: 20px 0; }
+        .diag-box { position: relative; width: 260px; height: 260px; margin: 10px 0; }
         #diag-canvas { width: 260px; height: 260px; }
 
-        .stat-row { width: 100%; margin: 12px 0; font-size: 9px; letter-spacing: 2px; opacity: 0.8; text-align: left; }
+        .stat-row { width: 100%; margin: 8px 0; font-size: 9px; letter-spacing: 2px; opacity: 0.8; text-align: left; }
         .bar { width: 100%; height: 2px; background: #0a0a0a; margin-top: 6px; }
         .fill { height: 100%; width: 0%; background: var(--neon); transition: 2s cubic-bezier(0.1, 0, 0, 1); }
 
-        .ability-badge { border: 1px solid rgba(0, 204, 255, 0.3); padding: 14px; font-size: 11px; margin-top: 20px; cursor: pointer; text-align: center; width: 100%; box-sizing: border-box; color: var(--oracle); letter-spacing: 3px; }
-        .ability-info { display: none; font-size: 12px; color: #ccc; margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 204, 255, 0.05); padding: 15px; border: 1px solid rgba(0, 204, 255, 0.1); }
+        .ability-badge { border: 1px solid rgba(0, 204, 255, 0.3); padding: 14px; font-size: 11px; margin-top: 15px; cursor: pointer; text-align: center; width: 100%; box-sizing: border-box; color: var(--oracle); letter-spacing: 3px; }
+        .ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05); padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); text-shadow: 0 0 5px rgba(0, 255, 65, 0.5); }
 
         .sync-word { 
             position: absolute; color: var(--neon); cursor: pointer; 
@@ -153,23 +153,21 @@
     </div>
 
     <div id="v-card">
-        <h1 id="v-type" style="letter-spacing: 10px; font-weight: 100;"></h1>
-        
-        <div class="diag-container">
+        <h1 id="v-type" style="letter-spacing: 10px; font-weight: 100; margin: 0;"></h1>
+        <div class="diag-box">
             <canvas id="diag-canvas"></canvas>
         </div>
-
         <div class="stat-row">ЛОГИКА <div class="bar"><div id="v-bar-log" class="fill"></div></div></div>
         <div class="stat-row">ОТКЛИК <div class="bar"><div id="v-bar-react" class="fill" style="background:var(--red)"></div></div></div>
         <div class="stat-row">ПАМЯТЬ <div class="bar"><div id="v-bar-mem" class="fill" style="background:var(--oracle)"></div></div></div>
         <div class="ability-badge" onclick="toggleAbility()">МОДУЛЬ: <span id="v-ability-name"></span></div>
         <div id="v-ability-desc" class="ability-info"></div>
-        <button class="btn" style="margin-top: 30px;" onclick="backToHub()">ВЕРНУТЬСЯ</button>
+        <button class="btn" style="margin-top: 20px;" onclick="backToHub()">ВЕРНУТЬСЯ</button>
     </div>
 
     <script>
         let aCtx, masterGain, thrillerFilter, lfo;
-        let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
+        let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = "АРХИТЕКТОР";
         let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
         let selectedWordsCount = 0, activeWordsOnScreen = 0;
 
@@ -198,10 +196,10 @@
         }
 
         const PROFILES = {
-            "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий.", oracle: "Твой план идеален. Но не забывай про хаос вне системы." },
+            "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий. Оптимизация системного отклика.", oracle: "Твой план идеален. Но не забывай про хаос вне системы." },
             "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов пропускной способности нейронного интерфейса.", oracle: "Скорость — твоя единственная броня." },
-            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме необработанной информации.", oracle: "Истина всегда лежит между строк кода." },
-            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в защищенных контурах.", oracle: "Они думают, что скрылись. Покажи им обратное." }
+            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме необработанной информации. Дешифровка реальности.", oracle: "Истина всегда лежит между строк кода." },
+            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в защищенных контурах. Превентивный удар.", oracle: "Они думают, что скрылись. Покажи им обратное." }
         };
 
         const QUESTIONS = [
@@ -321,7 +319,7 @@
             renderDiagnostic(type);
         }
 
-        function backToHub() { document.getElementById('v-card').classList.remove('open'); document.getElementById('id-tag').innerText = currentProfile; document.getElementById('id-tag').style.display = 'block'; document.getElementById('hub-oracle-btn').style.display = 'block'; sw('s-main'); renderAvatar(currentProfile, 'hub-canvas'); }
+        function backToHub() { document.getElementById('v-card').classList.remove('open'); document.getElementById('id-tag').innerText = currentProfile; document.getElementById('id-tag').style.display = 'block'; document.getElementById('hub-oracle-btn').style.display = 'block'; sw('s-main'); }
         function showStoredProfile() { if(isDone) document.getElementById('v-card').classList.add('open'); }
         function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
         
@@ -333,99 +331,74 @@
             window.speechSynthesis.speak(msg); 
         }
 
-        // Универсальный рендер аватара (как на главном)
-        function drawAvatarShape(ctx, type, x, y, size, frame, active) {
+        // --- ГРАФИЧЕСКИЙ ДВИЖОК ---
+
+        function drawShape(ctx, type, x, y, size, frame, active) {
             ctx.save();
             ctx.translate(x, y);
-            if (!active) { ctx.globalAlpha = 0.15; frame = 0; } else { ctx.globalAlpha = 1; }
-            ctx.strokeStyle = active ? 'var(--neon)' : 'rgba(0, 255, 65, 0.4)';
-            ctx.lineWidth = 1.5;
+            ctx.strokeStyle = active ? 'var(--neon)' : 'rgba(0, 255, 65, 0.15)';
+            ctx.lineWidth = active ? 2 : 1;
             ctx.beginPath();
-            
-            if(type === "АРХИТЕКТОР") { // Гексагон
-                for(let i=0; i<6; i++) { 
-                    let a = frame + i * Math.PI/3; 
-                    ctx.lineTo(Math.cos(a)*size, Math.sin(a)*size); 
-                }
+            if(type === "АРХИТЕКТОР") {
+                for(let i=0; i<6; i++) { let a = (active ? frame : 0) + i*Math.PI/3; ctx.lineTo(Math.cos(a)*size, Math.sin(a)*size); }
                 ctx.closePath();
-            } else if(type === "ИМПУЛЬС") { // Спираль
-                ctx.moveTo(0, 0); 
-                for(let i=0; i<20; i++) { 
-                    let r = i * (size/18); 
-                    let a = frame * 2 + i * 0.4; 
-                    ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); 
-                }
-            } else if(type === "АНАЛИТИК") { // Квадраты
-                ctx.rotate(frame);
-                ctx.rect(-size/1.5, -size/1.5, size*1.3, size*1.3);
-                ctx.rect(-size/2.5, -size/2.5, size*0.8, size*0.8);
-            } else if(type === "СКАНЕР") { // Прицел
-                ctx.arc(0, 0, size + Math.sin(frame)*3, 0, Math.PI*2);
-                ctx.moveTo(-size, 0); ctx.lineTo(size, 0);
-                ctx.moveTo(0, -size); ctx.lineTo(0, size);
+            } else if(type === "ИМПУЛЬС") {
+                ctx.moveTo(0,0); for(let i=0; i<20; i++){ let r=i*(size/18); let a=(active ? frame*2 : 0)+i*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); }
+            } else if(type === "АНАЛИТИК") {
+                if(active) ctx.rotate(frame);
+                ctx.rect(-size/1.2, -size/1.2, size*1.5, size*1.5); ctx.rect(-size/2, -size/2, size, size);
+            } else if(type === "СКАНЕР") {
+                ctx.arc(0,0, size + (active ? Math.sin(frame*2)*4 : 0), 0, Math.PI*2);
+                ctx.moveTo(-size,0); ctx.lineTo(size,0); ctx.moveTo(0,-size); ctx.lineTo(0,size);
             }
             ctx.stroke();
             ctx.restore();
         }
 
-        function renderAvatar(type, canvasId) {
-            const c = document.getElementById(canvasId); const ctx = c.getContext('2d');
-            c.width = 190; c.height = 190; let frame = 0;
-            function animate() {
-                if(!isDone) return;
-                ctx.clearRect(0,0,190,190);
-                drawAvatarShape(ctx, type, 95, 95, 60, frame, true);
-                frame += 0.03; requestAnimationFrame(animate);
-            }
-            animate();
+        // Анимация главного экрана (ХАБ)
+        const hC = document.getElementById('hub-canvas');
+        const hX = hC.getContext('2d');
+        let hFrame = 0;
+        function animateHub() {
+            hX.clearRect(0,0,190,190);
+            drawShape(hX, currentProfile, 95, 95, 60, hFrame, true);
+            hFrame += 0.02;
+            requestAnimationFrame(animateHub);
         }
+        animateHub();
 
+        // Анимация экрана результатов (ДИАГНОСТИКА)
         function renderDiagnostic(activeType) {
             const c = document.getElementById('diag-canvas'); const ctx = c.getContext('2d');
-            c.width = 260; c.height = 260; let frame = 0;
-            
-            const nodes = {
-                "АРХИТЕКТОР": {x: 130, y: 40},
-                "ИМПУЛЬС": {x: 130, y: 220},
-                "АНАЛИТИК": {x: 40, y: 130},
-                "СКАНЕР": {x: 220, y: 130}
-            };
+            c.width = 260; c.height = 260; let dFrame = 0;
+            const pts = { "АРХИТЕКТОР": [130, 50], "ИМПУЛЬС": [130, 210], "АНАЛИТИК": [50, 130], "СКАНЕР": [210, 130] };
 
-            function animate() {
+            function anim() {
                 if(!document.getElementById('v-card').classList.contains('open')) return;
                 ctx.clearRect(0,0,260,260);
                 
                 // Перекрестие
                 ctx.strokeStyle = 'rgba(0, 255, 65, 0.1)';
-                ctx.beginPath(); ctx.moveTo(130, 20); ctx.lineTo(130, 240); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(20, 130); ctx.lineTo(240, 130); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(130,20); ctx.lineTo(130,240); ctx.moveTo(20,130); ctx.lineTo(240,130); ctx.stroke();
 
-                // Отрисовка всех иконок (только активная крутится)
-                for(let t in nodes) {
-                    drawAvatarShape(ctx, t, nodes[t].x, nodes[t].y, 25, frame, t === activeType);
+                // Иконки
+                for(let t in pts) {
+                    const isActive = (t === activeType);
+                    // Пульсирующая подложка под активным
+                    if(isActive) {
+                        ctx.beginPath();
+                        ctx.arc(pts[t][0], pts[t][1], 35 + Math.sin(dFrame*3)*5, 0, Math.PI*2);
+                        ctx.fillStyle = 'rgba(0, 255, 65, 0.05)'; ctx.fill();
+                    }
+                    drawShape(ctx, t, pts[t][0], pts[t][1], 25, dFrame, isActive);
                 }
-
-                // Неоновая полупрозрачная диаграмма (Radar Chart)
-                const logVal = PROFILES[activeType].log / 100;
-                const reactVal = Math.max(0.1, 1 - (finalReactTime/20));
-                const memVal = memStep / 3;
-
-                ctx.fillStyle = 'rgba(0, 255, 65, 0.15)';
-                ctx.strokeStyle = 'rgba(0, 255, 65, 0.5)';
-                ctx.beginPath();
-                // Точки диаграммы привязаны к осям
-                ctx.moveTo(130, 130 - (80 * logVal)); // Вверх
-                ctx.lineTo(130 + (80 * reactVal), 130); // Право
-                ctx.lineTo(130, 130 + (80 * memVal)); // Вниз
-                ctx.lineTo(130 - (80 * logVal), 130); // Лево
-                ctx.closePath();
-                ctx.fill(); ctx.stroke();
-
-                frame += 0.03; requestAnimationFrame(animate);
+                dFrame += 0.03;
+                requestAnimationFrame(anim);
             }
-            animate();
+            anim();
         }
 
+        // Матрица фоновая
         const mc = document.getElementById('m-bg'); const mx = mc.getContext('2d');
         let mw = mc.width = window.innerWidth, mh = mc.height = window.innerHeight;
         const drops = Array(Math.floor(mw/25)).fill(1);
