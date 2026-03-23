@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PSY-OPS CORE v.25.0</title>
+    <title>PSY-OPS CORE v.26.0</title>
     <style>
         :root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; }
         
@@ -11,188 +11,312 @@
             margin: 0; padding: 0; height: 100%; 
             background: var(--bg); color: var(--neon); 
             font-family: 'Courier New', Courier, monospace; 
+            font-weight: 100;
+            -webkit-font-smoothing: antialiased;
             overflow: hidden; touch-action: none; 
         }
         
-        canvas#m-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.4; z-index: 0; pointer-events: none; }
+        canvas#m-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.55; z-index: 0; pointer-events: none; }
         
-        .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; text-align: center; padding: 20px; box-sizing: border-box; overflow-y: auto; }
+        .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; text-align: center; padding: 20px; box-sizing: border-box; }
         .active { display: flex; }
 
         .btn { 
-            background: transparent; border: 1px solid rgba(0, 255, 65, 0.4); color: var(--neon); 
-            padding: 15px; cursor: pointer; text-transform: uppercase; font-family: inherit; 
-            font-size: 12px; letter-spacing: 3px; width: 100%; max-width: 260px; margin: 8px 0; transition: 0.2s; 
+            background: transparent; border: 1px solid rgba(0, 255, 65, 0.4); 
+            color: var(--neon); padding: 18px; cursor: pointer; 
+            text-transform: uppercase; font-family: inherit; 
+            font-weight: 100; font-size: 13px; letter-spacing: 4px; 
+            width: 100%; max-width: 280px; margin: 10px 0; transition: 0.2s; 
         }
         .btn:active { background: rgba(0, 255, 65, 0.2); }
-        .btn-blue { border-color: var(--oracle); color: var(--oracle); }
+        .btn-blue { border-color: rgba(0, 204, 255, 0.4); color: var(--oracle); }
 
-        /* ДИАГРАММА КРЕСТ */
-        .cross-diagram { position: relative; width: 280px; height: 280px; margin: 20px 0; }
-        .cross-line-h { position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(0, 255, 65, 0.2); }
-        .cross-line-v { position: absolute; left: 50%; top: 0; width: 1px; height: 100%; background: rgba(0, 255, 65, 0.2); }
-        .p-icon { 
-            position: absolute; width: 60px; height: 60px; border: 1px solid rgba(255,255,255,0.1); 
-            display: flex; align-items: center; justify-content: center; font-size: 10px; background: #000;
-            transition: 0.5s; opacity: 0.4;
+        .hub-container { width: 260px; height: 260px; border: 1px solid rgba(0, 255, 65, 0.2); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        #hub-canvas { width: 190px; height: 190px; }
+
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; }
+        .cell { aspect-ratio: 1; background: rgba(0, 0, 0, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--neon); transition: 0.1s; }
+        .cell.err { background: var(--red) !important; color: #fff; }
+        .cell.ok { background: var(--neon) !important; color: #000; }
+
+        /* НОВАЯ ДИАГРАММА КРЕСТ */
+        .cross-wrap { position: relative; width: 240px; height: 240px; margin: 20px 0; }
+        .cross-v { position: absolute; left: 50%; top: 0; width: 1px; height: 100%; background: rgba(0,255,65,0.2); }
+        .cross-h { position: absolute; top: 50%; left: 0; width: 100%; height: 1px; background: rgba(0,255,65,0.2); }
+        .p-ico { 
+            position: absolute; width: 50px; height: 50px; border: 1px solid rgba(255,255,255,0.1); 
+            background: #000; display: flex; align-items: center; justify-content: center; 
+            font-size: 8px; letter-spacing: 1px; color: #555; transition: 0.5s;
         }
-        .p-icon.highlight { opacity: 1; border-color: var(--neon); box-shadow: 0 0 15px var(--neon); color: #fff; }
-        .p-top { top: 0; left: 50%; transform: translateX(-50%); }
-        .p-bottom { bottom: 0; left: 50%; transform: translateX(-50%); }
-        .p-left { left: 0; top: 50%; transform: translateY(-50%); }
-        .p-right { right: 0; top: 50%; transform: translateY(-50%); }
+        .p-ico.active-p { border-color: var(--neon); color: var(--neon); box-shadow: 0 0 15px var(--neon); opacity: 1; z-index: 5; }
+        .i-top { top: -25px; left: 50%; transform: translateX(-50%); }
+        .i-bottom { bottom: -25px; left: 50%; transform: translateX(-50%); }
+        .i-left { left: -25px; top: 50%; transform: translateY(-50%); }
+        .i-right { right: -25px; top: 50%; transform: translateY(-50%); }
 
-        .details-box { text-align: left; width: 100%; max-width: 320px; font-size: 11px; margin-top: 20px; line-height: 1.4; }
-        .details-box b { color: var(--oracle); }
+        .briefing { max-width: 340px; text-align: left; border-left: 1px solid rgba(0, 255, 65, 0.4); padding-left: 20px; margin-bottom: 40px; }
+        .briefing h2 { color: var(--oracle); letter-spacing: 6px; font-weight: 100; font-size: 16px; margin-bottom: 12px; }
+        
+        #v-card { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 370px; background: #000; border: 1px solid rgba(0, 255, 65, 0.4); padding: 25px 20px; z-index: 1000; display: none; flex-direction: column; align-items: center; }
+        #v-card.open { display: flex; }
 
-        .scroll-area { width: 100%; max-width: 350px; text-align: left; font-size: 12px; height: 70vh; overflow-y: scroll; padding-right: 10px; }
-        .scroll-area h3 { color: var(--oracle); border-bottom: 1px solid; padding-bottom: 5px; }
+        .stat-row { width: 100%; margin: 8px 0; font-size: 9px; letter-spacing: 2px; opacity: 0.8; text-align: left; }
+        .bar { width: 100%; height: 2px; background: #0a0a0a; margin-top: 4px; }
+        .fill { height: 100%; width: 0%; transition: 2s cubic-bezier(0.1, 0, 0, 1); }
+
+        .sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; }
+        
+        /* Стили для Оракула */
+        .info-page { text-align: left; font-size: 12px; line-height: 1.6; max-height: 70vh; overflow-y: auto; padding-right: 10px; }
+        .info-page b { color: var(--oracle); }
     </style>
 </head>
 <body>
     <canvas id="m-bg"></canvas>
 
     <div id="s-main" class="screen active">
-        <div class="hub-container" style="border:1px solid rgba(0,255,65,0.2); padding:20px;" onclick="showStoredProfile()">
-            <canvas id="hub-canvas" width="180" height="180"></canvas>
-            <div id="id-tag" style="margin-top: 15px; letter-spacing: 5px; display: none;"></div>
+        <div class="hub-container" onclick="showStoredProfile()">
+            <canvas id="hub-canvas"></canvas>
+            <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
         </div>
-        <button class="btn" style="margin-top: 30px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
-        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;" onclick="sw('s-oracle-details')">МАТРИЦА СВЯЗЕЙ</button>
+        <button class="btn" style="margin-top: 40px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
+        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;" onclick="sw('s-oracle-info')">ОРАКУЛ</button>
+    </div>
+
+    <div id="s-oracle-info" class="screen">
+        <div class="info-page">
+            <h2 style="color:var(--oracle)">МАТРИЦА ВЗАИМОДЕЙСТВИЯ</h2>
+            <p><b>АРХИТЕКТОР:</b> Контролирует <b>ИМПУЛЬС</b> через структуру, но уязвим для <b>СКАНЕРА</b>, который находит дыры в коде.</p>
+            <p><b>ИМПУЛЬС:</b> Подавляет <b>СКАНЕР</b> скоростью, но разбивается об оборону <b>АРХИТЕКТОРА</b>.</p>
+            <p><b>АНАЛИТИК:</b> Видит всех, но требует времени. Уязвим перед <b>ИМПУЛЬСОМ</b> в ближнем контакте.</p>
+            <p><b>СКАНЕР:</b> Вскрывает <b>АРХИТЕКТОРА</b>, но не успевает за <b>ИМПУЛЬСОМ</b>.</p>
+        </div>
+        <button class="btn" onclick="sw('s-main')">ВЕРНУТЬСЯ</button>
+    </div>
+
+    <div id="b-intro" class="screen">
+        <div class="briefing"><h2>ИНИЦИАЦИЯ</h2><p>Запуск протокола анализа нейронного отклика.</p></div>
+        <button class="btn" onclick="sw('s-psych'); renderQ();">ПРОДОЛЖИТЬ</button>
     </div>
 
     <div id="s-psych" class="screen">
-        <p id="q-text" style="margin-bottom:30px;"></p>
+        <p id="q-text"></p>
         <div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div>
     </div>
 
+    <div id="b-react" class="screen">
+        <div class="briefing"><h2>ФАЗА I: СКОРОСТЬ</h2><p>Найдите числа от 1 до 16.</p></div>
+        <button class="btn" onclick="startReactTest()">ПОДТВЕРДИТЬ</button>
+    </div>
+
     <div id="s-react" class="screen">
-        <div id="timer-display" style="font-size: 24px; color: var(--oracle);">0.000</div>
-        <div id="react-grid" class="grid" style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:20px 0;"></div>
-        <div id="att-label"></div>
+        <div id="timer-display" style="font-size: 26px; color: var(--oracle); margin-bottom: 10px;">0.000</div>
+        <div id="react-grid" class="grid"></div>
+        <div id="att-label" style="margin-top: 30px; color: var(--red); letter-spacing: 12px; font-size: 10px;"></div>
+    </div>
+
+    <div id="b-mem" class="screen">
+        <div class="briefing"><h2>ФАЗА II: ПАМЯТЬ</h2><p>Повторите импульсы.</p></div>
+        <button class="btn" onclick="startMemTest()">НАЧАТЬ</button>
     </div>
 
     <div id="s-mem" class="screen">
-        <div id="mem-grid" class="grid" style="display:grid; grid-template-columns:repeat(3,1fr); gap:10px;"></div>
+        <div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 280px;"></div>
+    </div>
+
+    <div id="b-sync" class="screen">
+        <div class="briefing"><h2>ФАЗА III: ВЕКТОР</h2><p>Выберите два узла данных.</p></div>
+        <button class="btn" onclick="startSyncTest()">ПРОДОЛЖИТЬ</button>
     </div>
 
     <div id="s-sync" class="screen">
-        <div id="words-container" style="position: relative; width: 100%; height: 70vh;"></div>
+        <div id="words-container" style="position: relative; width: 100vw; height: 80vh;"></div>
     </div>
 
-    <div id="v-card" class="screen">
-        <h2 id="v-type" style="letter-spacing: 8px; color: var(--oracle);"></h2>
+    <div id="v-card">
+        <h1 id="v-type" style="letter-spacing: 5px; font-weight: 100; margin: 0;"></h1>
         
-        <div class="cross-diagram">
-            <div class="cross-line-h"></div>
-            <div class="cross-line-v"></div>
-            <div id="ico-АРХИТЕКТОР" class="p-icon p-top">ARCH</div>
-            <div id="ico-ИМПУЛЬС" class="p-icon p-bottom">IMPL</div>
-            <div id="ico-АНАЛИТИК" class="p-icon p-left">ANLY</div>
-            <div id="ico-СКАНЕР" class="p-icon p-right">SCAN</div>
+        <div class="cross-wrap">
+            <div class="cross-v"></div><div class="cross-h"></div>
+            <div id="ico-АРХИТЕКТОР" class="p-ico i-top">ARCH</div>
+            <div id="ico-ИМПУЛЬС" class="p-ico i-bottom">IMPL</div>
+            <div id="ico-АНАЛИТИК" class="p-ico i-left">ANLY</div>
+            <div id="ico-СКАНЕР" class="p-ico i-right">SCAN</div>
         </div>
 
-        <div class="details-box">
-            <p><b>СИЛЬНЫЕ СТОРОНЫ:</b> <span id="v-strength"></span></p>
-            <p><b>УЯЗВИМОСТИ:</b> <span id="v-weak"></span></p>
-            <div class="stat-row">ОТКЛИК <div style="width:100%; height:2px; background:#111;"><div id="v-bar-react" style="height:100%; background:var(--red); width:0%;"></div></div></div>
-            <div class="stat-row" style="margin-top:10px;">ПАМЯТЬ <div style="width:100%; height:2px; background:#111;"><div id="v-bar-mem" style="height:100%; background:var(--oracle); width:0%;"></div></div></div>
+        <div style="text-align: left; width: 100%; font-size: 11px;">
+            <p><b>ПЛЮСЫ:</b> <span id="v-plus" style="color:var(--neon)"></span></p>
+            <p><b>МИНУСЫ:</b> <span id="v-minus" style="color:var(--red)"></span></p>
         </div>
 
-        <button class="btn" style="margin-top: 20px;" onclick="backToHub()">В ХАБ</button>
-    </div>
-
-    <div id="s-oracle-details" class="screen">
-        <div class="scroll-area">
-            <h3>АРХИТЕКТОР (ARCH)</h3>
-            <p>Доминирует над: <b>ИМПУЛЬСОМ</b> (структура подавляет хаос).<br>Уязвим перед: <b>СКАНЕРОМ</b> (взлом иерархии).<br>Синергия: <b>АНАЛИТИК</b>.</p>
-            
-            <h3>ИМПУЛЬС (IMPL)</h3>
-            <p>Доминирует над: <b>СКАНЕРОМ</b> (скорость выше обработки).<br>Уязвим перед: <b>АРХИТЕКТОРОМ</b> (стены нельзя пробежать).<br>Синергия: <b>АНАЛИТИК</b>.</p>
-            
-            <h3>АНАЛИТИК (ANLY)</h3>
-            <p>Доминирует над: <b>ВСЕМИ</b> (при наличии времени).<br>Уязвим перед: <b>ИМПУЛЬСОМ</b> (не успевает просчитать).<br>Синергия: <b>АРХИТЕКТОР</b>.</p>
-            
-            <h3>СКАНЕР (SCAN)</h3>
-            <p>Доминирует над: <b>АРХИТЕКТОРОМ</b> (видит лазейки).<br>Уязвим перед: <b>ИМПУЛЬСОМ</b> (нечего сканировать при взрыве).<br>Синергия: <b>ВСЕ</b>.</p>
-        </div>
-        <button class="btn btn-blue" onclick="sw('s-main')">НАЗАД</button>
+        <div class="stat-row">ОТКЛИК <div class="bar"><div id="v-bar-react" class="fill" style="background:var(--red)"></div></div></div>
+        <div class="stat-row">ПАМЯТЬ <div class="bar"><div id="v-bar-mem" class="fill" style="background:var(--oracle)"></div></div></div>
+        
+        <button class="btn" style="margin-top: 20px;" onclick="backToHub()">ВЕРНУТЬСЯ В ХАБ</button>
     </div>
 
     <script>
-        // Данные профилей
-        const DATA = {
-            "АРХИТЕКТОР": { s: "Системное мышление, создание барьеров.", w: "Консерватизм, медленная адаптация к хаосу.", ability: "СТРУКТУРА" },
-            "ИМПУЛЬС": { s: "Мгновенная реакция, прорыв защиты.", w: "Высокий риск ошибок, истощение ресурсов.", ability: "ДРАЙВ" },
-            "АНАЛИТИК": { s: "Глубинная дешифровка, поиск паттернов.", w: "Паралич анализа при дефиците данных.", ability: "МАТРИЦА" },
-            "СКАНЕР": { s: "Обнаружение скрытого, взлом логики.", w: "Низкая прямая защита.", ability: "ВЗЛОМ" }
+        let aCtx, masterGain, thrillerFilter, lfo;
+        let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
+        let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
+        let selectedWordsCount = 0, activeWordsOnScreen = 0;
+
+        function startAudioEngine() {
+            if (aCtx) return;
+            aCtx = new (window.AudioContext || window.webkitAudioContext)();
+            masterGain = aCtx.createGain(); masterGain.gain.value = 0.15; masterGain.connect(aCtx.destination);
+            const osc1 = aCtx.createOscillator(); const osc2 = aCtx.createOscillator();
+            thrillerFilter = aCtx.createBiquadFilter(); lfo = aCtx.createOscillator();
+            const lfoGain = aCtx.createGain();
+            osc1.type = 'sawtooth'; osc1.frequency.value = 42; osc2.type = 'square'; osc2.frequency.value = 42.2;
+            thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180; thrillerFilter.Q.value = 10;
+            lfo.type = 'sine'; lfo.frequency.value = 0.08; lfoGain.gain.value = 100;
+            lfo.connect(lfoGain); lfoGain.connect(thrillerFilter.frequency);
+            osc1.connect(thrillerFilter); osc2.connect(thrillerFilter);
+            thrillerFilter.connect(masterGain); osc1.start(); osc2.start(); lfo.start();
+        }
+
+        function playSound(f, d, type='sine', v=0.1) {
+            if(!aCtx) return;
+            const o = aCtx.createOscillator(); const g = aCtx.createGain();
+            o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime);
+            g.gain.setValueAtTime(v, aCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + d);
+            o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
+        }
+
+        const PROFILES = {
+            "АРХИТЕКТОР": { plus: "Системность, планирование, оборона.", minus: "Медлительность, шаблонность.", log: 95 },
+            "ИМПУЛЬС": { plus: "Скорость, агрессия, прорыв.", minus: "Хаотичность, быстрая утомляемость.", log: 45 },
+            "АНАЛИТИК": { plus: "Логика, дешифровка паттернов.", minus: "Долгое принятие решений.", log: 90 },
+            "СКАНЕР": { plus: "Поиск уязвимостей, скрытность.", minus: "Слабая прямая защита.", log: 85 }
         };
 
         const QUESTIONS = [
             {q: "Система взломана. Твой первый шаг?", o: [{t: "Анализ кода", a: "АРХИТЕКТОР"}, {t: "Удаление сектора", a: "ИМПУЛЬС"}]},
+            {q: "Доступ к сети ценой личности. Согласишься?", o: [{t: "Оценка рисков", a: "АНАЛИТИК"}, {t: "Усиление щитов", a: "СКАНЕР"}]},
             {q: "Что важнее: структура или динамика?", o: [{t: "Структура", a: "АРХИТЕКТОР"}, {t: "Динамика", a: "ИМПУЛЬС"}]},
+            {q: "Чужой сигнал в твоем канале. Действия?", o: [{t: "Отслеживание", a: "АНАЛИТИК"}, {t: "Агрессивный ответ", a: "СКАНЕР"}]},
+            {q: "Код — это язык или оружие?", o: [{t: "Язык", a: "АРХИТЕКТОР"}, {t: "Оружие", a: "ИМПУЛЬС"}]},
+            {q: "Неизвестный файл в карантине. Что делать?", o: [{t: "Изоляция", a: "СКАНЕР"}, {t: "Дешифровка", a: "АНАЛИТИК"}]},
+            {q: "Где корень ошибок: в человеке или в коде?", o: [{t: "В человеке", a: "АРХИТЕКТОР"}, {t: "В коде", a: "ИМПУЛЬС"}]},
             {q: "Источник силы: данные или чутье?", o: [{t: "Данные", a: "АНАЛИТИК"}, {t: "Чутье", a: "СКАНЕР"}]},
-            {q: "Тишина вызывает покой или тревогу?", o: [{t: "Тревогу", a: "СКАНЕР"}, {t: "Покой", a: "АРХИТЕКТОР"}]}
+            {q: "Тишина вызывает покой или тревогу?", o: [{t: "Тревогу", a: "СКАНЕР"}, {t: "Покой", a: "АРХИТЕКТОР"}]},
+            {q: "Твоя цель: абсолютный контроль или мощь?", o: [{t: "Контроль", a: "АРХИТЕКТОР"}, {t: "Мощь", a: "ИМПУЛЬС"}]}
         ];
 
-        let score = {}, currentProfile = "", finalReactTime = 0, memStep = 0;
+        const SYNC_WORDS = [
+            {t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "ВЗЛОМ", a: "СКАНЕР"},
+            {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "ПОТОК", a: "ИМПУЛЬС"}, {t: "СТРУКТУРА", a: "АРХИТЕКТОР"}
+        ];
 
         function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-        
-        function startSequence() { score = {}; curQ = 0; sw('s-psych'); renderQ(); }
+        function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('b-intro'); }
 
         function renderQ() {
             const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
             const box = document.getElementById('q-options'); box.innerHTML = "";
             q.o.forEach(o => {
                 const b = document.createElement('button'); b.className = "btn"; b.innerText = o.t;
-                b.onclick = () => { score[o.a] = (score[o.a] || 0) + 1; curQ++; if(curQ < QUESTIONS.length) renderQ(); else startReactTest(); };
+                b.onclick = () => { playSound(400 + curQ*50, 0.1); score[o.a] = (score[o.a] || 0) + 1; curQ++; if(curQ < QUESTIONS.length) renderQ(); else sw('b-react'); };
                 box.appendChild(b);
             });
         }
 
-        // Блок тестов (упрощено для примера, логика та же что была)
-        function startReactTest() { sw('s-react'); /* тут твоя логика 1-16 */ setTimeout(() => { finalReactTime = 2.5; startMemTest(); }, 2000); }
-        function startMemTest() { sw('s-mem'); /* тут твоя логика с кнопками */ setTimeout(() => { memStep = 2; finalize(); }, 2000); }
+        function startReactTest() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); updateAttLabel(); renderReactGrid(); startTimer(); }
+        function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - reactStartTime) / 1000).toFixed(3); }, 41); }
+        function updateAttLabel() { document.getElementById('att-label').innerText = "[ " + "■ ".repeat(attempts) + "□ ".repeat(3-attempts) + "]"; }
+        
+        function renderReactGrid() {
+            const g = document.getElementById('react-grid'); g.innerHTML = "";
+            let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
+            ns.forEach(n => {
+                const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
+                c.onclick = () => { if(n === target) { playSound(800 + n*30, 0.05); target++; if(target > 16) { clearInterval(timerInterval); finalReactTime = (Date.now() - reactStartTime)/1000; sw('b-mem'); } else renderReactGrid(); } else { playSound(80, 0.2, 'square'); attempts--; updateAttLabel(); c.classList.add('err'); setTimeout(()=>c.classList.remove('err'),200); if(attempts <= 0) { clearInterval(timerInterval); sw('b-mem'); } }};
+                g.appendChild(c);
+            });
+        }
+
+        function startMemTest() { memStep = 0; sw('s-mem'); nextMemRound(); }
+        function nextMemRound() {
+            memSeq = Array.from({length: 4 + memStep}, () => Math.floor(Math.random()*9));
+            const mg = document.getElementById('mem-grid'); mg.innerHTML = "";
+            for(let i=0; i<9; i++) { const c = document.createElement('div'); c.className = "cell"; c.onclick = () => handleMemClick(i, c); mg.appendChild(c); }
+            playMemSequence();
+        }
+        async function playMemSequence() {
+            const cells = document.getElementById('mem-grid').children;
+            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); playSound(1000, 0.05); cells[id].style.background = "var(--oracle)"; await new Promise(r => setTimeout(r, 400)); cells[id].style.background = "rgba(0,0,0,0.85)"; }
+            memIdx = 0;
+        }
+        function handleMemClick(id, el) { if(id === memSeq[memIdx]) { playSound(1200, 0.05); el.classList.add('ok'); setTimeout(() => el.classList.remove('ok'), 200); memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); } } else { playSound(60, 0.4, 'sawtooth'); el.classList.add('err'); setTimeout(() => sw('b-sync'), 300); } }
+
+        function startSyncTest() {
+            sw('s-sync'); selectedWordsCount = 0; activeWordsOnScreen = 0;
+            const container = document.getElementById('words-container'); container.innerHTML = "";
+            function spawn() {
+                if (selectedWordsCount >= 2 || !document.getElementById('s-sync').classList.contains('active')) return;
+                if (activeWordsOnScreen < 4) {
+                    const word = SYNC_WORDS[Math.floor(Math.random()*SYNC_WORDS.length)];
+                    const w = document.createElement('div'); w.className = "sync-word"; w.innerText = word.t;
+                    w.style.left = Math.random()*70 + 15 + "%"; w.style.top = Math.random()*70 + 15 + "%";
+                    container.appendChild(w); activeWordsOnScreen++;
+                    setTimeout(() => w.style.opacity = 1, 50);
+                    w.onclick = () => { w.style.color = "var(--oracle)"; score[word.a] = (score[word.a] || 0) + 2; selectedWordsCount++; if(selectedWordsCount === 2) finalize(); };
+                    setTimeout(() => { w.style.opacity = 0; setTimeout(() => { w.remove(); activeWordsOnScreen--; }, 500); }, 2500);
+                }
+                setTimeout(spawn, 800);
+            }
+            spawn();
+        }
 
         function finalize() {
             let type = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "АНАЛИТИК";
-            currentProfile = type;
-            
+            currentProfile = type; isDone = true;
             document.getElementById('v-type').innerText = type;
-            document.getElementById('v-strength').innerText = DATA[type].s;
-            document.getElementById('v-weak').innerText = DATA[type].w;
+            document.getElementById('v-plus').innerText = PROFILES[type].plus;
+            document.getElementById('v-minus').innerText = PROFILES[type].minus;
             
-            // Подсветка иконки в кресте
-            document.querySelectorAll('.p-icon').forEach(i => i.classList.remove('highlight'));
-            document.getElementById('ico-' + type).classList.add('highlight');
+            // Крест: сброс и подсветка
+            document.querySelectorAll('.p-ico').forEach(i => i.classList.remove('active-p'));
+            document.getElementById('ico-' + type).classList.add('active-p');
 
-            sw('v-card');
+            document.getElementById('v-card').classList.add('open');
             setTimeout(() => {
-                document.getElementById('v-bar-react').style.width = "75%";
-                document.getElementById('v-bar-mem').style.width = "60%";
+                document.getElementById('v-bar-react').style.width = Math.max(5, 100 - (finalReactTime*4)) + "%";
+                document.getElementById('v-bar-mem').style.width = (memStep/3 * 100) + "%";
             }, 500);
         }
 
-        function backToHub() {
-            document.getElementById('id-tag').innerText = currentProfile;
-            document.getElementById('id-tag').style.display = 'block';
-            document.getElementById('hub-oracle-btn').style.display = 'block';
-            sw('s-main');
+        function backToHub() { document.getElementById('v-card').classList.remove('open'); document.getElementById('id-tag').innerText = currentProfile; document.getElementById('id-tag').style.display = 'block'; document.getElementById('hub-oracle-btn').style.display = 'block'; sw('s-main'); renderHubAvatar(currentProfile); }
+        function showStoredProfile() { if(isDone) document.getElementById('v-card').classList.add('open'); }
+        
+        function renderHubAvatar(type) {
+            const c = document.getElementById('hub-canvas'); const ctx = c.getContext('2d');
+            c.width = 190; c.height = 190; let frame = 0;
+            function animate() {
+                if(!isDone) return; 
+                ctx.clearRect(0, 0, 190, 190); ctx.strokeStyle = 'rgba(0, 255, 65, 0.4)'; ctx.lineWidth = 1; ctx.beginPath();
+                if(type === "АРХИТЕКТОР") { for(let i=0; i<6; i++) { let a = frame + i * Math.PI/3; ctx.moveTo(95 + Math.cos(a)*65, 95 + Math.sin(a)*65); ctx.lineTo(95 + Math.cos(a + Math.PI/3)*65, 95 + Math.sin(a + Math.PI/3)*65); } }
+                else if(type === "ИМПУЛЬС") { ctx.moveTo(95, 95); for(let i=0; i<25; i++) { let r = 5 + i*3.5; let a = frame * 2.5 + i*0.4; ctx.lineTo(95 + Math.cos(a)*r, 95 + Math.sin(a)*r); } }
+                else if(type === "АНАЛИТИК") { ctx.save(); ctx.translate(95, 95); ctx.rotate(frame); ctx.rect(-45, -45, 90, 90); ctx.rect(-30, -30, 60, 60); ctx.restore(); }
+                else if(type === "СКАНЕР") { ctx.arc(95, 95, 60 + Math.sin(frame)*8, 0, Math.PI*2); ctx.moveTo(95 - 40, 95); ctx.lineTo(95 + 40, 95); ctx.moveTo(95, 95 - 40); ctx.lineTo(95, 95 + 40); }
+                ctx.stroke(); frame += 0.02; requestAnimationFrame(animate);
+            }
+            animate();
         }
 
-        // МАТРИЦА ФОН
         const mc = document.getElementById('m-bg'); const mx = mc.getContext('2d');
         let mw = mc.width = window.innerWidth, mh = mc.height = window.innerHeight;
-        const drops = Array(Math.floor(mw/20)).fill(1);
+        const drops = Array(Math.floor(mw/25)).fill(1);
         function drawM() {
-            mx.fillStyle = 'rgba(0,0,0,0.1)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41';
+            mx.fillStyle = 'rgba(0,0,0,0.1)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41'; mx.font = '14px monospace';
             drops.forEach((y, i) => {
-                mx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*20, y*20);
-                if(y*20 > mh && Math.random() > 0.98) drops[i] = 0; drops[i]++;
+                mx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*25, y*25);
+                if(y*25 > mh && Math.random() > 0.99) drops[i] = 0; drops[i]++;
             });
         }
-        setInterval(drawM, 50);
+        setInterval(drawM, 70);
     </script>
 </body>
 </html>
