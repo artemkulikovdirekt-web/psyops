@@ -63,7 +63,7 @@
         .briefing h2 { color: var(--oracle); letter-spacing: 6px; font-weight: 100; font-size: 16px; margin-bottom: 12px; }
         .briefing p { font-size: 13px; line-height: 1.6; opacity: 0.8; }
 
-        /* Focus Protocol */
+        /* Focus Protocol UI */
         .timer-val { font-size: 54px; text-shadow: 0 0 20px var(--neon); margin: 20px 0; letter-spacing: 5px; }
         
         .fail-circles { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 340px; }
@@ -77,7 +77,7 @@
         .f-circle span { font-size: 18px; color: var(--oracle); margin-top: 5px; }
 
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px; box-sizing: border-box; }
-        .modal-content { border: 1px solid var(--neon); padding: 25px; width: 100%; max-width: 320px; font-size: 13px; background:#000; color: var(--neon); }
+        .modal-content { border: 1px solid var(--neon); padding: 25px; width: 100%; max-width: 320px; font-size: 13px; background:#000; color: var(--neon); position: relative; }
 
         #v-card { 
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
@@ -126,14 +126,56 @@
         <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;">ОРАКУЛ</button>
     </div>
 
-    <div id="b-intro" class="screen"><div class="briefing"><h2>ИНИЦИАЦИЯ</h2><p>Запуск протокола определения психо-когнитивного профиля. Система анализирует паттерны нейронного отклика.</p></div><button class="btn" onclick="sw('s-psych'); renderQ();">ПРОДОЛЖИТЬ</button></div>
-    <div id="s-psych" class="screen"><p id="q-text"></p><div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div></div>
-    <div id="b-react" class="screen"><div class="briefing"><h2>ФАЗА I: СКОРОСТЬ</h2><p>Найдите числа от 1 до 16. Ошибка блокирует систему на 200мс.</p></div><button class="btn" onclick="startReactTest()">ПОДТВЕРДИТЬ</button></div>
-    <div id="s-react" class="screen"><div id="timer-display" style="font-size: 26px; color: var(--oracle); margin-bottom: 10px;">0.000</div><div id="react-grid" class="grid"></div><div id="att-label" style="margin-top: 30px; color: var(--red); letter-spacing: 12px; font-size: 10px;"></div></div>
-    <div id="b-mem" class="screen"><div class="briefing"><h2>ФАЗА II: ПАМЯТЬ</h2><p>Повторите последовательность импульсов в точном порядке.</p></div><button class="btn" onclick="startMemTest()">НАЧАТЬ</button></div>
-    <div id="s-mem" class="screen"><div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 280px;"></div></div>
-    <div id="b-sync" class="screen"><div class="briefing"><h2>ФАЗА III: ВЕКТОР</h2><p>Выберите два приоритетных узла в потоке данных.</p></div><button class="btn" onclick="startSyncTest()">ПРОДОЛЖИТЬ</button></div>
-    <div id="s-sync" class="screen"><div id="words-container" style="position: relative; width: 100vw; height: 80vh;"></div></div>
+    <div id="b-intro" class="screen">
+        <div class="briefing">
+            <h2>ИНИЦИАЦИЯ</h2>
+            <p>Запуск протокола определения психо-когнитивного профиля. Будьте сосредоточены. Система анализирует паттерны нейронного отклика в реальном времени.</p>
+        </div>
+        <button class="btn" onclick="sw('s-psych'); renderQ();">ПРОДОЛЖИТЬ</button>
+    </div>
+
+    <div id="s-psych" class="screen">
+        <p id="q-text"></p>
+        <div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div>
+    </div>
+
+    <div id="b-react" class="screen">
+        <div class="briefing">
+            <h2>ФАЗА I: СКОРОСТЬ</h2>
+            <p>Синхронизация нейронного отклика. Найдите числа от 1 до 16. Любая ошибка блокирует систему на 200мс.</p>
+        </div>
+        <button class="btn" onclick="startReactTest()">ПОДТВЕРДИТЬ</button>
+    </div>
+
+    <div id="s-react" class="screen">
+        <div id="timer-display" style="font-size: 26px; color: var(--oracle); margin-bottom: 10px;">0.000</div>
+        <div id="react-grid" class="grid"></div>
+        <div id="att-label" style="margin-top: 30px; color: var(--red); letter-spacing: 12px; font-size: 10px;"></div>
+    </div>
+
+    <div id="b-mem" class="screen">
+        <div class="briefing">
+            <h2>ФАЗА II: ПАМЯТЬ</h2>
+            <p>Восстановление поврежденного сектора. Повторите последовательность световых импульсов в точном порядке.</p>
+        </div>
+        <button class="btn" onclick="startMemTest()">НАЧАТЬ</button>
+    </div>
+
+    <div id="s-mem" class="screen">
+        <div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 280px;"></div>
+    </div>
+
+    <div id="b-sync" class="screen">
+        <div class="briefing">
+            <h2>ФАЗА III: ВЕКТОР</h2>
+            <p>Определение семантических доминант. Выберите два приоритетных узла в потоке данных для завершения синхронизации.</p>
+        </div>
+        <button class="btn" onclick="startSyncTest()">ПРОДОЛЖИТЬ</button>
+    </div>
+
+    <div id="s-sync" class="screen">
+        <div id="words-container" style="position: relative; width: 100vw; height: 80vh;"></div>
+    </div>
 
     <div id="s-focus-timer" class="screen">
         <div style="letter-spacing:10px; opacity:0.5; font-size:12px;">PROTOCOL_ACTIVE</div>
@@ -166,8 +208,8 @@
             <p style="text-align:left; line-height:1.6; font-size:12px;">
                 FOCUS_PROTOCOL — это режим принудительной синхронизации когнитивного процесса.<br><br>
                 ДИРЕКТИВА:<br>
-                > 1. Устраните цифровые шумы.<br>
-                > 2. После активации таймера аппарат сознания должен быть замкнут на одной целевой задаче. Любое переключение внимания — критический сбой.
+                1. Устраните цифровые шумы.<br>
+                2. После активации таймера аппарат сознания должен быть замкнут на одной целевой задаче. Любое переключение внимания — критический сбой.
             </p>
             <button class="btn" onclick="toggleModal('m-info-1', false); toggleModal('m-info-2', true);">ДАЛЕЕ</button>
         </div>
@@ -177,7 +219,7 @@
         <div class="modal-content">
             <h3 style="color:var(--oracle); letter-spacing:2px;">FOCUS_PROTOCOL: INFO [2/2]</h3>
             <p style="text-align:left; line-height:1.6; font-size:12px;">
-                > 3. По завершении цикла подтвердите статус сессии.<br><br>
+                3. По завершении цикла подтвердите статус сессии.<br><br>
                 Внимание — это единственный конечный ресурс вашей нейронной сети. Любое внешнее отвлечение вызывает фрагментацию сознания, требуя до 23 минут на восстановление исходной глубины погружения.
             </p>
             <button class="btn" onclick="toggleModal('m-info-2', false)">ПРИНЯТЬ</button>
@@ -210,11 +252,11 @@
         let selectedWordsCount = 0, activeWordsOnScreen = 0, focusTimerInterval;
 
         const FAIL_DATA = {
-            'COGNITIVE_ESCAPE': { t: 'Уход в простую задачу', d: 'Стремление мозга избежать когнитивного давления путем переключения на знакомые, легкие действия.' },
-            'INTERNAL_LOOP': { t: 'Зацикленность на мыслях', d: 'Потеря фокуса из-за внутренней рефлексии или бесконечного обдумывания побочных идей.' },
-            'ENV_DISCOMFORT': { t: 'Дискомфорт среды', d: 'Внешние физические факторы (шум, свет, эргономика), подрывающие стабильность концентрации.' },
-            'FALSE_URGENCY': { t: 'Внезапные дела', d: 'Иллюзия необходимости немедленного решения второстепенных задач, возникающая как форма саботажа.' },
-            'RES_EXHAUSTION': { t: 'Истощение ресурса', d: 'Критическое снижение уровня нейропластичности и глюкозы в крови, делающее фокус невозможным.' }
+            'COGNITIVE_ESCAPE': { t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу.', d: 'Стремление мозга избежать когнитивного давления путем переключения на знакомые, легкие действия (соцсети, новости).' },
+            'INTERNAL_LOOP': { t: '[ INTERNAL_LOOP ] — Зацикленность на мыслях.', d: 'Потеря фокуса из-за внутренней рефлексии или бесконечного обдумывания побочных идей, не связанных с задачей.' },
+            'ENV_DISCOMFORT': { t: '[ ENV_DISCOMFORT ] — Дискомфорт среды.', d: 'Внешние физические факторы (шум, свет, эргономика), подрывающие стабильность концентрации.' },
+            'FALSE_URGENCY': { t: '[ FALSE_URGENCY ] — Внезапные важные дела.', d: 'Иллюзия необходимости немедленного решения второстепенных задач, возникающая как форма саботажа.' },
+            'RES_EXHAUSTION': { t: '[ RES_EXHAUSTION ] — Истощение ресурса.', d: 'Критическое снижение уровня нейропластичности и глюкозы. Внимание — это единственный конечный ресурс вашей нейронной сети.' }
         };
 
         function startAudioEngine() {
@@ -244,7 +286,7 @@
         const PROFILES = {
             "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий." },
             "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов." },
-            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме информации." },
+            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме." },
             "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в контурах." }
         };
 
@@ -266,7 +308,7 @@
         function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
-        // FOCUS ENGINE
+        // FOCUS LOGIC
         function initFocus(mins) {
             const endTime = Date.now() + mins * 60 * 1000;
             localStorage.setItem('focus_end_time', endTime);
@@ -286,15 +328,13 @@
         }
         function abortFocus() { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); sw('s-main'); }
         function debugFastForward() { const newEnd = Date.now() + 2000; localStorage.setItem('focus_end_time', newEnd); runFocusUI(newEnd); }
-        function logFocus() { sw('s-main'); }
-        
         function showFailDetail(key) {
             document.getElementById('fail-title').innerText = key;
             document.getElementById('fail-desc').innerHTML = `<b>${FAIL_DATA[key].t}</b><br><br>${FAIL_DATA[key].d}`;
             toggleModal('m-fail-detail', true);
         }
 
-        // TEST LOGIC
+        // ТЕСТОВАЯ ЛОГИКА
         function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('b-intro'); }
         function renderQ() {
             const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
@@ -313,10 +353,11 @@
             let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
             ns.forEach(n => {
                 const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
-                c.onclick = () => { if(n === target) { playSound(800 + n*30, 0.05); target++; if(target > 16) { clearInterval(timerInterval); finalReactTime = (Date.now()-reactStartTime)/1000; sw('b-mem'); } else renderReactGrid(); } else { attempts--; updateAttLabel(); if(attempts <= 0) sw('b-mem'); }};
+                c.onclick = () => { if(n === target) { playSound(800 + n*30, 0.05); target++; if(target > 16) { clearInterval(timerInterval); finalReactTime = (Date.now()-reactStartTime)/1000; sw('b-mem'); } else renderReactGrid(); } else { playSound(100, 0.2, 'square'); attempts--; updateAttLabel(); if(attempts <= 0) sw('b-mem'); }};
                 g.appendChild(c);
             });
         }
+
         function startMemTest() { memStep = 0; sw('s-mem'); nextMemRound(); }
         function nextMemRound() {
             memSeq = Array.from({length: 4 + memStep}, () => Math.floor(Math.random()*9));
@@ -326,10 +367,18 @@
         }
         async function playMemSequence() {
             const cells = document.getElementById('mem-grid').children;
-            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); cells[id].style.background = "var(--oracle)"; await new Promise(r => setTimeout(r, 400)); cells[id].style.background = "rgba(0,0,0,0.85)"; }
+            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); playSound(1000, 0.05); cells[id].style.background = "var(--oracle)"; await new Promise(r => setTimeout(r, 400)); cells[id].style.background = "rgba(0,0,0,0.85)"; }
             memIdx = 0;
         }
-        function handleMemClick(id, el) { if(id === memSeq[memIdx]) { memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); } } else sw('b-sync'); }
+        function handleMemClick(id, el) { 
+            if(id === memSeq[memIdx]) { 
+                playSound(1200, 0.05); el.classList.add('ok'); setTimeout(() => el.classList.remove('ok'), 200);
+                memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); } 
+            } else { 
+                playSound(60, 0.4, 'sawtooth'); el.classList.add('err'); setTimeout(() => sw('b-sync'), 300); 
+            } 
+        }
+
         function startSyncTest() {
             sw('s-sync'); selectedWordsCount = 0; activeWordsOnScreen = 0; const container = document.getElementById('words-container'); container.innerHTML = "";
             function spawn() {
@@ -420,7 +469,15 @@
 
         window.onload = () => {
             const savedEnd = localStorage.getItem('focus_end_time');
-            if (savedEnd && parseInt(savedEnd) > Date.now()) { startAudioEngine(); runFocusUI(parseInt(savedEnd)); }
+            if (savedEnd) {
+                const diff = parseInt(savedEnd) - Date.now();
+                if (diff > 0) {
+                    startAudioEngine();
+                    runFocusUI(parseInt(savedEnd));
+                } else {
+                    localStorage.removeItem('focus_end_time');
+                }
+            }
         };
     </script>
 </body>
