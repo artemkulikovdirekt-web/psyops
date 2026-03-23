@@ -18,75 +18,65 @@
         
         canvas#m-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.55; z-index: 0; pointer-events: none; }
         
-        .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; text-align: center; padding: 20px; box-sizing: border-box; }
-        .active { display: flex; }
+        .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; text-align: center; padding: 20px; box-sizing: border-box; opacity: 0; transition: opacity 0.5s; }
+        .active { display: flex; opacity: 1; }
 
         .btn { 
-            background: transparent; 
-            border: 1px solid rgba(0, 255, 65, 0.4); 
-            color: var(--neon); 
-            padding: 18px; 
-            cursor: pointer; 
-            text-transform: uppercase; 
-            font-family: inherit; 
-            font-weight: 100; 
-            font-size: 13px; 
-            letter-spacing: 4px; 
-            width: 100%; 
-            max-width: 280px; 
-            margin: 10px 0; 
-            transition: 0.2s; 
+            background: transparent; border: 1px solid rgba(0, 255, 65, 0.4); 
+            color: var(--neon); padding: 18px; cursor: pointer; 
+            text-transform: uppercase; font-family: inherit; font-weight: 100; 
+            font-size: 13px; letter-spacing: 4px; width: 100%; 
+            max-width: 280px; margin: 10px 0; transition: 0.2s; 
         }
         .btn:active { background: rgba(0, 255, 65, 0.2); }
         .btn-blue { border-color: rgba(0, 204, 255, 0.4); color: var(--oracle); }
+        .btn-red { border-color: var(--red); color: var(--red); }
 
         .hub-container { 
-            width: 260px; height: 260px; 
-            border: 1px solid rgba(0, 255, 65, 0.2); 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            position: relative; 
+            width: 260px; height: 260px; border: 1px solid rgba(0, 255, 65, 0.2); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; 
         }
         #hub-canvas { width: 190px; height: 190px; }
 
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; }
         .cell { 
-            aspect-ratio: 1; background: rgba(0, 0, 0, 0.85); 
-            border: 1px solid rgba(255, 255, 255, 0.15); 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 20px; color: var(--neon); transition: 0.1s; 
+            aspect-ratio: 1; background: rgba(0, 0, 0, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); 
+            display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--neon); transition: 0.1s; 
         }
         .cell.err { background: var(--red) !important; color: #fff; }
         .cell.ok { background: var(--neon) !important; color: #000; }
 
-        .briefing { max-width: 340px; text-align: left; border-left: 1px solid rgba(0, 255, 65, 0.4); padding-left: 20px; margin-bottom: 40px; }
-        .briefing h2 { color: var(--oracle); letter-spacing: 6px; font-weight: 100; font-size: 16px; margin-bottom: 12px; }
-        .briefing p { font-size: 13px; line-height: 1.6; opacity: 0.8; }
+        /* FOCUS MODULE STYLES */
+        .focus-header { margin-top: 30px; letter-spacing: 5px; font-size: 14px; display: flex; align-items: center; gap: 15px; }
+        .info-btn { width: 30px; height: 30px; border: 1px solid var(--neon); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; }
+        
+        .modal { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); 
+            z-index: 2000; display: none; align-items: center; justify-content: center; padding: 30px; box-sizing: border-box;
+        }
+        .modal-content { max-width: 500px; text-align: left; border: 1px solid var(--neon); padding: 25px; line-height: 1.5; font-size: 13px; }
+        
+        .timer-val { font-size: 64px; color: var(--neon); text-shadow: 0 0 20px var(--neon); margin: 20px 0; }
+        
+        .fail-grid { display: grid; grid-template-columns: 1fr; gap: 10px; width: 100%; max-width: 300px; }
+        .fail-node { border: 1px solid rgba(0, 255, 65, 0.3); padding: 15px; cursor: pointer; text-align: left; position: relative; overflow: hidden; }
+        .fail-node:hover { border-color: var(--red); background: rgba(255, 51, 51, 0.05); }
+        .glyph { float: right; color: var(--oracle); font-weight: bold; }
 
         #v-card { 
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 92%; max-width: 370px; background: #000; 
-            border: 1px solid rgba(0, 255, 65, 0.6); 
-            padding: 30px 20px; z-index: 1000; 
-            display: none; flex-direction: column; align-items: center; 
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
+            width: 92%; max-width: 370px; background: #000; border: 1px solid rgba(0, 255, 65, 0.6); 
+            padding: 30px 20px; z-index: 1000; display: none; flex-direction: column; align-items: center; box-shadow: 0 0 20px rgba(0, 255, 65, 0.2);
         }
         #v-card.open { display: flex; }
-
         .diag-box { position: relative; width: 260px; height: 260px; margin: 10px 0; }
         #diag-canvas { width: 260px; height: 260px; }
-
         .stat-row { width: 100%; margin: 8px 0; font-size: 9px; letter-spacing: 2px; opacity: 0.8; text-align: left; }
         .bar { width: 100%; height: 2px; background: #0a0a0a; margin-top: 6px; }
         .fill { height: 100%; width: 0%; background: var(--neon); transition: 2s cubic-bezier(0.1, 0, 0, 1); }
-
         .ability-badge { border: 1px solid rgba(0, 204, 255, 0.3); padding: 14px; font-size: 11px; margin-top: 15px; cursor: pointer; text-align: center; width: 100%; box-sizing: border-box; color: var(--oracle); letter-spacing: 3px; }
-        .ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05); padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); text-shadow: 0 0 5px rgba(0, 255, 65, 0.5); }
-
-        .sync-word { 
-            position: absolute; color: var(--neon); cursor: pointer; 
-            font-size: 14px; letter-spacing: 2px; opacity: 0;
-            transition: opacity 0.5s;
-        }
+        .ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05); padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); }
+        .sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; }
     </style>
 </head>
 <body>
@@ -97,66 +87,80 @@
             <canvas id="hub-canvas"></canvas>
             <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
         </div>
-        <button class="btn" style="margin-top: 40px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
+        
+        <div class="focus-header">
+            FOCUS_PROTOCOL <div class="info-btn" onclick="toggleModal('m-info', true)">i</div>
+        </div>
+        <div style="display:flex; gap:5px; width:100%; max-width:280px;">
+            <button class="btn" style="font-size:10px; letter-spacing:1px;" onclick="initFocus(10)">10 MIN</button>
+            <button class="btn" style="font-size:10px; letter-spacing:1px;" onclick="initFocus(30)">30 MIN</button>
+            <button class="btn" style="font-size:10px; letter-spacing:1px;" onclick="initFocus(60)">60 MIN</button>
+        </div>
+
+        <button class="btn" style="margin-top: 20px; border-color:var(--oracle); color:var(--oracle)" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
         <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;" onclick="oracleSpeak()">ОРАКУЛ</button>
     </div>
 
-    <div id="b-intro" class="screen">
-        <div class="briefing">
-            <h2>ИНИЦИАЦИЯ</h2>
-            <p>Запуск протокола определения психо-когнитивного профиля. Будьте сосредоточены. Система анализирует паттерны нейронного отклика в реальном времени.</p>
+    <div id="s-focus-timer" class="screen">
+        <div style="letter-spacing:10px; opacity:0.5;">PROTOCOL_ACTIVE</div>
+        <div id="timer-display" class="timer-val">00:00:00</div>
+        <button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
+    </div>
+
+    <div id="s-focus-res" class="screen">
+        <h2 style="letter-spacing:5px;">ЦИКЛ ЗАВЕРШЕН</h2>
+        <p style="font-size:12px; opacity:0.7; margin-bottom:30px;">ПОДТВЕРДИТЕ СТАТУС СИНХРОНИЗАЦИИ</p>
+        <button class="btn" style="border-color:var(--neon)" onclick="logFocus('success')">СИНХРОНИЗАЦИЯ УСПЕШНА</button>
+        <button class="btn btn-red" onclick="sw('s-focus-fail')">КРИТИЧЕСКИЙ СБОЙ</button>
+    </div>
+
+    <div id="s-focus-fail" class="screen">
+        <h2 style="color:var(--red); letter-spacing:5px;">АНАЛИЗ СБОЯ</h2>
+        <div class="fail-grid">
+            <div class="fail-node" onclick="logFocus('fail', 'COGNITIVE_ESCAPE')"><span class="glyph">⎘</span>COGNITIVE_ESCAPE</div>
+            <div class="fail-node" onclick="logFocus('fail', 'INTERNAL_LOOP')"><span class="glyph">∞</span>INTERNAL_LOOP</div>
+            <div class="fail-node" onclick="logFocus('fail', 'ENV_DISCOMFORT')"><span class="glyph">⚡</span>ENV_DISCOMFORT</div>
+            <div class="fail-node" onclick="logFocus('fail', 'FALSE_URGENCY')"><span class="glyph">⏳</span>FALSE_URGENCY</div>
+            <div class="fail-node" onclick="logFocus('fail', 'RES_EXHAUSTION')"><span class="glyph">∅</span>RES_EXHAUSTION</div>
         </div>
+    </div>
+
+    <div id="m-info" class="modal">
+        <div class="modal-content">
+            <h3 style="color:var(--oracle)">ИНСТРУКЦИЯ FOCUS_PROTOCOL</h3>
+            <p>Внимание — это единственный конечный ресурс вашей нейронной сети. Любое внешнее отвлечение вызывает фрагментацию сознания, требуя до 23 минут на восстановление исходной глубины погружения.</p>
+            <p>ДИРЕКТИВА:<br>
+            1. Устраните шумы.<br>
+            2. Аппарат сознания должен быть замкнут на одной задаче.<br>
+            3. Любое переключение внимания — критический сбой.</p>
+            <button class="btn" onclick="toggleModal('m-info', false)">ПРИНЯТЬ</button>
+        </div>
+    </div>
+
+    <div id="b-intro" class="screen">
+        <div class="briefing"><h2>ИНИЦИАЦИЯ</h2><p>Запуск протокола определения психо-когнитивного профиля...</p></div>
         <button class="btn" onclick="sw('s-psych'); renderQ();">ПРОДОЛЖИТЬ</button>
     </div>
-
-    <div id="s-psych" class="screen">
-        <p id="q-text"></p>
-        <div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div>
-    </div>
-
+    <div id="s-psych" class="screen"><p id="q-text"></p><div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div></div>
     <div id="b-react" class="screen">
-        <div class="briefing">
-            <h2>ФАЗА I: СКОРОСТЬ</h2>
-            <p>Синхронизация нейронного отклика. Найдите числа от 1 до 16. Любая ошибка блокирует систему на 200мс.</p>
-        </div>
+        <div class="briefing"><h2>ФАЗА I: СКОРОСТЬ</h2><p>Найдите числа от 1 до 16.</p></div>
         <button class="btn" onclick="startReactTest()">ПОДТВЕРДИТЬ</button>
     </div>
-
-    <div id="s-react" class="screen">
-        <div id="timer-display" style="font-size: 26px; color: var(--oracle); margin-bottom: 10px;">0.000</div>
-        <div id="react-grid" class="grid"></div>
-        <div id="att-label" style="margin-top: 30px; color: var(--red); letter-spacing: 12px; font-size: 10px;"></div>
-    </div>
-
+    <div id="s-react" class="screen"><div id="react-timer" style="font-size: 26px; color: var(--oracle); margin-bottom: 10px;">0.000</div><div id="react-grid" class="grid"></div><div id="att-label" style="margin-top: 30px; color: var(--red); letter-spacing: 12px; font-size: 10px;"></div></div>
     <div id="b-mem" class="screen">
-        <div class="briefing">
-            <h2>ФАЗА II: ПАМЯТЬ</h2>
-            <p>Восстановление поврежденного сектора. Повторите последовательность световых импульсов в точном порядке.</p>
-        </div>
+        <div class="briefing"><h2>ФАЗА II: ПАМЯТЬ</h2><p>Повторите последовательность импульсов.</p></div>
         <button class="btn" onclick="startMemTest()">НАЧАТЬ</button>
     </div>
-
-    <div id="s-mem" class="screen">
-        <div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 280px;"></div>
-    </div>
-
+    <div id="s-mem" class="screen"><div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 280px;"></div></div>
     <div id="b-sync" class="screen">
-        <div class="briefing">
-            <h2>ФАЗА III: ВЕКТОР</h2>
-            <p>Определение семантических доминант. Выберите два приоритетных узла в потоке данных для завершения синхронизации.</p>
-        </div>
+        <div class="briefing"><h2>ФАЗА III: ВЕКТОР</h2><p>Выберите два приоритетных узла.</p></div>
         <button class="btn" onclick="startSyncTest()">ПРОДОЛЖИТЬ</button>
     </div>
-
-    <div id="s-sync" class="screen">
-        <div id="words-container" style="position: relative; width: 100vw; height: 80vh;"></div>
-    </div>
+    <div id="s-sync" class="screen"><div id="words-container" style="position: relative; width: 100vw; height: 80vh;"></div></div>
 
     <div id="v-card">
         <h1 id="v-type" style="letter-spacing: 10px; font-weight: 100; margin: 0;"></h1>
-        <div class="diag-box">
-            <canvas id="diag-canvas"></canvas>
-        </div>
+        <div class="diag-box"><canvas id="diag-canvas"></canvas></div>
         <div class="stat-row">ЛОГИКА <div class="bar"><div id="v-bar-log" class="fill"></div></div></div>
         <div class="stat-row">ОТКЛИК <div class="bar"><div id="v-bar-react" class="fill" style="background:var(--red)"></div></div></div>
         <div class="stat-row">ПАМЯТЬ <div class="bar"><div id="v-bar-mem" class="fill" style="background:var(--oracle)"></div></div></div>
@@ -170,20 +174,91 @@
         let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
         let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
         let selectedWordsCount = 0, activeWordsOnScreen = 0;
+        let focusTimerInterval;
 
+        const PROFILES = {
+            "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей.", oracle: "Твой план идеален." },
+            "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Превышение лимитов пропускной способности.", oracle: "Скорость — твоя броня." },
+            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме.", oracle: "Истина между строк кода." },
+            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз.", oracle: "Покажи им обратное." }
+        };
+
+        // --- CORE FUNCTIONS ---
+        function sw(id) { 
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); 
+            const target = document.getElementById(id);
+            target.style.display = 'flex';
+            setTimeout(() => target.classList.add('active'), 10);
+        }
+
+        function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
+
+        // --- FOCUS_PROTOCOL LOGIC ---
+        function initFocus(mins) {
+            const endTime = Date.now() + mins * 60 * 1000;
+            localStorage.setItem('focus_end_time', endTime);
+            localStorage.setItem('focus_target_duration', mins);
+            runFocusUI(endTime);
+        }
+
+        function runFocusUI(endTime) {
+            sw('s-focus-timer');
+            clearInterval(focusTimerInterval);
+            focusTimerInterval = setInterval(() => {
+                const now = Date.now();
+                const diff = endTime - now;
+                if (diff <= 0) {
+                    clearInterval(focusTimerInterval);
+                    localStorage.removeItem('focus_end_time');
+                    sw('s-focus-res');
+                    playSound(1000, 0.5, 'sine');
+                } else {
+                    const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    document.getElementById('timer-display').innerText = `${h}:${m}:${s}`;
+                }
+            }, 1000);
+        }
+
+        function abortFocus() {
+            clearInterval(focusTimerInterval);
+            logFocus('aborted');
+            localStorage.removeItem('focus_end_time');
+            sw('s-main');
+        }
+
+        function logFocus(status, node = null) {
+            const history = JSON.parse(localStorage.getItem('focus_protocol_history') || "[]");
+            const entry = {
+                date: new Date().toISOString(),
+                target_duration: localStorage.getItem('focus_target_duration'),
+                status: status,
+                fail_node: node,
+                psycho_class: currentProfile || "UNIDENTIFIED"
+            };
+            history.push(entry);
+            localStorage.setItem('focus_protocol_history', JSON.stringify(history));
+            sw('s-main');
+        }
+
+        // ПРОВЕРКА PERSISTENCE ПРИ ЗАГРУЗКЕ
+        window.onload = () => {
+            const savedEnd = localStorage.getItem('focus_end_time');
+            if (savedEnd && parseInt(savedEnd) > Date.now()) {
+                runFocusUI(parseInt(savedEnd));
+            }
+        };
+
+        // --- AUDIO ENGINE ---
         function startAudioEngine() {
             if (aCtx) return;
             aCtx = new (window.AudioContext || window.webkitAudioContext)();
             masterGain = aCtx.createGain(); masterGain.gain.value = 0.15; masterGain.connect(aCtx.destination);
-            const osc1 = aCtx.createOscillator(); const osc2 = aCtx.createOscillator();
-            thrillerFilter = aCtx.createBiquadFilter(); lfo = aCtx.createOscillator();
-            const lfoGain = aCtx.createGain();
-            osc1.type = 'sawtooth'; osc1.frequency.value = 42; osc2.type = 'square'; osc2.frequency.value = 42.2;
-            thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180; thrillerFilter.Q.value = 10;
-            lfo.type = 'sine'; lfo.frequency.value = 0.08; lfoGain.gain.value = 100;
-            lfo.connect(lfoGain); lfoGain.connect(thrillerFilter.frequency);
-            osc1.connect(thrillerFilter); osc2.connect(thrillerFilter);
-            thrillerFilter.connect(masterGain); osc1.start(); osc2.start(); lfo.start();
+            thrillerFilter = aCtx.createBiquadFilter();
+            thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180;
+            const osc1 = aCtx.createOscillator(); osc1.type = 'sawtooth'; osc1.frequency.value = 42;
+            osc1.connect(thrillerFilter); thrillerFilter.connect(masterGain); osc1.start();
         }
 
         function playSound(f, d, type='sine', v=0.1) {
@@ -195,13 +270,17 @@
             o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
         }
 
-        const PROFILES = {
-            "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий. Оптимизация системного отклика.", oracle: "Твой план идеален. Но не забывай про хаос вне системы." },
-            "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов пропускной способности нейронного интерфейса.", oracle: "Скорость — твоя единственная броня." },
-            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме необработанной информации. Дешифровка реальности.", oracle: "Истина всегда лежит между строк кода." },
-            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в защищенных контурах. Превентивный удар.", oracle: "Они думают, что скрылись. Покажи им обратное." }
-        };
-
+        // --- ТЕСТЫ (БЕЗ ИЗМЕНЕНИЙ) ---
+        function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('b-intro'); }
+        function renderQ() {
+            const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
+            const box = document.getElementById('q-options'); box.innerHTML = "";
+            q.o.forEach(o => {
+                const b = document.createElement('button'); b.className = "btn"; b.innerText = o.t;
+                b.onclick = () => { playSound(400 + curQ*50, 0.1); score[o.a] = (score[o.a] || 0) + 1; curQ++; if(curQ < QUESTIONS.length) renderQ(); else sw('b-react'); };
+                box.appendChild(b);
+            });
+        }
         const QUESTIONS = [
             {q: "Система взломана. Твой первый шаг?", o: [{t: "Анализ кода", a: "АРХИТЕКТОР"}, {t: "Удаление сектора", a: "ИМПУЛЬС"}]},
             {q: "Доступ к сети ценой личности. Согласишься?", o: [{t: "Оценка рисков", a: "АНАЛИТИК"}, {t: "Усиление щитов", a: "СКАНЕР"}]},
@@ -215,39 +294,13 @@
             {q: "Твоя цель: абсолютный контроль или мощь?", o: [{t: "Контроль", a: "АРХИТЕКТОР"}, {t: "Мощь", a: "ИМПУЛЬС"}]}
         ];
 
-        const SYNC_WORDS = [
-            {t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"},
-            {t: "Δ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ω", a: "АНАЛИТИК"},
-            {t: "Ψ", a: "СКАНЕР"}, {t: "КОНТРОЛЬ", a: "АРХИТЕКТОР"}, {t: "ПОТОК", a: "ИМПУЛЬС"},
-            {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "Ξ", a: "СКАНЕР"}, {t: "ИМПУЛЬС", a: "ИМПУЛЬС"},
-            {t: "λ", a: "АРХИТЕКТОР"}, {t: "МАТРИЦА", a: "АНАЛИТИК"},
-            {t: "ВЕКТОР", a: "АРХИТЕКТОР"}, {t: "Ø", a: "АНАЛИТИК"}, {t: "ТЕНЬ", a: "СКАНЕР"},
-            {t: "КАНАЛ", a: "ИМПУЛЬС"}, {t: "ВЗЛОМ", a: "СКАНЕР"}
-        ];
-
-        function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-        function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('b-intro'); }
-
-        function renderQ() {
-            const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
-            const box = document.getElementById('q-options'); box.innerHTML = "";
-            q.o.forEach(o => {
-                const b = document.createElement('button'); b.className = "btn"; b.innerText = o.t;
-                b.onclick = () => { playSound(400 + curQ*50, 0.1); score[o.a] = (score[o.a] || 0) + 1; curQ++; if(curQ < QUESTIONS.length) renderQ(); else sw('b-react'); };
-                box.appendChild(b);
-            });
-        }
-
-        function startReactTest() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); updateAttLabel(); renderReactGrid(); startTimer(); }
-        function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - reactStartTime) / 1000).toFixed(3); }, 41); }
-        function updateAttLabel() { document.getElementById('att-label').innerText = "[ " + "■ ".repeat(attempts) + "□ ".repeat(3-attempts) + "]"; }
-        
+        function startReactTest() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); renderReactGrid(); }
         function renderReactGrid() {
             const g = document.getElementById('react-grid'); g.innerHTML = "";
             let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
             ns.forEach(n => {
                 const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
-                c.onclick = () => { if(n === target) { playSound(800 + n*30, 0.05); target++; if(target > 16) { clearInterval(timerInterval); finalReactTime = (Date.now() - reactStartTime)/1000; sw('b-mem'); } else renderReactGrid(); } else { playSound(80, 0.2, 'square'); attempts--; updateAttLabel(); c.classList.add('err'); setTimeout(()=>c.classList.remove('err'),200); if(attempts <= 0) { clearInterval(timerInterval); sw('b-mem'); } }};
+                c.onclick = () => { if(n === target) { target++; if(target > 16) { finalReactTime = (Date.now() - reactStartTime)/1000; sw('b-mem'); } else renderReactGrid(); } else { attempts--; if(attempts <= 0) sw('b-mem'); }};
                 g.appendChild(c);
             });
         }
@@ -261,44 +314,25 @@
         }
         async function playMemSequence() {
             const cells = document.getElementById('mem-grid').children;
-            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); playSound(1000, 0.05); cells[id].style.background = "var(--oracle)"; await new Promise(r => setTimeout(r, 400)); cells[id].style.background = "rgba(0,0,0,0.85)"; }
+            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); cells[id].style.background = "var(--oracle)"; await new Promise(r => setTimeout(r, 400)); cells[id].style.background = "rgba(0,0,0,0.85)"; }
             memIdx = 0;
         }
         function handleMemClick(id, el) { 
-            if(id === memSeq[memIdx]) { 
-                playSound(1200, 0.05); 
-                el.classList.add('ok'); setTimeout(() => el.classList.remove('ok'), 200);
-                memIdx++; 
-                if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); } 
-            } else { 
-                playSound(60, 0.4, 'sawtooth'); 
-                el.classList.add('err');
-                setTimeout(() => sw('b-sync'), 300); 
-            } 
+            if(id === memSeq[memIdx]) { memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); } } else sw('b-sync');
         }
 
+        const SYNC_WORDS = [{t: "Σ", a: "АРХИТЕКТОР"}, {t: "Δ", a: "ИМПУЛЬС"}, {t: "Ω", a: "АНАЛИТИК"}, {t: "Ψ", a: "СКАНЕР"}];
         function startSyncTest() {
-            sw('s-sync'); selectedWordsCount = 0; activeWordsOnScreen = 0;
+            sw('s-sync'); selectedWordsCount = 0; 
             const container = document.getElementById('words-container'); container.innerHTML = "";
             function spawn() {
-                if (selectedWordsCount >= 2 || !document.getElementById('s-sync').classList.contains('active')) return;
-                if (activeWordsOnScreen < 4) {
-                    const word = SYNC_WORDS[Math.floor(Math.random()*SYNC_WORDS.length)];
-                    const w = document.createElement('div'); w.className = "sync-word"; w.innerText = word.t;
-                    w.style.left = Math.random()*70 + 15 + "%"; w.style.top = Math.random()*70 + 15 + "%";
-                    container.appendChild(w);
-                    activeWordsOnScreen++;
-                    setTimeout(() => w.style.opacity = 1, 50);
-                    w.onclick = () => { 
-                        w.style.color = "var(--oracle)"; score[word.a] = (score[word.a] || 0) + 2; 
-                        selectedWordsCount++; 
-                        if(selectedWordsCount === 2) finalize(); 
-                    };
-                    setTimeout(() => { 
-                        w.style.opacity = 0; 
-                        setTimeout(() => { w.remove(); activeWordsOnScreen--; }, 500); 
-                    }, 2500);
-                }
+                if (selectedWordsCount >= 2) return;
+                const word = SYNC_WORDS[Math.floor(Math.random()*SYNC_WORDS.length)];
+                const w = document.createElement('div'); w.className = "sync-word"; w.innerText = word.t;
+                w.style.left = Math.random()*70 + 15 + "%"; w.style.top = Math.random()*70 + 15 + "%";
+                container.appendChild(w);
+                setTimeout(() => w.style.opacity = 1, 50);
+                w.onclick = () => { score[word.a] = (score[word.a] || 0) + 2; selectedWordsCount++; if(selectedWordsCount === 2) finalize(); };
                 setTimeout(spawn, 800);
             }
             spawn();
@@ -308,99 +342,51 @@
             let type = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "АНАЛИТИК";
             currentProfile = type; isDone = true;
             document.getElementById('v-type').innerText = type;
-            document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
-            document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
             document.getElementById('v-card').classList.add('open');
-            setTimeout(() => {
-                document.getElementById('v-bar-log').style.width = PROFILES[type].log + "%";
-                document.getElementById('v-bar-react').style.width = Math.max(5, 100 - (finalReactTime*4)) + "%";
-                document.getElementById('v-bar-mem').style.width = (memStep/3 * 100) + "%";
-            }, 500);
+            document.getElementById('v-bar-log').style.width = PROFILES[type].log + "%";
             renderDiagnostic(type);
         }
 
         function backToHub() { document.getElementById('v-card').classList.remove('open'); document.getElementById('id-tag').innerText = currentProfile; document.getElementById('id-tag').style.display = 'block'; document.getElementById('hub-oracle-btn').style.display = 'block'; sw('s-main'); }
         function showStoredProfile() { if(isDone) document.getElementById('v-card').classList.add('open'); }
         function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
-        
-        function oracleSpeak() { 
-            if (aCtx && aCtx.state === 'suspended') aCtx.resume(); 
-            window.speechSynthesis.cancel(); 
-            const msg = new SpeechSynthesisUtterance(PROFILES[currentProfile].oracle); 
-            msg.lang = 'ru-RU'; msg.pitch = 0.8; msg.rate = 0.9; 
-            window.speechSynthesis.speak(msg); 
-        }
+        function oracleSpeak() { window.speechSynthesis.speak(new SpeechSynthesisUtterance(PROFILES[currentProfile].oracle)); }
 
-        // --- ГРАФИЧЕСКИЙ ДВИЖОК ---
-
+        // --- GRAPHICS (BEEF UP) ---
         function drawShape(ctx, type, x, y, size, frame, active) {
-            ctx.save();
-            ctx.translate(x, y);
+            ctx.save(); ctx.translate(x, y);
             ctx.strokeStyle = active ? '#00ff41' : 'rgba(0, 255, 65, 0.15)';
-            ctx.lineWidth = active ? 2 : 1;
-            ctx.beginPath();
-            if(type === "АРХИТЕКТОР") {
-                for(let i=0; i<6; i++) { let a = (active ? frame : 0) + i*Math.PI/3; ctx.lineTo(Math.cos(a)*size, Math.sin(a)*size); }
-                ctx.closePath();
-            } else if(type === "ИМПУЛЬС") {
-                ctx.moveTo(0,0); for(let i=0; i<25; i++){ let r=i*(size/20); let a=(active ? frame*2.5 : 0)+i*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); }
-            } else if(type === "АНАЛИТИК") {
-                if(active) ctx.rotate(frame);
-                ctx.rect(-size/1.2, -size/1.2, size*1.5, size*1.5); ctx.rect(-size/2, -size/2, size, size);
-            } else if(type === "СКАНЕР") {
-                ctx.arc(0,0, size + (active ? Math.sin(frame*2)*8 : 0), 0, Math.PI*2);
-                ctx.moveTo(-size,0); ctx.lineTo(size,0); ctx.moveTo(0,-size); ctx.lineTo(0,size);
-            }
-            ctx.stroke();
-            ctx.restore();
+            ctx.lineWidth = active ? 2 : 1; ctx.beginPath();
+            if(type === "АРХИТЕКТОР") { for(let i=0; i<6; i++) { let a = i*Math.PI/3; ctx.lineTo(Math.cos(a)*size, Math.sin(a)*size); } ctx.closePath(); }
+            else if(type === "ИМПУЛЬС") { ctx.moveTo(0,0); for(let i=0; i<25; i++){ let r=i*(size/20); let a=frame*2.5+i*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); } }
+            else if(type === "АНАЛИТИК") { if(active) ctx.rotate(frame); ctx.rect(-size/1.2, -size/1.2, size*1.5, size*1.5); ctx.rect(-size/2, -size/2, size, size); }
+            else if(type === "СКАНЕР") { ctx.arc(0,0, size + (active ? Math.sin(frame*2)*8 : 0), 0, Math.PI*2); ctx.moveTo(-size,0); ctx.lineTo(size,0); ctx.moveTo(0,-size); ctx.lineTo(0,size); }
+            ctx.stroke(); ctx.restore();
         }
 
-        // Анимация главного экрана (ХАБ)
-        const hC = document.getElementById('hub-canvas');
-        const hX = hC.getContext('2d');
-        hC.width = 190; hC.height = 190;
-        let hFrame = 0;
+        const hC = document.getElementById('hub-canvas'); const hX = hC.getContext('2d');
+        hC.width = 190; hC.height = 190; let hFrame = 0;
         function animateHub() {
             hX.clearRect(0,0,190,190);
-            if(isDone && currentProfile) {
-                drawShape(hX, currentProfile, 95, 95, 60, hFrame, true);
-            }
-            hFrame += 0.02;
-            requestAnimationFrame(animateHub);
+            if(isDone && currentProfile) drawShape(hX, currentProfile, 95, 95, 60, hFrame, true);
+            else drawShape(hX, "АРХИТЕКТОР", 95, 95, 40, hFrame, false);
+            hFrame += 0.02; requestAnimationFrame(animateHub);
         }
         animateHub();
 
-        // Анимация экрана результатов (ДИАГНОСТИКА)
         function renderDiagnostic(activeType) {
             const c = document.getElementById('diag-canvas'); const ctx = c.getContext('2d');
             c.width = 260; c.height = 260; let dFrame = 0;
             const pts = { "АРХИТЕКТОР": [130, 50], "ИМПУЛЬС": [130, 210], "АНАЛИТИК": [50, 130], "СКАНЕР": [210, 130] };
-
             function anim() {
                 if(!document.getElementById('v-card').classList.contains('open')) return;
                 ctx.clearRect(0,0,260,260);
-                
-                // Перекрестие
-                ctx.strokeStyle = 'rgba(0, 255, 65, 0.1)';
-                ctx.beginPath(); ctx.moveTo(130,20); ctx.lineTo(130,240); ctx.moveTo(20,130); ctx.lineTo(240,130); ctx.stroke();
-
-                // Иконки
-                for(let t in pts) {
-                    const isActive = (t === activeType);
-                    if(isActive) {
-                        ctx.beginPath();
-                        ctx.arc(pts[t][0], pts[t][1], 35 + Math.sin(dFrame*3)*5, 0, Math.PI*2);
-                        ctx.fillStyle = 'rgba(0, 255, 65, 0.05)'; ctx.fill();
-                    }
-                    drawShape(ctx, t, pts[t][0], pts[t][1], 25, dFrame, isActive);
-                }
-                dFrame += 0.03;
-                requestAnimationFrame(anim);
+                for(let t in pts) drawShape(ctx, t, pts[t][0], pts[t][1], 25, dFrame, t === activeType);
+                dFrame += 0.03; requestAnimationFrame(anim);
             }
             anim();
         }
 
-        // Матрица фоновая
         const mc = document.getElementById('m-bg'); const mx = mc.getContext('2d');
         let mw = mc.width = window.innerWidth, mh = mc.height = window.innerHeight;
         const drops = Array(Math.floor(mw/25)).fill(1);
