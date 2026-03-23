@@ -49,7 +49,15 @@
         }
         #hub-canvas { width: 190px; height: 190px; }
 
-        #active-focus-label { font-size: 10px; color: var(--oracle); margin-bottom: 10px; letter-spacing: 3px; display: none; }
+        /* СТИЛЬ ТАЙМЕРА НА ГЛАВНОМ */
+        #active-focus-label { 
+            font-size: 32px; 
+            color: var(--neon); 
+            margin-bottom: 15px; 
+            letter-spacing: 5px; 
+            display: none; 
+            text-shadow: 0 0 15px var(--neon);
+        }
 
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; max-width: 90vw; }
         .cell { 
@@ -108,7 +116,8 @@
     <canvas id="m-bg"></canvas>
 
     <div id="s-main" class="screen active">
-        <div id="active-focus-label">FOCUS_MODE: <span id="hub-timer">00:00</span></div>
+        <div id="active-focus-label">00:00</div>
+        
         <div class="hub-container" onclick="showStoredProfile()">
             <canvas id="hub-canvas"></canvas>
             <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
@@ -297,7 +306,7 @@
             {q: "Система взломана. Твой первый шаг?", o: [{t: "Анализ кода", a: "АРХИТЕКТОР"}, {t: "Удаление сектора", a: "ИМПУЛЬС"}]},
             {q: "Доступ к сети ценой личности. Согласишься?", o: [{t: "Оценка рисков", a: "АНАЛИТИК"}, {t: "Усиление щитов", a: "СКАНЕР"}]},
             {q: "Что важнее: структура или динамика?", o: [{t: "Структура", a: "АРХИТЕКТОР"}, {t: "Динамика", a: "ИМПУЛЬС"}]},
-            {q: "Чугой сигнал в твоем канале. Действия?", o: [{t: "Отслеживание", a: "АНАЛИТИК"}, {t: "Агрессивный ответ", a: "СКАНЕР"}]},
+            {q: "Чужой сигнал в твоем канале. Действия?", o: [{t: "Отслеживание", a: "АНАЛИТИК"}, {t: "Агрессивный ответ", a: "СКАНЕР"}]},
             {q: "Код — это язык или оружие?", o: [{t: "Язык", a: "АРХИТЕКТОР"}, {t: "Оружие", a: "ИМПУЛЬС"}]},
             {q: "Неизвестный файл в карантине. Что делать?", o: [{t: "Изоляция", a: "СКАНЕР"}, {t: "Дешифровка", a: "АНАЛИТИК"}]},
             {q: "Где корень ошибок: в человеке или в коде?", o: [{t: "В человеке", a: "АРХИТЕКТОР"}, {t: "В коде", a: "ИМПУЛЬС"}]},
@@ -331,9 +340,9 @@
                 else {
                     const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
                     const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-                    const timeStr = `${m}:${s}`;
-                    document.getElementById('focus-countdown').innerText = `00:${timeStr}`;
-                    document.getElementById('hub-timer').innerText = timeStr;
+                    const timeStr = `00:${m}:${s}`;
+                    document.getElementById('focus-countdown').innerText = timeStr;
+                    document.getElementById('active-focus-label').innerText = timeStr; // ТАЙМЕР НА ГЛАВНОМ
                 }
             }, 1000);
         }
@@ -388,7 +397,7 @@
             memIdx = 0;
         }
         function handleMemClick(id, el) { 
-            playSound(1100, 0.03); // ЗВУК ПРИ НАЖАТИИ
+            playSound(1100, 0.03);
             if(id === memSeq[memIdx]) { 
                 el.classList.add('ok'); setTimeout(() => el.classList.remove('ok'), 200);
                 memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); } 
@@ -418,20 +427,33 @@
         function finalize() {
             let type = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "АНАЛИТИК";
             currentProfile = type; isDone = true;
-            document.getElementById('v-type').innerText = type;
-            document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
-            document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
+            // СОХРАНЕНИЕ
+            localStorage.setItem('psy_profile', type);
+            localStorage.setItem('psy_done', 'true');
+            
+            updateUIProfile(type);
             document.getElementById('v-card').classList.add('open');
-            document.getElementById('focus-module').style.display = 'block';
-            setTimeout(() => {
-                document.getElementById('v-bar-log').style.width = PROFILES[type].log + "%";
-                document.getElementById('v-bar-react').style.width = "75%";
-                document.getElementById('v-bar-mem').style.width = (memStep/3 * 100) + "%";
-            }, 500);
             renderDiagnostic(type);
         }
 
-        function backToHub() { document.getElementById('v-card').classList.remove('open'); document.getElementById('id-tag').innerText = currentProfile; document.getElementById('id-tag').style.display = 'block'; document.getElementById('hub-oracle-btn').style.display = 'block'; sw('s-main'); }
+        function updateUIProfile(type) {
+            document.getElementById('v-type').innerText = type;
+            document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
+            document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
+            document.getElementById('focus-module').style.display = 'block';
+            document.getElementById('start-btn').style.display = 'none';
+            document.getElementById('id-tag').innerText = type;
+            document.getElementById('id-tag').style.display = 'block';
+            document.getElementById('hub-oracle-btn').style.display = 'block';
+            
+            setTimeout(() => {
+                document.getElementById('v-bar-log').style.width = PROFILES[type].log + "%";
+                document.getElementById('v-bar-react').style.width = "75%";
+                document.getElementById('v-bar-mem').style.width = "66%";
+            }, 500);
+        }
+
+        function backToHub() { document.getElementById('v-card').classList.remove('open'); sw('s-main'); }
         function showStoredProfile() { if(isDone) { document.getElementById('v-card').classList.add('open'); renderDiagnostic(currentProfile); } }
         function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
 
@@ -444,16 +466,13 @@
             if(type === "АРХИТЕКТОР") { for(let i=0; i<6; i++) { let a = (active ? frame : 0) + i*Math.PI/3; ctx.lineTo(Math.cos(a)*size, Math.sin(a)*size); } ctx.closePath(); }
             else if(type === "ИМПУЛЬС") { ctx.moveTo(0,0); for(let i=0; i<25; i++){ let r=i*(size/20); let a=(active ? frame*2.5 : 0)+i*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); } }
             else if(type === "АНАЛИТИК") { if(active) ctx.rotate(frame); ctx.strokeRect(-size/1.2, -size/1.2, size*1.5, size*1.5); ctx.strokeRect(-size/4, -size/4, size/2, size/2); }
-            else if(type === "СКАНЕР") { 
-                if(active) ctx.rotate(frame); // АНИМАЦИЯ СКАНЕРА
-                ctx.arc(0,0, size, 0, Math.PI*2); ctx.moveTo(-size,0); ctx.lineTo(size,0); ctx.moveTo(0,-size); ctx.lineTo(0,size); 
-            }
+            else if(type === "СКАНЕР") { if(active) ctx.rotate(frame); ctx.arc(0,0, size, 0, Math.PI*2); ctx.moveTo(-size,0); ctx.lineTo(size,0); ctx.moveTo(0,-size); ctx.lineTo(0,size); }
             ctx.stroke(); ctx.restore();
         }
 
         const hC = document.getElementById('hub-canvas'); const hX = hC.getContext('2d');
         hC.width = 190; hC.height = 190; let hFrame = 0;
-        function animateHub() { hX.clearRect(0,0,190,190); if(isDone) drawShape(hX, currentProfile, 95, 95, 60, hFrame, true); hFrame += 0.02; requestAnimationFrame(animateHub); }
+        function animateHub() { hX.clearRect(0,0,190,190); if(isDone && currentProfile) drawShape(hX, currentProfile, 95, 95, 60, hFrame, true); hFrame += 0.02; requestAnimationFrame(animateHub); }
         animateHub();
 
         let diagAnimId;
@@ -485,6 +504,15 @@
         setInterval(drawM, 70);
 
         window.onload = () => {
+            // ВОССТАНОВЛЕНИЕ СЕССИИ
+            const savedProfile = localStorage.getItem('psy_profile');
+            const savedDone = localStorage.getItem('psy_done');
+            if (savedProfile && savedDone === 'true') {
+                currentProfile = savedProfile;
+                isDone = true;
+                updateUIProfile(currentProfile);
+            }
+
             const savedEnd = localStorage.getItem('focus_end_time');
             if (savedEnd) {
                 const diff = parseInt(savedEnd) - Date.now();
