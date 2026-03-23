@@ -10,7 +10,6 @@
         body, html { 
             margin: 0; padding: 0; height: 100%; 
             background: var(--bg); color: var(--neon); 
-            /* Исправленный шрифт для единообразия */
             font-family: 'Courier New', Courier, monospace; 
             font-weight: 100;
             -webkit-font-smoothing: antialiased;
@@ -32,7 +31,7 @@
             font-family: 'Courier New', Courier, monospace; 
             font-weight: 100; 
             font-size: 13px; 
-            letter-spacing: 3px; /* Тонкий вид для RU */
+            letter-spacing: 3px; 
             width: 100%; 
             max-width: 280px; 
             margin: 10px 0; 
@@ -201,7 +200,6 @@
         <div id="focus-countdown" class="timer-val">00:00:00</div>
         <button class="btn" style="border-color:var(--neon)" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
         <button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
-        <button onclick="const newEnd = Date.now() + 1000; localStorage.setItem('focus_end_time', newEnd); runFocusUI(newEnd);" style="background:transparent; border:none; color:transparent; cursor:pointer; margin-top:10px; font-size:10px; width:100%; max-width:280px;">[ DEBUG: FORCE_FINISH ]</button>
     </div>
 
     <div id="s-focus-res" class="screen">
@@ -278,6 +276,28 @@
             'RES_EXHAUSTION': { t: '[ RES_EXHAUSTION ] — Истощение ресурса.', d: 'Критическое снижение уровня нейропластичности и глюкозы. Внимание — это единственный конечный ресурс вашей нейронной сети.' }
         };
 
+        const PROFILES = {
+            "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий." },
+            "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов." },
+            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме." },
+            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в контурах." }
+        };
+
+        const QUESTIONS = [
+            {q: "Система взломана. Твой первый шаг?", o: [{t: "Анализ кода", a: "АРХИТЕКТОР"}, {t: "Удаление сектора", a: "ИМПУЛЬС"}]},
+            {q: "Доступ к сети ценой личности. Согласишься?", o: [{t: "Оценка рисков", a: "АНАЛИТИК"}, {t: "Усиление щитов", a: "СКАНЕР"}]},
+            {q: "Что важнее: структура или динамика?", o: [{t: "Структура", a: "АРХИТЕКТОР"}, {t: "Динамика", a: "ИМПУЛЬС"}]},
+            {q: "Чужой сигнал в твоем канале. Действия?", o: [{t: "Отслеживание", a: "АНАЛИТИК"}, {t: "Агрессивный ответ", a: "СКАНЕР"}]},
+            {q: "Код — это язык или оружие?", o: [{t: "Язык", a: "АРХИТЕКТОР"}, {t: "Оружие", a: "ИМПУЛЬС"}]},
+            {q: "Неизвестный файл в карантине. Что делать?", o: [{t: "Изоляция", a: "СКАНЕР"}, {t: "Дешифровка", a: "АНАЛИТИК"}]},
+            {q: "Где корень ошибок: в человеке или в коде?", o: [{t: "В человеке", a: "АРХИТЕКТОР"}, {t: "В коде", a: "ИМПУЛЬС"}]},
+            {q: "Источник силы: данные или чутье?", o: [{t: "Данные", a: "АНАЛИТИК"}, {t: "Чутье", a: "СКАНЕР"}]},
+            {q: "Тишина вызывает покой или тревогу?", o: [{t: "Тревогу", a: "СКАНЕР"}, {t: "Покой", a: "АРХИТЕКТОР"}]},
+            {q: "Твоя цель: абсолютный контроль или мощь?", o: [{t: "Контроль", a: "АРХИТЕКТОР"}, {t: "Мощь", a: "ИМПУЛЬС"}]}
+        ];
+
+        const SYNC_WORDS = [{t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"}, {t: "Δ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ω", a: "АНАЛИТИК"}, {t: "Ψ", a: "СКАНЕР"}, {t: "КОНТРОЛЬ", a: "АРХИТЕКТОР"}, {t: "ПОТОК", a: "ИМПУЛЬС"}, {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "Ξ", a: "СКАНЕР"}, {t: "ИМПУЛЬС", a: "ИМПУЛЬС"}, {t: "λ", a: "АРХИТЕКТОР"}, {t: "МАТРИЦА", a: "АНАЛИТИК"}, {t: "ВЕКТОР", a: "АРХИТЕКТОР"}, {t: "Ø", a: "АНАЛИТИК"}, {t: "ТЕНЬ", a: "СКАНЕР"}, {t: "КАНАЛ", a: "ИМПУЛЬС"}, {t: "ВЗЛОМ", a: "СКАНЕР"}];
+
         function startAudioEngine() {
             if (aCtx) return;
             aCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -302,37 +322,34 @@
             o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
         }
 
-        const PROFILES = {
-            "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий." },
-            "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов." },
-            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме." },
-            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в контурах." }
-        };
-
-        const QUESTIONS = [
-            {q: "Система взломана. Твой первый шаг?", o: [{t: "Анализ кода", a: "АРХИТЕКТОР"}, {t: "Удаление сектора", a: "ИМПУЛЬС"}]},
-            {q: "Доступ к сети ценой личности. Согласишься?", o: [{t: "Оценка рисков", a: "АНАЛИТИК"}, {t: "Усиление щитов", a: "СКАНЕР"}]},
-            {q: "Что важнее: структура или динамика?", o: [{t: "Структура", a: "АРХИТЕКТОР"}, {t: "Динамика", a: "ИМПУЛЬС"}]},
-            {q: "Чужой сигнал в твоем канале. Действия?", o: [{t: "Отслеживание", a: "АНАЛИТИК"}, {t: "Агрессивный ответ", a: "СКАНЕР"}]},
-            {q: "Код — это язык или оружие?", o: [{t: "Язык", a: "АРХИТЕКТОР"}, {t: "Оружие", a: "ИМПУЛЬС"}]},
-            {q: "Неизвестный файл в карантине. Что делать?", o: [{t: "Изоляция", a: "СКАНЕР"}, {t: "Дешифровка", a: "АНАЛИТИК"}]},
-            {q: "Где корень ошибок: в человеке или в коде?", o: [{t: "В человеке", a: "АРХИТЕКТОР"}, {t: "В коде", a: "ИМПУЛЬС"}]},
-            {q: "Источник силы: данные или чутье?", o: [{t: "Данные", a: "АНАЛИТИК"}, {t: "Чутье", a: "СКАНЕР"}]},
-            {q: "Тишина вызывает покой или тревогу?", o: [{t: "Тревогу", a: "СКАНЕР"}, {t: "Покой", a: "АРХИТЕКТОР"}]},
-            {q: "Твоя цель: абсолютный контроль или мощь?", o: [{t: "Контроль", a: "АРХИТЕКТОР"}, {t: "Мощь", a: "ИМПУЛЬС"}]}
-        ];
-
-        const SYNC_WORDS = [{t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"}, {t: "Δ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ω", a: "АНАЛИТИК"}, {t: "Ψ", a: "СКАНЕР"}, {t: "КОНТРОЛЬ", a: "АРХИТЕКТОР"}, {t: "ПОТОК", a: "ИМПУЛЬС"}, {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "Ξ", a: "СКАНЕР"}, {t: "ИМПУЛЬС", a: "ИМПУЛЬС"}, {t: "λ", a: "АРХИТЕКТОР"}, {t: "МАТРИЦА", a: "АНАЛИТИК"}, {t: "ВЕКТОР", a: "АРХИТЕКТОР"}, {t: "Ø", a: "АНАЛИТИК"}, {t: "ТЕНЬ", a: "СКАНЕР"}, {t: "КАНАЛ", a: "ИМПУЛЬС"}, {t: "ВЗЛОМ", a: "СКАНЕР"}];
-
         function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
-        // LOCK SYSTEM (6 HOURS)
+        // --- CORE LOGIC & PERSISTENCE ---
+
+        window.onload = () => {
+            const savedProfile = localStorage.getItem('psy_profile');
+            const isFinished = localStorage.getItem('psy_done');
+            if (isFinished && savedProfile) {
+                isDone = true; currentProfile = savedProfile;
+                updateUIProfile(savedProfile);
+            }
+            updateLockUI();
+            
+            const activeFocusEnd = localStorage.getItem('focus_end_time');
+            if (activeFocusEnd && Date.now() < activeFocusEnd) {
+                document.getElementById('active-focus-label').style.display = 'block';
+                runFocusUI(parseInt(activeFocusEnd));
+            }
+            initMatrixBG();
+        };
+
         function setTestLock() {
             const unlockTime = Date.now() + (6 * 60 * 60 * 1000);
             localStorage.setItem('test_unlock_time', unlockTime);
             updateLockUI();
         }
+
         function updateLockUI() {
             const btn = document.getElementById('start-btn');
             const unlockAt = localStorage.getItem('test_unlock_time');
@@ -356,13 +373,13 @@
             }, 1000);
         }
 
-        // FOCUS LOGIC
         function initFocus(mins) {
             const endTime = Date.now() + mins * 60 * 1000;
             localStorage.setItem('focus_end_time', endTime);
             document.getElementById('active-focus-label').style.display = 'block';
             runFocusUI(endTime);
         }
+
         function runFocusUI(endTime) {
             sw('s-focus-timer'); clearInterval(focusTimerInterval);
             focusTimerInterval = setInterval(() => {
@@ -372,8 +389,7 @@
                     localStorage.removeItem('focus_end_time'); 
                     document.getElementById('active-focus-label').style.display = 'none';
                     sw('s-focus-res'); 
-                }
-                else {
+                } else {
                     const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
                     const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
                     const timeStr = `00:${m}:${s}`;
@@ -382,8 +398,9 @@
                 }
             }, 1000);
         }
+
         function abortFocus() { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); document.getElementById('active-focus-label').style.display = 'none'; sw('s-main'); }
-        
+
         function selectFail(key) {
             document.querySelectorAll('.f-circle').forEach(el => el.classList.remove('selected-fail'));
             document.getElementById('fail-' + key).classList.add('selected-fail');
@@ -396,7 +413,10 @@
             toggleModal('m-fail-detail', true);
         }
 
+        // --- TEST SEQUENCES ---
+
         function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('b-intro'); }
+        
         function renderQ() {
             const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
             const box = document.getElementById('q-options'); box.innerHTML = "";
@@ -406,9 +426,11 @@
                 box.appendChild(b);
             });
         }
+
         function startReactTest() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); updateAttLabel(); renderReactGrid(); startTimer(); }
         function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - reactStartTime) / 1000).toFixed(3); }, 41); }
         function updateAttLabel() { document.getElementById('att-label').innerText = "[ " + "■ ".repeat(attempts) + "□ ".repeat(3-attempts) + "]"; }
+        
         function renderReactGrid() {
             const g = document.getElementById('react-grid'); g.innerHTML = "";
             let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
@@ -464,7 +486,7 @@
             currentProfile = type; isDone = true;
             localStorage.setItem('psy_profile', type);
             localStorage.setItem('psy_done', 'true');
-            setTestLock(); // LOCK BUTTON
+            setTestLock(); 
             updateUIProfile(type);
             document.getElementById('v-card').classList.add('open');
             renderDiagnostic(type);
@@ -489,6 +511,8 @@
         function backToHub() { document.getElementById('v-card').classList.remove('open'); sw('s-main'); }
         function showStoredProfile() { if(isDone) { document.getElementById('v-card').classList.add('open'); renderDiagnostic(currentProfile); } }
         function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
+
+        // --- VISUALS & ANIMATIONS ---
 
         function drawShape(ctx, type, x, y, size, frame, active) {
             ctx.save(); ctx.translate(x, y);
@@ -516,47 +540,30 @@
             function anim() {
                 if(!document.getElementById('v-card').classList.contains('open')) return;
                 ctx.clearRect(0,0,260,260);
-                for(let t in pts) drawShape(ctx, t, pts[t][0], pts[t][1], 25, dFrame, (t === activeType));
-                dFrame += 0.03; diagAnimId = requestAnimationFrame(anim);
+                Object.keys(pts).forEach(k => drawShape(ctx, k, pts[k][0], pts[k][1], 25, dFrame, k === activeType));
+                ctx.beginPath(); ctx.strokeStyle = 'rgba(0, 255, 65, 0.1)'; ctx.moveTo(130, 50); ctx.lineTo(130, 210); ctx.moveTo(50, 130); ctx.lineTo(210, 130); ctx.stroke();
+                dFrame += 0.02; diagAnimId = requestAnimationFrame(anim);
             }
             anim();
         }
 
-        const mc = document.getElementById('m-bg'); const mx = mc.getContext('2d');
-        let mw = mc.width = window.innerWidth, mh = mc.height = window.innerHeight;
-        const drops = Array(Math.floor(mw/25)).fill(1);
-        function drawM() {
-            mx.fillStyle = 'rgba(0,0,0,0.1)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41'; mx.font = '14px monospace';
-            drops.forEach((y, i) => {
-                mx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*25, y*25);
-                if(y*25 > mh && Math.random() > 0.99) drops[i] = 0; drops[i]++;
-            });
-            for(let i=1; i<=5; i++) { const el = document.getElementById('g'+i); if(el) el.innerText = String.fromCharCode(0x30A0 + Math.random()*96); }
-        }
-        setInterval(drawM, 70);
-
-        window.onload = () => {
-            const savedProfile = localStorage.getItem('psy_profile');
-            const savedDone = localStorage.getItem('psy_done');
-            if (savedProfile && savedDone === 'true') {
-                currentProfile = savedProfile;
-                isDone = true;
-                updateUIProfile(currentProfile);
-                updateLockUI(); // Восстанавливаем блокировку
-            }
-
-            const savedEnd = localStorage.getItem('focus_end_time');
-            if (savedEnd) {
-                const diff = parseInt(savedEnd) - Date.now();
-                if (diff > 0) {
-                    startAudioEngine();
-                    document.getElementById('active-focus-label').style.display = 'block';
-                    runFocusUI(parseInt(savedEnd));
-                } else {
-                    localStorage.removeItem('focus_end_time');
+        function initMatrixBG() {
+            const c = document.getElementById('m-bg'); const ctx = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const chars = "01010101ABCDEF-X".split(""); const fontSize = 10; const columns = c.width / fontSize;
+            const drops = Array(Math.floor(columns)).fill(1);
+            function draw() {
+                ctx.fillStyle = "rgba(0, 0, 0, 0.05)"; ctx.fillRect(0, 0, c.width, c.height);
+                ctx.fillStyle = "#00ff41"; ctx.font = fontSize + "px Courier New";
+                for (let i = 0; i < drops.length; i++) {
+                    const text = chars[Math.floor(Math.random() * chars.length)];
+                    ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                    if (drops[i] * fontSize > c.height && Math.random() > 0.975) drops[i] = 0;
+                    drops[i]++;
                 }
             }
-        };
+            setInterval(draw, 33);
+        }
     </script>
 </body>
 </html>
