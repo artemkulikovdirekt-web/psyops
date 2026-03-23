@@ -315,20 +315,15 @@
         function showStoredProfile() { if(isDone) document.getElementById('v-card').classList.add('open'); }
         function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
         
-        // ОРАКУЛ: ФИКС ДЛЯ TELEGRAM (ПРЯМОЙ ВЫЗОВ СИНТЕСА)
+        // Починка Оракула для мобильных версий (Минимальное вмешательство)
         function oracleSpeak() { 
-            if (!currentProfile) return;
-            if (aCtx && aCtx.state === 'suspended') aCtx.resume();
-            
-            window.speechSynthesis.cancel();
-            const msg = new SpeechSynthesisUtterance(PROFILES[currentProfile].oracle);
-            msg.lang = 'ru-RU';
-            msg.pitch = 0.7;
-            msg.rate = 0.95;
-            
-            // Важно: на мобилках голос подхватывается лучше после "прогрева"
-            window.speechSynthesis.speak(new SpeechSynthesisUtterance("")); 
-            window.speechSynthesis.speak(msg);
+            if (aCtx && aCtx.state === 'suspended') aCtx.resume(); 
+            window.speechSynthesis.cancel(); 
+            const msg = new SpeechSynthesisUtterance(PROFILES[currentProfile].oracle); 
+            msg.lang = 'ru-RU'; 
+            msg.pitch = 0.8;
+            msg.rate = 0.9;
+            window.speechSynthesis.speak(msg); 
         }
 
         function renderHubAvatar(type) {
@@ -340,6 +335,7 @@
                 ctx.strokeStyle = 'rgba(0, 255, 65, 0.4)';
                 ctx.lineWidth = 1; 
                 ctx.beginPath();
+                
                 if(type === "АРХИТЕКТОР") { 
                     for(let i=0; i<6; i++) { 
                         let a = frame + i * Math.PI/3; 
@@ -357,7 +353,8 @@
                 }
                 else if(type === "АНАЛИТИК") {
                     ctx.save(); ctx.translate(95, 95); ctx.rotate(frame);
-                    ctx.rect(-45, -45, 90, 90); ctx.rect(-30, -30, 60, 60);
+                    ctx.rect(-45, -45, 90, 90);
+                    ctx.rect(-30, -30, 60, 60);
                     ctx.restore();
                 }
                 else if(type === "СКАНЕР") {
@@ -365,38 +362,25 @@
                     ctx.moveTo(95 - 40, 95); ctx.lineTo(95 + 40, 95);
                     ctx.moveTo(95, 95 - 40); ctx.lineTo(95, 95 + 40);
                 }
-                ctx.stroke(); frame += 0.02; requestAnimationFrame(animate);
+                
+                ctx.stroke(); 
+                frame += 0.02; 
+                requestAnimationFrame(animate);
             }
             animate();
         }
 
-        // ВОССТАНОВЛЕННАЯ МАТРИЦА (МАТРИЧНЫЙ КОД)
-        const mc = document.getElementById('m-bg'); 
-        const mx = mc.getContext('2d');
-        let mw, mh, drops;
-
-        function resizeMatrix() {
-            mw = mc.width = window.innerWidth;
-            mh = mc.height = window.innerHeight;
-            drops = Array(Math.floor(mw / 20)).fill(1);
-        }
-
+        const mc = document.getElementById('m-bg'); const mx = mc.getContext('2d');
+        let mw = mc.width = window.innerWidth, mh = mc.height = window.innerHeight;
+        const drops = Array(Math.floor(mw/25)).fill(1);
         function drawM() {
-            mx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-            mx.fillRect(0, 0, mw, mh);
-            mx.fillStyle = '#00ff41';
-            mx.font = '15px monospace';
-            for (let i = 0; i < drops.length; i++) {
-                const text = String.fromCharCode(0x30A0 + Math.random() * 96);
-                mx.fillText(text, i * 20, drops[i] * 20);
-                if (drops[i] * 20 > mh && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            }
+            mx.fillStyle = 'rgba(0,0,0,0.1)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41'; mx.font = '14px monospace';
+            drops.forEach((y, i) => {
+                mx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*25, y*25);
+                if(y*25 > mh && Math.random() > 0.99) drops[i] = 0; drops[i]++;
+            });
         }
-
-        window.addEventListener('resize', resizeMatrix);
-        resizeMatrix();
-        setInterval(drawM, 50);
+        setInterval(drawM, 70);
     </script>
 </body>
 </html>
