@@ -195,6 +195,7 @@
         <div id="focus-countdown" class="timer-val">00:00:00</div>
         <button class="btn" style="border-color:var(--neon)" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
         <button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
+        <button onclick="const newEnd = Date.now() + 1000; localStorage.setItem('focus_end_time', newEnd); runFocusUI(newEnd);" style="background:transparent; border:none; color:transparent; cursor:pointer; margin-top:10px; font-size:10px; width:100%; max-width:280px;">[ DEBUG: FORCE_FINISH ]</button>
     </div>
 
     <div id="s-focus-res" class="screen">
