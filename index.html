@@ -167,7 +167,7 @@
 
     <script>
         let aCtx, masterGain, thrillerFilter, lfo;
-        let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = "АРХИТЕКТОР";
+        let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
         let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
         let selectedWordsCount = 0, activeWordsOnScreen = 0;
 
@@ -336,19 +336,19 @@
         function drawShape(ctx, type, x, y, size, frame, active) {
             ctx.save();
             ctx.translate(x, y);
-            ctx.strokeStyle = active ? 'var(--neon)' : 'rgba(0, 255, 65, 0.15)';
+            ctx.strokeStyle = active ? '#00ff41' : 'rgba(0, 255, 65, 0.15)';
             ctx.lineWidth = active ? 2 : 1;
             ctx.beginPath();
             if(type === "АРХИТЕКТОР") {
                 for(let i=0; i<6; i++) { let a = (active ? frame : 0) + i*Math.PI/3; ctx.lineTo(Math.cos(a)*size, Math.sin(a)*size); }
                 ctx.closePath();
             } else if(type === "ИМПУЛЬС") {
-                ctx.moveTo(0,0); for(let i=0; i<20; i++){ let r=i*(size/18); let a=(active ? frame*2 : 0)+i*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); }
+                ctx.moveTo(0,0); for(let i=0; i<25; i++){ let r=i*(size/20); let a=(active ? frame*2.5 : 0)+i*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); }
             } else if(type === "АНАЛИТИК") {
                 if(active) ctx.rotate(frame);
                 ctx.rect(-size/1.2, -size/1.2, size*1.5, size*1.5); ctx.rect(-size/2, -size/2, size, size);
             } else if(type === "СКАНЕР") {
-                ctx.arc(0,0, size + (active ? Math.sin(frame*2)*4 : 0), 0, Math.PI*2);
+                ctx.arc(0,0, size + (active ? Math.sin(frame*2)*8 : 0), 0, Math.PI*2);
                 ctx.moveTo(-size,0); ctx.lineTo(size,0); ctx.moveTo(0,-size); ctx.lineTo(0,size);
             }
             ctx.stroke();
@@ -358,10 +358,13 @@
         // Анимация главного экрана (ХАБ)
         const hC = document.getElementById('hub-canvas');
         const hX = hC.getContext('2d');
+        hC.width = 190; hC.height = 190;
         let hFrame = 0;
         function animateHub() {
             hX.clearRect(0,0,190,190);
-            drawShape(hX, currentProfile, 95, 95, 60, hFrame, true);
+            if(isDone && currentProfile) {
+                drawShape(hX, currentProfile, 95, 95, 60, hFrame, true);
+            }
             hFrame += 0.02;
             requestAnimationFrame(animateHub);
         }
@@ -384,7 +387,6 @@
                 // Иконки
                 for(let t in pts) {
                     const isActive = (t === activeType);
-                    // Пульсирующая подложка под активным
                     if(isActive) {
                         ctx.beginPath();
                         ctx.arc(pts[t][0], pts[t][1], 35 + Math.sin(dFrame*3)*5, 0, Math.PI*2);
