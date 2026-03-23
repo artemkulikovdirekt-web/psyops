@@ -10,6 +10,7 @@
         body, html { 
             margin: 0; padding: 0; height: 100%; 
             background: var(--bg); color: var(--neon); 
+            /* Исправленный шрифт для единообразия */
             font-family: 'Courier New', Courier, monospace; 
             font-weight: 100;
             -webkit-font-smoothing: antialiased;
@@ -28,16 +29,21 @@
             padding: 18px; 
             cursor: pointer; 
             text-transform: uppercase; 
-            font-family: inherit; 
+            font-family: 'Courier New', Courier, monospace; 
             font-weight: 100; 
             font-size: 13px; 
-            letter-spacing: 4px; 
+            letter-spacing: 3px; /* Тонкий вид для RU */
             width: 100%; 
             max-width: 280px; 
             margin: 10px 0; 
             transition: 0.2s; 
         }
         .btn:active { background: rgba(0, 255, 65, 0.2); }
+        .btn:disabled { 
+            border-color: rgba(0, 255, 65, 0.1); 
+            color: rgba(0, 255, 65, 0.2); 
+            cursor: default; 
+        }
         .btn-blue { border-color: rgba(0, 204, 255, 0.4); color: var(--oracle); }
         .btn-red { border-color: var(--red); color: var(--red); }
 
@@ -49,7 +55,6 @@
         }
         #hub-canvas { width: 190px; height: 190px; }
 
-        /* СТИЛЬ ТАЙМЕРА НА ГЛАВНОМ */
         #active-focus-label { 
             font-size: 32px; 
             color: var(--neon); 
@@ -57,6 +62,7 @@
             letter-spacing: 5px; 
             display: none; 
             text-shadow: 0 0 15px var(--neon);
+            font-weight: 100;
         }
 
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; max-width: 90vw; }
@@ -65,15 +71,16 @@
             border: 1px solid rgba(255, 255, 255, 0.15); 
             display: flex; align-items: center; justify-content: center; 
             font-size: 20px; color: var(--neon); transition: 0.1s; 
+            font-weight: 100;
         }
         .cell.err { background: var(--red) !important; color: #fff; }
         .cell.ok { background: var(--neon) !important; color: #000; }
 
         .briefing { max-width: 340px; width: 90vw; text-align: left; border-left: 1px solid rgba(0, 255, 65, 0.4); padding-left: 20px; margin-bottom: 40px; }
         .briefing h2 { color: var(--oracle); letter-spacing: 6px; font-weight: 100; font-size: 16px; margin-bottom: 12px; }
-        .briefing p { font-size: 13px; line-height: 1.6; opacity: 0.8; }
+        .briefing p { font-size: 13px; line-height: 1.6; opacity: 0.8; letter-spacing: 1px; }
 
-        .timer-val { font-size: 54px; text-shadow: 0 0 20px var(--neon); margin: 20px 0; letter-spacing: 5px; }
+        .timer-val { font-size: 54px; text-shadow: 0 0 20px var(--neon); margin: 20px 0; letter-spacing: 5px; font-weight: 100; }
         
         .fail-circles { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 340px; }
         .f-circle { 
@@ -81,14 +88,13 @@
             border-radius: 50%; display: flex; flex-direction: column; 
             align-items: center; justify-content: center; cursor: pointer;
             font-size: 8px; text-align: center; padding: 5px; box-sizing: border-box;
-            transition: 0.3s;
+            transition: 0.3s; font-weight: 100; letter-spacing: 1px;
         }
         .f-circle.selected-fail { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); color: var(--neon); }
-        .f-circle:hover { border-color: var(--oracle); background: rgba(0, 204, 255, 0.05); }
         .f-circle span { font-size: 18px; color: var(--oracle); margin-top: 5px; }
 
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px; box-sizing: border-box; }
-        .modal-content { border: 1px solid var(--neon); padding: 25px; width: 100%; max-width: 320px; font-size: 13px; background:#000; color: var(--neon); position: relative; }
+        .modal-content { border: 1px solid var(--neon); padding: 25px; width: 100%; max-width: 320px; font-size: 13px; background:#000; color: var(--neon); position: relative; letter-spacing: 1px; }
 
         #v-card { 
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
@@ -107,9 +113,9 @@
         .fill { height: 100%; width: 0%; background: var(--neon); transition: 2s cubic-bezier(0.1, 0, 0, 1); }
 
         .ability-badge { border: 1px solid rgba(0, 204, 255, 0.3); padding: 14px; font-size: 11px; margin-top: 15px; cursor: pointer; text-align: center; width: 100%; box-sizing: border-box; color: var(--oracle); letter-spacing: 3px; }
-        .ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05); padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); }
+        .ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05); padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); letter-spacing: 1px; }
 
-        .sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; }
+        .sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; font-weight: 100; }
     </style>
 </head>
 <body>
@@ -148,7 +154,7 @@
     </div>
 
     <div id="s-psych" class="screen">
-        <p id="q-text"></p>
+        <p id="q-text" style="letter-spacing:1px;"></p>
         <div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div>
     </div>
 
@@ -262,7 +268,7 @@
         let aCtx, masterGain, thrillerFilter, lfo;
         let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
         let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
-        let selectedWordsCount = 0, activeWordsOnScreen = 0, focusTimerInterval;
+        let selectedWordsCount = 0, activeWordsOnScreen = 0, focusTimerInterval, lockInterval;
 
         const FAIL_DATA = {
             'COGNITIVE_ESCAPE': { t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу.', d: 'Стремление мозга избежать когнитивного давления путем переключения на знакомые, легкие действия (соцсети, новости).' },
@@ -321,6 +327,35 @@
         function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
+        // LOCK SYSTEM (6 HOURS)
+        function setTestLock() {
+            const unlockTime = Date.now() + (6 * 60 * 60 * 1000);
+            localStorage.setItem('test_unlock_time', unlockTime);
+            updateLockUI();
+        }
+        function updateLockUI() {
+            const btn = document.getElementById('start-btn');
+            const unlockAt = localStorage.getItem('test_unlock_time');
+            if(!unlockAt) return;
+
+            clearInterval(lockInterval);
+            lockInterval = setInterval(() => {
+                const diff = unlockAt - Date.now();
+                if(diff <= 0) {
+                    clearInterval(lockInterval);
+                    localStorage.removeItem('test_unlock_time');
+                    btn.disabled = false;
+                    btn.innerText = "ЗАПУСТИТЬ ТЕСТ";
+                } else {
+                    btn.disabled = true;
+                    const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    btn.innerText = `БЛОКИРОВКА: ${h}:${m}:${s}`;
+                }
+            }, 1000);
+        }
+
         // FOCUS LOGIC
         function initFocus(mins) {
             const endTime = Date.now() + mins * 60 * 1000;
@@ -343,7 +378,7 @@
                     const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
                     const timeStr = `00:${m}:${s}`;
                     document.getElementById('focus-countdown').innerText = timeStr;
-                    document.getElementById('active-focus-label').innerText = timeStr; // ТАЙМЕР НА ГЛАВНОМ
+                    document.getElementById('active-focus-label').innerText = timeStr;
                 }
             }, 1000);
         }
@@ -361,7 +396,6 @@
             toggleModal('m-fail-detail', true);
         }
 
-        // ТЕСТОВАЯ ЛОГИКА
         function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('b-intro'); }
         function renderQ() {
             const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
@@ -428,10 +462,9 @@
         function finalize() {
             let type = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "АНАЛИТИК";
             currentProfile = type; isDone = true;
-            // СОХРАНЕНИЕ
             localStorage.setItem('psy_profile', type);
             localStorage.setItem('psy_done', 'true');
-            
+            setTestLock(); // LOCK BUTTON
             updateUIProfile(type);
             document.getElementById('v-card').classList.add('open');
             renderDiagnostic(type);
@@ -442,7 +475,6 @@
             document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
             document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
             document.getElementById('focus-module').style.display = 'block';
-            document.getElementById('start-btn').style.display = 'none';
             document.getElementById('id-tag').innerText = type;
             document.getElementById('id-tag').style.display = 'block';
             document.getElementById('hub-oracle-btn').style.display = 'block';
@@ -458,7 +490,6 @@
         function showStoredProfile() { if(isDone) { document.getElementById('v-card').classList.add('open'); renderDiagnostic(currentProfile); } }
         function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
 
-        // GRAPHICS
         function drawShape(ctx, type, x, y, size, frame, active) {
             ctx.save(); ctx.translate(x, y);
             ctx.strokeStyle = active ? '#00ff41' : 'rgba(0, 255, 65, 0.15)';
@@ -505,13 +536,13 @@
         setInterval(drawM, 70);
 
         window.onload = () => {
-            // ВОССТАНОВЛЕНИЕ СЕССИИ
             const savedProfile = localStorage.getItem('psy_profile');
             const savedDone = localStorage.getItem('psy_done');
             if (savedProfile && savedDone === 'true') {
                 currentProfile = savedProfile;
                 isDone = true;
                 updateUIProfile(currentProfile);
+                updateLockUI(); // Восстанавливаем блокировку
             }
 
             const savedEnd = localStorage.getItem('focus_end_time');
