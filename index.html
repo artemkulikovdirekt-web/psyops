@@ -48,12 +48,10 @@
     <canvas id="m-bg"></canvas>
     <div id="s-main" class="screen active">
         <div id="active-focus-label" onclick="sw('s-focus-timer')">00:00</div>
-        
         <div class="hub-container" onclick="showStoredProfile()">
             <canvas id="hub-canvas"></canvas>
             <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
         </div>
-
         <div id="focus-module" style="display:none; margin-top: 25px; width: 100%; max-width: 320px; border: 1px solid rgba(0, 255, 65, 0.1); padding: 15px; box-sizing: border-box;">
             <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%;">
                 <span onclick="showHistory()" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid; letter-spacing: 1px;">H HISTORY</span>
@@ -61,20 +59,46 @@
                 <span onclick="toggleModal('m-info-1', true)" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid">i INFO</span>
             </div>
             <div style="display:flex; gap:5px; width:100%;">
-                <button class="btn" style="font-size:10px; padding:12px; letter-spacing:1px;" onclick="initFocus(10)">10 MIN</button>
-                <button class="btn" style="font-size:10px; padding:12px; letter-spacing:1px;" onclick="initFocus(30)">30 MIN</button>
-                <button class="btn" style="font-size:10px; padding:12px; letter-spacing:1px;" onclick="initFocus(60)">60 MIN</button>
+                <button class="btn" onclick="initFocus(10)">10 MIN</button>
+                <button class="btn" onclick="initFocus(30)">30 MIN</button>
+                <button class="btn" onclick="initFocus(60)">60 MIN</button>
             </div>
         </div>
         <button id="start-btn" class="btn" style="margin-top: 40px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
     </div>
-
     <div id="s-focus-timer" class="screen">
         <div style="letter-spacing:10px; opacity:0.5; font-size:12px;">PROTOCOL_ACTIVE</div>
         <div id="focus-countdown" class="timer-val">00:00:00</div>
-        <button class="btn" style="border-color:var(--neon)" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
+        <button class="btn" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
         <button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
-    </div><script>
+    </div>
+    <div id="s-focus-res" class="screen">
+        <h2 style="letter-spacing:5px;">ЦИКЛ ЗАВЕРШЕН</h2>
+        <button class="btn" onclick="logFocus('success')">СИНХРОНИЗАЦИЯ УСПЕШНА</button>
+        <button class="btn btn-red" onclick="sw('s-focus-fail')">КРИТИЧЕСКИЙ СБОЙ</button>
+    </div>
+    <div id="s-focus-fail" class="screen">
+        <h2 style="color:var(--red); letter-spacing:5px; margin-bottom:30px;">АНАЛИЗ СБОЯ</h2>
+        <div class="fail-circles">
+            <div class="f-circle" id="fail-COGNITIVE_ESCAPE" onclick="selectFail('COGNITIVE_ESCAPE')">ESCAPE<span id="g1"></span></div>
+            <div class="f-circle" id="fail-INTERNAL_LOOP" onclick="selectFail('INTERNAL_LOOP')">LOOP<span id="g2"></span></div>
+            <div class="f-circle" id="fail-ENV_DISCOMFORT" onclick="selectFail('ENV_DISCOMFORT')">ENV<span id="g3"></span></div>
+            <div class="f-circle" id="fail-FALSE_URGENCY" onclick="selectFail('FALSE_URGENCY')">URGENCY<span id="g4"></span></div>
+            <div class="f-circle" id="fail-RES_EXHAUSTION" onclick="selectFail('RES_EXHAUSTION')">RES<span id="g5"></span></div>
+        </div>
+        <button class="btn" onclick="sw('s-main')">ВЕРНУТЬСЯ</button>
+    </div>
+    <div id="b-intro" class="screen"><div class="briefing"><h2>ИНИЦИАЦИЯ</h2><p>Запуск протокола определения профиля.</p></div><button class="btn" onclick="sw('s-psych'); renderQ();">ПРОДОЛЖИТЬ</button></div>
+    <div id="s-psych" class="screen"><p id="q-text"></p><div id="q-options"></div></div>
+    <div id="b-react" class="screen"><div class="briefing"><h2>ФАЗА I: СКОРОСТЬ</h2><p>Найдите числа от 1 до 16.</p></div><button class="btn" onclick="startReactTest()">ПОДТВЕРДИТЬ</button></div>
+    <div id="s-react" class="screen"><div id="timer-display">0.000</div><div id="react-grid" class="grid"></div><div id="att-label"></div></div>
+    <div id="b-mem" class="screen"><div class="briefing"><h2>ФАЗА II: ПАМЯТЬ</h2><p>Повторите последовательность.</p></div><button class="btn" onclick="startMemTest()">НАЧАТЬ</button></div>
+    <div id="s-mem" class="screen"><div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr);"></div></div>
+    <div id="b-sync" class="screen"><div class="briefing"><h2>ФАЗА III: ВЕКТОР</h2><p>Выберите два приоритетных узла.</p></div><button class="btn" onclick="startSyncTest()">ПРОДОЛЖИТЬ</button></div>
+    <div id="s-sync" class="screen"><div id="words-container" style="position: relative; width: 100vw; height: 80vh;"></div></div>
+    <div id="m-history" class="modal" onclick="toggleModal('m-history', false)"><div class="modal-content"><h3 style="color:var(--oracle)">LOG_DATA_STREAM</h3><div id="history-content"></div><button class="btn btn-blue" onclick="clearHistory(event)">CLEAR_LOGS</button></div></div>
+    <div id="m-fail-detail" class="modal" onclick="toggleModal('m-fail-detail', false)"><div class="modal-content"><h3 id="fail-title"></h3><p id="fail-desc"></p></div></div>
+    <div id="v-card"><h1 id="v-type"></h1><div class="diag-box"><canvas id="diag-canvas"></canvas></div><div class="stat-row">ЛОГИКА <div class="bar"><div id="v-bar-log" class="fill"></div></div></div><div class="stat-row">ОТКЛИК <div class="bar"><div id="v-bar-react" class="fill"></div></div></div><div class="stat-row">ПАМЯТЬ <div class="bar"><div id="v-bar-mem" class="fill"></div></div></div><div class="ability-badge" onclick="toggleAbility()">МОДУЛЬ: <span id="v-ability-name"></span></div><div id="v-ability-desc" class="ability-info"></div><button class="btn" onclick="backToHub()">ВЕРНУТЬСЯ</button></div><script>
     let aCtx, masterGain, thrillerFilter, lfo;
     let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
     let curQ = 0, reactStartTime, memStep = 0, memSeq = [], timerInterval, memIdx = 0;
@@ -120,19 +144,22 @@
     function logFocusEvent(status, detail = "") { let logs = JSON.parse(localStorage.getItem('focus_logs') || "[]"); logs.unshift({ time: new Date().toLocaleString(), status, type: detail }); localStorage.setItem('focus_logs', JSON.stringify(logs.slice(0, 50))); }
     function showHistory() { const logs = JSON.parse(localStorage.getItem('focus_logs') || "[]"); document.getElementById('history-content').innerHTML = logs.map(l => `<div style="padding:5px 0; border-bottom:1px solid rgba(0,255,65,0.1)">[${l.time}] ${l.status} - ${l.type}</div>`).join(''); toggleModal('m-history', true); }
     function clearHistory(e) { e.stopPropagation(); localStorage.removeItem('focus_logs'); showHistory(); }
-
-    function initFocus(mins) { const endTime = Date.now() + mins * 60 * 1000; localStorage.setItem('focus_end_time', endTime); runFocusUI(endTime); }
-    
-    function runFocusUI(endTime) { 
+    function initFocus(mins) { const endTime = Date.now() + mins * 60 * 1000; localStorage.setItem('focus_end_time', endTime); runFocusUI(endTime); }function runFocusUI(endTime) { 
         sw('s-focus-timer');
         document.getElementById('active-focus-label').style.display = 'block'; 
         clearInterval(focusTimerInterval);
         focusTimerInterval = setInterval(() => { 
             const diff = endTime - Date.now(); 
-            if (diff <= 0) { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); document.getElementById('active-focus-label').style.display = 'none'; sw('s-focus-res'); } 
-            else { 
-                const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0'); const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-                document.getElementById('focus-countdown').innerText = `00:${m}:${s}`; document.getElementById('active-focus-label').innerText = `${m}:${s}`;
+            if (diff <= 0) { 
+                clearInterval(focusTimerInterval); 
+                localStorage.removeItem('focus_end_time'); 
+                document.getElementById('active-focus-label').style.display = 'none'; 
+                sw('s-focus-res'); 
+            } else { 
+                const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                document.getElementById('focus-countdown').innerText = `00:${m}:${s}`;
+                document.getElementById('active-focus-label').innerText = `${m}:${s}`;
             } 
         }, 1000); 
     }
@@ -212,3 +239,5 @@
         }
     };
 </script>
+</body>
+</html>
