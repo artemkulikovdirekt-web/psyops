@@ -1,518 +1,563 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PSY-OPS CORE v.24.5</title>
-    <style>
-        :root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; }
-        
-        body, html { 
-            margin: 0; padding: 0; height: 100%; 
-            background: var(--bg); color: var(--neon); 
-            /* Исправленный шрифт для единообразия */
-            font-family: 'Courier New', Courier, monospace; 
-            font-weight: 100;
-            -webkit-font-smoothing: antialiased;
-            overflow-x: hidden; touch-action: none; 
-        }
-        
-        canvas#m-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.55; z-index: 0; pointer-events: none; }
-        
-        .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; text-align: center; padding: 20px; box-sizing: border-box; }
-        .active { display: flex; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PSY-OPS CORE v.24.5</title>
+    <style>
+        :root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; }
+        
+        body, html { 
+            margin: 0; padding: 0; height: 100%; 
+            background: var(--bg); color: var(--neon); 
+            font-family: 'Courier New', Courier, monospace; 
+            font-weight: 100;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden; touch-action: none; 
+        }
+        
+        canvas#m-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.55; z-index: 0; pointer-events: none; }
+        
+        .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; text-align: center; padding: 20px; box-sizing: border-box; }
+        .active { display: flex; }
 
-        .btn { 
-            background: transparent; 
-            border: 1px solid rgba(0, 255, 65, 0.4); 
-            color: var(--neon); 
-            padding: 18px; 
-            cursor: pointer; 
-            text-transform: uppercase; 
-            font-family: 'Courier New', Courier, monospace; 
-            font-weight: 100; 
-            font-size: 13px; 
-            letter-spacing: 3px; /* Тонкий вид для RU */
-            width: 100%; 
-            max-width: 280px; 
-            margin: 10px 0; 
-            transition: 0.2s; 
-        }
-        .btn:active { background: rgba(0, 255, 65, 0.2); }
-        .btn:disabled { 
-            border-color: rgba(0, 255, 65, 0.1); 
-            color: rgba(0, 255, 65, 0.2); 
-            cursor: default; 
-        }
-        .btn-blue { border-color: rgba(0, 204, 255, 0.4); color: var(--oracle); }
-        .btn-red { border-color: var(--red); color: var(--red); }
+        .btn { 
+            background: transparent; 
+            border: 1px solid rgba(0, 255, 65, 0.4); 
+            color: var(--neon); 
+            padding: 18px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            font-family: 'Courier New', Courier, monospace; 
+            font-weight: 100; 
+            font-size: 13px; 
+            letter-spacing: 3px; 
+            width: 100%; 
+            max-width: 280px; 
+            margin: 10px 0; 
+            transition: 0.2s; 
+        }
+        .btn:active { background: rgba(0, 255, 65, 0.2); }
+        .btn:disabled { 
+            border-color: rgba(0, 255, 65, 0.1); 
+            color: rgba(0, 255, 65, 0.2); 
+            cursor: default; 
+        }
+        .btn-blue { border-color: rgba(0, 204, 255, 0.4); color: var(--oracle); }
+        .btn-red { border-color: var(--red); color: var(--red); }
 
-        .hub-container { 
-            width: 260px; height: 260px; 
-            border: 1px solid rgba(0, 255, 65, 0.2); 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            position: relative; 
-        }
-        #hub-canvas { width: 190px; height: 190px; }
+        .hub-container { 
+            width: 260px; height: 260px; 
+            border: 1px solid rgba(0, 255, 65, 0.2); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            position: relative; 
+        }
+        #hub-canvas { width: 190px; height: 190px; }
 
-        #active-focus-label { 
-            font-size: 32px; 
-            color: var(--neon); 
-            margin-bottom: 15px; 
-            letter-spacing: 5px; 
-            display: none; 
-            text-shadow: 0 0 15px var(--neon);
-            font-weight: 100;
-        }
+        #active-focus-label { 
+            font-size: 32px; 
+            color: var(--neon); 
+            margin-bottom: 15px; 
+            letter-spacing: 5px; 
+            display: none; 
+            text-shadow: 0 0 15px var(--neon);
+            font-weight: 100;
+        }
 
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; max-width: 90vw; }
-        .cell { 
-            aspect-ratio: 1; background: rgba(0, 0, 0, 0.85); 
-            border: 1px solid rgba(255, 255, 255, 0.15); 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 20px; color: var(--neon); transition: 0.1s; 
-            font-weight: 100;
-        }
-        .cell.err { background: var(--red) !important; color: #fff; }
-        .cell.ok { background: var(--neon) !important; color: #000; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; max-width: 90vw; }
+        .cell { 
+            aspect-ratio: 1; background: rgba(0, 0, 0, 0.85); 
+            border: 1px solid rgba(255, 255, 255, 0.15); 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 20px; color: var(--neon); transition: 0.1s; 
+            font-weight: 100;
+        }
+        .cell.err { background: var(--red) !important; color: #fff; }
+        .cell.ok { background: var(--neon) !important; color: #000; }
 
-        .briefing { max-width: 340px; width: 90vw; text-align: left; border-left: 1px solid rgba(0, 255, 65, 0.4); padding-left: 20px; margin-bottom: 40px; }
-        .briefing h2 { color: var(--oracle); letter-spacing: 6px; font-weight: 100; font-size: 16px; margin-bottom: 12px; }
-        .briefing p { font-size: 13px; line-height: 1.6; opacity: 0.8; letter-spacing: 1px; }
+        .briefing { max-width: 340px; width: 90vw; text-align: left; border-left: 1px solid rgba(0, 255, 65, 0.4); padding-left: 20px; margin-bottom: 40px; }
+        .briefing h2 { color: var(--oracle); letter-spacing: 6px; font-weight: 100; font-size: 16px; margin-bottom: 12px; }
+        .briefing p { font-size: 13px; line-height: 1.6; opacity: 0.8; letter-spacing: 1px; }
 
-        .timer-val { font-size: 54px; text-shadow: 0 0 20px var(--neon); margin: 20px 0; letter-spacing: 5px; font-weight: 100; }
-        
-        .fail-circles { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 340px; }
-        .f-circle { 
-            width: 85px; height: 85px; border: 1px solid rgba(0, 255, 65, 0.3); 
-            border-radius: 50%; display: flex; flex-direction: column; 
-            align-items: center; justify-content: center; cursor: pointer;
-            font-size: 8px; text-align: center; padding: 5px; box-sizing: border-box;
-            transition: 0.3s; font-weight: 100; letter-spacing: 1px;
-        }
-        .f-circle.selected-fail { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); color: var(--neon); }
-        .f-circle span { font-size: 18px; color: var(--oracle); margin-top: 5px; }
+        .timer-val { font-size: 54px; text-shadow: 0 0 20px var(--neon); margin: 20px 0; letter-spacing: 5px; font-weight: 100; }
+        
+        .fail-circles { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 340px; }
+        .f-circle { 
+            width: 85px; height: 85px; border: 1px solid rgba(0, 255, 65, 0.3); 
+            border-radius: 50%; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; cursor: pointer;
+            font-size: 8px; text-align: center; padding: 5px; box-sizing: border-box;
+            transition: 0.3s; font-weight: 100; letter-spacing: 1px;
+        }
+        .f-circle.selected-fail { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); color: var(--neon); }
+        .f-circle span { font-size: 18px; color: var(--oracle); margin-top: 5px; }
 
-        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px; box-sizing: border-box; }
-        .modal-content { border: 1px solid var(--neon); padding: 25px; width: 100%; max-width: 320px; font-size: 13px; background:#000; color: var(--neon); position: relative; letter-spacing: 1px; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px; box-sizing: border-box; }
+        .modal-content { border: 1px solid var(--neon); padding: 25px; width: 100%; max-width: 320px; font-size: 13px; background:#000; color: var(--neon); position: relative; letter-spacing: 1px; }
 
-        #v-card { 
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
-            width: 92%; max-width: 370px; background: #000; 
-            border: 1px solid rgba(0, 255, 65, 0.6); 
-            padding: 30px 20px; z-index: 1000; 
-            display: none; flex-direction: column; align-items: center; 
-        }
-        #v-card.open { display: flex; }
+        #v-card { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 92%; max-width: 370px; background: #000; 
+            border: 1px solid rgba(0, 255, 65, 0.6); 
+            padding: 30px 20px; z-index: 1000; 
+            display: none; flex-direction: column; align-items: center; 
+        }
+        #v-card.open { display: flex; }
 
-        .diag-box { position: relative; width: 260px; height: 260px; margin: 10px 0; }
-        #diag-canvas { width: 260px; height: 260px; }
+        .diag-box { position: relative; width: 260px; height: 260px; margin: 10px 0; }
+        #diag-canvas { width: 260px; height: 260px; }
 
-        .stat-row { width: 100%; margin: 8px 0; font-size: 9px; letter-spacing: 2px; opacity: 0.8; text-align: left; }
-        .bar { width: 100%; height: 2px; background: #0a0a0a; margin-top: 6px; }
-        .fill { height: 100%; width: 0%; background: var(--neon); transition: 2s cubic-bezier(0.1, 0, 0, 1); }
+        .stat-row { width: 100%; margin: 8px 0; font-size: 9px; letter-spacing: 2px; opacity: 0.8; text-align: left; }
+        .bar { width: 100%; height: 2px; background: #0a0a0a; margin-top: 6px; }
+        .fill { height: 100%; width: 0%; background: var(--neon); transition: 2s cubic-bezier(0.1, 0, 0, 1); }
 
-        .ability-badge { border: 1px solid rgba(0, 204, 255, 0.3); padding: 14px; font-size: 11px; margin-top: 15px; cursor: pointer; text-align: center; width: 100%; box-sizing: border-box; color: var(--oracle); letter-spacing: 3px; }
-        .ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05); padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); letter-spacing: 1px; }
+        .ability-badge { border: 1px solid rgba(0, 204, 255, 0.3); padding: 14px; font-size: 11px; margin-top: 15px; cursor: pointer; text-align: center; width: 100%; box-sizing: border-box; color: var(--oracle); letter-spacing: 3px; }
+        .ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05); padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); letter-spacing: 1px; }
 
-        .sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; font-weight: 100; }
-    </style>
+        .sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; font-weight: 100; }
+        
+        #history-content div { border-bottom: 1px solid rgba(0, 255, 65, 0.1); padding: 5px 0; }
+    </style>
 </head>
 <body>
-    <canvas id="m-bg"></canvas>
+    <canvas id="m-bg"></canvas>
 
-    <div id="s-main" class="screen active">
-        <div id="active-focus-label">00:00</div>
-        
-        <div class="hub-container" onclick="showStoredProfile()">
-            <canvas id="hub-canvas"></canvas>
-            <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
-        </div>
+    <div id="s-main" class="screen active">
+        <div id="active-focus-label">00:00</div>
+        
+        <div class="hub-container" onclick="showStoredProfile()">
+            <canvas id="hub-canvas"></canvas>
+            <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
+        </div>
 
-        <div id="focus-module" style="display:none; margin-top: 25px; width: 100%; max-width: 280px;">
-            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 10px; letter-spacing: 3px; opacity: 0.7;">FOCUS_PROTOCOL</span>
-                <span onclick="toggleModal('m-info-1', true)" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid">[ i ] INFO</span>
-            </div>
-            <div style="display:flex; gap:5px; width:100%;">
-                <button class="btn" style="font-size:10px; padding:12px; letter-spacing:1px;" onclick="initFocus(10)">10 MIN</button>
-                <button class="btn" style="font-size:10px; padding:12px; letter-spacing:1px;" onclick="initFocus(30)">30 MIN</button>
-                <button class="btn" style="font-size:10px; padding:12px; letter-spacing:1px;" onclick="initFocus(60)">60 MIN</button>
-            </div>
-        </div>
+        <div id="focus-module" style="display:none; margin-top: 25px; width: 100%; max-width: 320px; border: 1px solid rgba(0, 255, 65, 0.1); padding: 15px; box-sizing: border-box;">
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%;">
+                <span onclick="showHistory()" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid; letter-spacing: 1px;">[ H ] HISTORY</span>
+                <span style="font-size: 10px; letter-spacing: 3px; opacity: 0.9; color: var(--neon);">FOCUS_PROTOCOL</span>
+                <span onclick="toggleModal('m-info-1', true)" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid">[ i ] INFO</span>
+            </div>
+            <div style="display:flex; gap:5px; width:100%;">
+                <button class="btn" style="font-size:10px; padding:12px; letter-spacing:1px;" onclick="initFocus(10)">10 MIN</button>
+                <button class="btn" style="font-size:10px; padding:12px; letter-spacing:1px;" onclick="initFocus(30)">30 MIN</button>
+                <button class="btn" style="font-size:10px; padding:12px; letter-spacing:1px;" onclick="initFocus(60)">60 MIN</button>
+            </div>
+        </div>
 
-        <button id="start-btn" class="btn" style="margin-top: 40px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
-        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;">ОРАКУЛ</button>
-    </div>
+        <button id="start-btn" class="btn" style="margin-top: 40px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
+        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;">ОРАКУЛ</button>
+    </div>
 
-    <div id="b-intro" class="screen">
-        <div class="briefing">
-            <h2>ИНИЦИАЦИЯ</h2>
-            <p>Запуск протокола определения психо-когнитивного профиля. Будьте сосредоточены. Система анализирует паттерны нейронного отклика в реальном времени.</p>
-        </div>
-        <button class="btn" onclick="sw('s-psych'); renderQ();">ПРОДОЛЖИТЬ</button>
-    </div>
+    <div id="b-intro" class="screen">
+        <div class="briefing">
+            <h2>ИНИЦИАЦИЯ</h2>
+            <p>Запуск протокола определения психо-когнитивного профиля. Будьте сосредоточены. Система анализирует паттерны нейронного отклика в реальном времени.</p>
+        </div>
+        <button class="btn" onclick="sw('s-psych'); renderQ();">ПРОДОЛЖИТЬ</button>
+    </div>
 
-    <div id="s-psych" class="screen">
-        <p id="q-text" style="letter-spacing:1px;"></p>
-        <div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div>
-    </div>
+    <div id="s-psych" class="screen">
+        <p id="q-text" style="letter-spacing:1px;"></p>
+        <div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div>
+    </div>
 
-    <div id="b-react" class="screen">
-        <div class="briefing">
-            <h2>ФАЗА I: СКОРОСТЬ</h2>
-            <p>Синхронизация нейронного отклика. Найдите числа от 1 до 16. Любая ошибка блокирует систему на 200мс.</p>
-        </div>
-        <button class="btn" onclick="startReactTest()">ПОДТВЕРДИТЬ</button>
-    </div>
+    <div id="b-react" class="screen">
+        <div class="briefing">
+            <h2>ФАЗА I: СКОРОСТЬ</h2>
+            <p>Синхронизация нейронного отклика. Найдите числа от 1 до 16. Любая ошибка блокирует систему на 200мс.</p>
+        </div>
+        <button class="btn" onclick="startReactTest()">ПОДТВЕРДИТЬ</button>
+    </div>
 
-    <div id="s-react" class="screen">
-        <div id="timer-display" style="font-size: 26px; color: var(--oracle); margin-bottom: 10px;">0.000</div>
-        <div id="react-grid" class="grid"></div>
-        <div id="att-label" style="margin-top: 30px; color: var(--red); letter-spacing: 12px; font-size: 10px;"></div>
-    </div>
+    <div id="s-react" class="screen">
+        <div id="timer-display" style="font-size: 26px; color: var(--oracle); margin-bottom: 10px;">0.000</div>
+        <div id="react-grid" class="grid"></div>
+        <div id="att-label" style="margin-top: 30px; color: var(--red); letter-spacing: 12px; font-size: 10px;"></div>
+    </div>
 
-    <div id="b-mem" class="screen">
-        <div class="briefing">
-            <h2>ФАЗА II: ПАМЯТЬ</h2>
-            <p>Восстановление поврежденного сектора. Повторите последовательность световых импульсов в точном порядке.</p>
-        </div>
-        <button class="btn" onclick="startMemTest()">НАЧАТЬ</button>
-    </div>
+    <div id="b-mem" class="screen">
+        <div class="briefing">
+            <h2>ФАЗА II: ПАМЯТЬ</h2>
+            <p>Восстановление поврежденного сектора. Повторите последовательность световых импульсов в точном порядке.</p>
+        </div>
+        <button class="btn" onclick="startMemTest()">НАЧАТЬ</button>
+    </div>
 
-    <div id="s-mem" class="screen">
-        <div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 280px;"></div>
-    </div>
+    <div id="s-mem" class="screen">
+        <div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 280px;"></div>
+    </div>
 
-    <div id="b-sync" class="screen">
-        <div class="briefing">
-            <h2>ФАЗА III: ВЕКТОР</h2>
-            <p>Определение семантических доминант. Выберите два приоритетных узла в потоке данных для завершения синхронизации.</p>
-        </div>
-        <button class="btn" onclick="startSyncTest()">ПРОДОЛЖИТЬ</button>
-    </div>
+    <div id="b-sync" class="screen">
+        <div class="briefing">
+            <h2>ФАЗА III: ВЕКТОР</h2>
+            <p>Определение семантических доминант. Выберите два приоритетных узла в потоке данных для завершения синхронизации.</p>
+        </div>
+        <button class="btn" onclick="startSyncTest()">ПРОДОЛЖИТЬ</button>
+    </div>
 
-    <div id="s-sync" class="screen">
-        <div id="words-container" style="position: relative; width: 100vw; height: 80vh;"></div>
-    </div>
+    <div id="s-sync" class="screen">
+        <div id="words-container" style="position: relative; width: 100vw; height: 80vh;"></div>
+    </div>
 
-    <div id="s-focus-timer" class="screen">
-        <div style="letter-spacing:10px; opacity:0.5; font-size:12px;">PROTOCOL_ACTIVE</div>
-        <div id="focus-countdown" class="timer-val">00:00:00</div>
-        <button class="btn" style="border-color:var(--neon)" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
-        <button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
-        <button onclick="const newEnd = Date.now() + 1000; localStorage.setItem('focus_end_time', newEnd); runFocusUI(newEnd);" style="background:transparent; border:none; color:transparent; cursor:pointer; margin-top:10px; font-size:10px; width:100%; max-width:280px;">[ DEBUG: FORCE_FINISH ]</button>
-    </div>
+    <div id="s-focus-timer" class="screen">
+        <div style="letter-spacing:10px; opacity:0.5; font-size:12px;">PROTOCOL_ACTIVE</div>
+        <div id="focus-countdown" class="timer-val">00:00:00</div>
+        <button class="btn" style="border-color:var(--neon)" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
+        <button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
+    </div>
 
-    <div id="s-focus-res" class="screen">
-        <h2 style="letter-spacing:5px;">ЦИКЛ ЗАВЕРШЕН</h2>
-        <button class="btn" style="border-color:var(--neon)" onclick="logFocus('success')">СИНХРОНИЗАЦИЯ УСПЕШНА</button>
-        <button class="btn btn-red" onclick="sw('s-focus-fail')">КРИТИЧЕСКИЙ СБОЙ</button>
-    </div>
+    <div id="s-focus-res" class="screen">
+        <h2 style="letter-spacing:5px;">ЦИКЛ ЗАВЕРШЕН</h2>
+        <button class="btn" style="border-color:var(--neon)" onclick="logFocus('success')">СИНХРОНИЗАЦИЯ УСПЕШНА</button>
+        <button class="btn btn-red" onclick="sw('s-focus-fail')">КРИТИЧЕСКИЙ СБОЙ</button>
+    </div>
 
-    <div id="s-focus-fail" class="screen">
-        <h2 style="color:var(--red); letter-spacing:5px; margin-bottom:30px;">АНАЛИЗ СБОЯ</h2>
-        <div class="fail-circles">
-            <div class="f-circle" id="fail-COGNITIVE_ESCAPE" onclick="selectFail('COGNITIVE_ESCAPE')">ESCAPE<span id="g1"></span></div>
-            <div class="f-circle" id="fail-INTERNAL_LOOP" onclick="selectFail('INTERNAL_LOOP')">LOOP<span id="g2"></span></div>
-            <div class="f-circle" id="fail-ENV_DISCOMFORT" onclick="selectFail('ENV_DISCOMFORT')">ENV<span id="g3"></span></div>
-            <div class="f-circle" id="fail-FALSE_URGENCY" onclick="selectFail('FALSE_URGENCY')">URGENCY<span id="g4"></span></div>
-            <div class="f-circle" id="fail-RES_EXHAUSTION" onclick="selectFail('RES_EXHAUSTION')">RES<span id="g5"></span></div>
-        </div>
-        <button class="btn" style="margin-top:40px; border-color:rgba(0,255,65,0.2)" onclick="sw('s-main')">ВЕРНУТЬСЯ</button>
-    </div>
+    <div id="s-focus-fail" class="screen">
+        <h2 style="color:var(--red); letter-spacing:5px; margin-bottom:30px;">АНАЛИЗ СБОЯ</h2>
+        <div class="fail-circles">
+            <div class="f-circle" id="fail-COGNITIVE_ESCAPE" onclick="selectFail('COGNITIVE_ESCAPE')">ESCAPE<span id="g1"></span></div>
+            <div class="f-circle" id="fail-INTERNAL_LOOP" onclick="selectFail('INTERNAL_LOOP')">LOOP<span id="g2"></span></div>
+            <div class="f-circle" id="fail-ENV_DISCOMFORT" onclick="selectFail('ENV_DISCOMFORT')">ENV<span id="g3"></span></div>
+            <div class="f-circle" id="fail-FALSE_URGENCY" onclick="selectFail('FALSE_URGENCY')">URGENCY<span id="g4"></span></div>
+            <div class="f-circle" id="fail-RES_EXHAUSTION" onclick="selectFail('RES_EXHAUSTION')">RES<span id="g5"></span></div>
+        </div>
+        <button class="btn" style="margin-top:40px; border-color:rgba(0,255,65,0.2)" onclick="sw('s-main')">ВЕРНУТЬСЯ</button>
+    </div>
 
-    <div id="m-info-1" class="modal">
-        <div class="modal-content">
-            <h3 style="color:var(--oracle); letter-spacing:2px;">FOCUS_PROTOCOL: INFO [1/2]</h3>
-            <p style="text-align:left; line-height:1.6; font-size:12px;">
-                FOCUS_PROTOCOL — это режим принудительной синхронизации когнитивного процесса. Внимание — это единственный конечный ресурс вашей нейронной сети. Любое внешнее отвлечение вызывает фрагментацию сознания, требуя до 23 минут на восстановление исходной глубины погружения.
-            </p>
-            <button class="btn" onclick="toggleModal('m-info-1', false); toggleModal('m-info-2', true);">ДАЛЕЕ</button>
-        </div>
-    </div>
+    <div id="m-info-1" class="modal">
+        <div class="modal-content">
+            <h3 style="color:var(--oracle); letter-spacing:2px;">FOCUS_PROTOCOL: INFO [1/2]</h3>
+            <p style="text-align:left; line-height:1.6; font-size:12px;">
+                FOCUS_PROTOCOL — это режим принудительной синхронизации когнитивного процесса. Внимание — это единственный конечный ресурс вашей нейронной сети. Любое внешнее отвлечение вызывает фрагментацию сознания.
+            </p>
+            <button class="btn" onclick="toggleModal('m-info-1', false); toggleModal('m-info-2', true);">ДАЛЕЕ</button>
+        </div>
+    </div>
 
-    <div id="m-info-2" class="modal">
-        <div class="modal-content">
-            <h3 style="color:var(--oracle); letter-spacing:2px;">FOCUS_PROTOCOL: INFO [2/2]</h3>
-            <p style="text-align:left; line-height:1.6; font-size:12px;">
-                ДИРЕКТИВА:<br>
-                1. Устраните цифровые шумы.<br>
-                2. После активации таймера аппарат сознания должен быть замкнут на одной целевой задаче. Любое переключение внимания — критический сбой.<br>
-                3. По завершении цикла подтвердите статус сессии.
-            </p>
-            <button class="btn" onclick="toggleModal('m-info-2', false)">ПРИНЯТЬ</button>
-        </div>
-    </div>
+    <div id="m-info-2" class="modal">
+        <div class="modal-content">
+            <h3 style="color:var(--oracle); letter-spacing:2px;">FOCUS_PROTOCOL: INFO [2/2]</h3>
+            <p style="text-align:left; line-height:1.6; font-size:12px;">
+                ДИРЕКТИВА:<br>
+                1. Устраните цифровые шумы.<br>
+                2. После активации таймера аппарат сознания должен быть замкнут на одной целевой задаче.<br>
+                3. По завершении цикла подтвердите статус сессии.
+            </p>
+            <button class="btn" onclick="toggleModal('m-info-2', false)">ПРИНЯТЬ</button>
+        </div>
+    </div>
 
-    <div id="m-fail-detail" class="modal" onclick="toggleModal('m-fail-detail', false)">
-        <div class="modal-content" style="border-color:var(--red)">
-            <h3 id="fail-title" style="color:var(--red); letter-spacing:2px;"></h3>
-            <p id="fail-desc" style="text-align:left; line-height:1.6;"></p>
-            <p style="font-size:10px; opacity:0.5; margin-top:20px;">[ НАЖМИТЕ ДЛЯ ЗАКРЫТИЯ ]</p>
-        </div>
-    </div>
+    <div id="m-history" class="modal" onclick="toggleModal('m-history', false)">
+        <div class="modal-content" style="border-color:var(--oracle); max-width: 340px;">
+            <h3 style="color:var(--oracle); letter-spacing:2px;">LOG_DATA_STREAM</h3>
+            <div id="history-content" style="text-align:left; max-height: 300px; overflow-y: auto; font-size: 11px; font-family: monospace;"></div>
+            <button class="btn btn-blue" style="margin-top:20px;" onclick="clearHistory(event)">CLEAR_LOGS</button>
+        </div>
+    </div>
 
-    <div id="v-card">
-        <h1 id="v-type" style="letter-spacing: 10px; font-weight: 100; margin: 0;"></h1>
-        <div class="diag-box"><canvas id="diag-canvas"></canvas></div>
-        <div class="stat-row">ЛОГИКА <div class="bar"><div id="v-bar-log" class="fill"></div></div></div>
-        <div class="stat-row">ОТКЛИК <div class="bar"><div id="v-bar-react" class="fill" style="background:var(--red)"></div></div></div>
-        <div class="stat-row">ПАМЯТЬ <div class="bar"><div id="v-bar-mem" class="fill" style="background:var(--oracle)"></div></div></div>
-        <div class="ability-badge" onclick="toggleAbility()">МОДУЛЬ: <span id="v-ability-name"></span></div>
-        <div id="v-ability-desc" class="ability-info"></div>
-        <button class="btn" style="margin-top: 20px;" onclick="backToHub()">ВЕРНУТЬСЯ</button>
-    </div>
+    <div id="m-fail-detail" class="modal" onclick="toggleModal('m-fail-detail', false)">
+        <div class="modal-content" style="border-color:var(--red)">
+            <h3 id="fail-title" style="color:var(--red); letter-spacing:2px;"></h3>
+            <p id="fail-desc" style="text-align:left; line-height:1.6;"></p>
+            <p style="font-size:10px; opacity:0.5; margin-top:20px;">[ НАЖМИТЕ ДЛЯ ЗАКРЫТИЯ ]</p>
+        </div>
+    </div>
 
-    <script>
-        let aCtx, masterGain, thrillerFilter, lfo;
-        let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
-        let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
-        let selectedWordsCount = 0, activeWordsOnScreen = 0, focusTimerInterval, lockInterval;
+    <div id="v-card">
+        <h1 id="v-type" style="letter-spacing: 10px; font-weight: 100; margin: 0;"></h1>
+        <div class="diag-box"><canvas id="diag-canvas"></canvas></div>
+        <div class="stat-row">ЛОГИКА <div class="bar"><div id="v-bar-log" class="fill"></div></div></div>
+        <div class="stat-row">ОТКЛИК <div class="bar"><div id="v-bar-react" class="fill" style="background:var(--red)"></div></div></div>
+        <div class="stat-row">ПАМЯТЬ <div class="bar"><div id="v-bar-mem" class="fill" style="background:var(--oracle)"></div></div></div>
+        <div class="ability-badge" onclick="toggleAbility()">МОДУЛЬ: <span id="v-ability-name"></span></div>
+        <div id="v-ability-desc" class="ability-info"></div>
+        <button class="btn" style="margin-top: 20px;" onclick="backToHub()">ВЕРНУТЬСЯ</button>
+    </div><script>
+        let aCtx, masterGain, thrillerFilter, lfo;
+        let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
+        let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
+        let selectedWordsCount = 0, activeWordsOnScreen = 0, focusTimerInterval, lockInterval;
 
-        const FAIL_DATA = {
-            'COGNITIVE_ESCAPE': { t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу.', d: 'Стремление мозга избежать когнитивного давления путем переключения на знакомые, легкие действия (соцсети, новости).' },
-            'INTERNAL_LOOP': { t: '[ INTERNAL_LOOP ] — Зацикленность на мыслях.', d: 'Потеря фокуса из-за внутренней рефлексии или бесконечного обдумывания побочных идей, не связанных с задачей.' },
-            'ENV_DISCOMFORT': { t: '[ ENV_DISCOMFORT ] — Дискомфорт среды.', d: 'Внешние физические факторы (шум, свет, эргономика), подрывающие стабильность концентрации.' },
-            'FALSE_URGENCY': { t: '[ FALSE_URGENCY ] — Внезапные важные дела.', d: 'Иллюзия необходимости немедленного решения второстепенных задач, возникающая как форма саботажа.' },
-            'RES_EXHAUSTION': { t: '[ RES_EXHAUSTION ] — Истощение ресурса.', d: 'Критическое снижение уровня нейропластичности и глюкозы. Внимание — это единственный конечный ресурс вашей нейронной сети.' }
-        };
+        const FAIL_DATA = {
+            'COGNITIVE_ESCAPE': { t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу.', d: 'Стремление мозга избежать когнитивного давления путем переключения на знакомые, легкие действия.' },
+            'INTERNAL_LOOP': { t: '[ INTERNAL_LOOP ] — Зацикленность на мыслях.', d: 'Потеря фокуса из-за внутренней рефлексии или бесконечного обдумывания побочных идей.' },
+            'ENV_DISCOMFORT': { t: '[ ENV_DISCOMFORT ] — Дискомфорт среды.', d: 'Внешние физические факторы (шум, свет), подрывающие концентрацию.' },
+            'FALSE_URGENCY': { t: '[ FALSE_URGENCY ] — Внезапные важные дела.', d: 'Иллюзия необходимости немедленного решения второстепенных задач.' },
+            'RES_EXHAUSTION': { t: '[ RES_EXHAUSTION ] — Истощение ресурса.', d: 'Критическое снижение уровня нейропластичности. Внимание исчерпано.' }
+        };
 
-        function startAudioEngine() {
-            if (aCtx) return;
-            aCtx = new (window.AudioContext || window.webkitAudioContext)();
-            masterGain = aCtx.createGain(); masterGain.gain.value = 0.15; masterGain.connect(aCtx.destination);
-            const osc1 = aCtx.createOscillator(); const osc2 = aCtx.createOscillator();
-            thrillerFilter = aCtx.createBiquadFilter(); lfo = aCtx.createOscillator();
-            const lfoGain = aCtx.createGain();
-            osc1.type = 'sawtooth'; osc1.frequency.value = 42; osc2.type = 'square'; osc2.frequency.value = 42.2;
-            thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180; thrillerFilter.Q.value = 10;
-            lfo.type = 'sine'; lfo.frequency.value = 0.08; lfoGain.gain.value = 100;
-            lfo.connect(lfoGain); lfoGain.connect(thrillerFilter.frequency);
-            osc1.connect(thrillerFilter); osc2.connect(thrillerFilter);
-            thrillerFilter.connect(masterGain); osc1.start(); osc2.start(); lfo.start();
-        }
+        const PROFILES = {
+            "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий." },
+            "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов." },
+            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме." },
+            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в контурах." }
+        };
 
-        function playSound(f, d, type='sine', v=0.1) {
-            if(!aCtx) return;
-            const o = aCtx.createOscillator(); const g = aCtx.createGain();
-            o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime);
-            g.gain.setValueAtTime(v, aCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + d);
-            o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
-        }
+        const QUESTIONS = [
+            {q: "Система взломана. Твой первый шаг?", o: [{t: "Анализ кода", a: "АРХИТЕКТОР"}, {t: "Удаление сектора", a: "ИМПУЛЬС"}]},
+            {q: "Доступ к сети ценой личности. Согласишься?", o: [{t: "Оценка рисков", a: "АНАЛИТИК"}, {t: "Усиление щитов", a: "СКАНЕР"}]},
+            {q: "Что важнее: структура или динамика?", o: [{t: "Структура", a: "АРХИТЕКТОР"}, {t: "Динамика", a: "ИМПУЛЬС"}]},
+            {q: "Чужой сигнал в твоем канале. Действия?", o: [{t: "Отслеживание", a: "АНАЛИТИК"}, {t: "Агрессивный ответ", a: "СКАНЕР"}]},
+            {q: "Код — это язык или оружие?", o: [{t: "Язык", a: "АРХИТЕКТОР"}, {t: "Оружие", a: "ИМПУЛЬС"}]},
+            {q: "Неизвестный файл в карантине. Что делать?", o: [{t: "Изоляция", a: "СКАНЕР"}, {t: "Дешифровка", a: "АНАЛИТИК"}]},
+            {q: "Где корень ошибок: в человеке или в коде?", o: [{t: "В человеке", a: "АРХИТЕКТОР"}, {t: "В коде", a: "ИМПУЛЬС"}]},
+            {q: "Источник силы: данные или чутье?", o: [{t: "Данные", a: "АНАЛИТИК"}, {t: "Чутье", a: "СКАНЕР"}]},
+            {q: "Тишина вызывает покой или тревогу?", o: [{t: "Тревогу", a: "СКАНЕР"}, {t: "Покой", a: "АРХИТЕКТОР"}]},
+            {q: "Твоя цель: абсолютный контроль или мощь?", o: [{t: "Контроль", a: "АРХИТЕКТОР"}, {t: "Мощь", a: "ИМПУЛЬС"}]}
+        ];
 
-        const PROFILES = {
-            "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий." },
-            "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов." },
-            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме." },
-            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в контурах." }
-        };
+        const SYNC_WORDS = [{t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"}, {t: "Δ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ω", a: "АНАЛИТИК"}, {t: "Ψ", a: "СКАНЕР"}, {t: "КОНТРОЛЬ", a: "АРХИТЕКТОР"}, {t: "ПОТОК", a: "ИМПУЛЬС"}, {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "Ξ", a: "СКАНЕР"}, {t: "ИМПУЛЬС", a: "ИМПУЛЬС"}, {t: "λ", a: "АРХИТЕКТОР"}, {t: "МАТРИЦА", a: "АНАЛИТИК"}, {t: "ВЕКТОР", a: "АРХИТЕКТОР"}, {t: "Ø", a: "АНАЛИТИК"}, {t: "ТЕНЬ", a: "СКАНЕР"}, {t: "КАНАЛ", a: "ИМПУЛЬС"}, {t: "ВЗЛОМ", a: "СКАНЕР"}];
 
-        const QUESTIONS = [
-            {q: "Система взломана. Твой первый шаг?", o: [{t: "Анализ кода", a: "АРХИТЕКТОР"}, {t: "Удаление сектора", a: "ИМПУЛЬС"}]},
-            {q: "Доступ к сети ценой личности. Согласишься?", o: [{t: "Оценка рисков", a: "АНАЛИТИК"}, {t: "Усиление щитов", a: "СКАНЕР"}]},
-            {q: "Что важнее: структура или динамика?", o: [{t: "Структура", a: "АРХИТЕКТОР"}, {t: "Динамика", a: "ИМПУЛЬС"}]},
-            {q: "Чужой сигнал в твоем канале. Действия?", o: [{t: "Отслеживание", a: "АНАЛИТИК"}, {t: "Агрессивный ответ", a: "СКАНЕР"}]},
-            {q: "Код — это язык или оружие?", o: [{t: "Язык", a: "АРХИТЕКТОР"}, {t: "Оружие", a: "ИМПУЛЬС"}]},
-            {q: "Неизвестный файл в карантине. Что делать?", o: [{t: "Изоляция", a: "СКАНЕР"}, {t: "Дешифровка", a: "АНАЛИТИК"}]},
-            {q: "Где корень ошибок: в человеке или в коде?", o: [{t: "В человеке", a: "АРХИТЕКТОР"}, {t: "В коде", a: "ИМПУЛЬС"}]},
-            {q: "Источник силы: данные или чутье?", o: [{t: "Данные", a: "АНАЛИТИК"}, {t: "Чутье", a: "СКАНЕР"}]},
-            {q: "Тишина вызывает покой или тревогу?", o: [{t: "Тревогу", a: "СКАНЕР"}, {t: "Покой", a: "АРХИТЕКТОР"}]},
-            {q: "Твоя цель: абсолютный контроль или мощь?", o: [{t: "Контроль", a: "АРХИТЕКТОР"}, {t: "Мощь", a: "ИМПУЛЬС"}]}
-        ];
+        function startAudioEngine() {
+            if (aCtx) return;
+            aCtx = new (window.AudioContext || window.webkitAudioContext)();
+            masterGain = aCtx.createGain(); masterGain.gain.value = 0.15; masterGain.connect(aCtx.destination);
+            const osc1 = aCtx.createOscillator(); const osc2 = aCtx.createOscillator();
+            thrillerFilter = aCtx.createBiquadFilter(); lfo = aCtx.createOscillator();
+            const lfoGain = aCtx.createGain();
+            osc1.type = 'sawtooth'; osc1.frequency.value = 42; osc2.type = 'square'; osc2.frequency.value = 42.2;
+            thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180; thrillerFilter.Q.value = 10;
+            lfo.type = 'sine'; lfo.frequency.value = 0.08; lfoGain.gain.value = 100;
+            lfo.connect(lfoGain); lfoGain.connect(thrillerFilter.frequency);
+            osc1.connect(thrillerFilter); osc2.connect(thrillerFilter);
+            thrillerFilter.connect(masterGain); osc1.start(); osc2.start(); lfo.start();
+        }
 
-        const SYNC_WORDS = [{t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"}, {t: "Δ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ω", a: "АНАЛИТИК"}, {t: "Ψ", a: "СКАНЕР"}, {t: "КОНТРОЛЬ", a: "АРХИТЕКТОР"}, {t: "ПОТОК", a: "ИМПУЛЬС"}, {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "Ξ", a: "СКАНЕР"}, {t: "ИМПУЛЬС", a: "ИМПУЛЬС"}, {t: "λ", a: "АРХИТЕКТОР"}, {t: "МАТРИЦА", a: "АНАЛИТИК"}, {t: "ВЕКТОР", a: "АРХИТЕКТОР"}, {t: "Ø", a: "АНАЛИТИК"}, {t: "ТЕНЬ", a: "СКАНЕР"}, {t: "КАНАЛ", a: "ИМПУЛЬС"}, {t: "ВЗЛОМ", a: "СКАНЕР"}];
+        function playSound(f, d, type='sine', v=0.1) {
+            if(!aCtx) return;
+            const o = aCtx.createOscillator(); const g = aCtx.createGain();
+            o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime);
+            g.gain.setValueAtTime(v, aCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + d);
+            o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
+        }
 
-        function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
-        function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
+        function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+        function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
-        // LOCK SYSTEM (6 HOURS)
-        function setTestLock() {
-            const unlockTime = Date.now() + (6 * 60 * 60 * 1000);
-            localStorage.setItem('test_unlock_time', unlockTime);
-            updateLockUI();
-        }
-        function updateLockUI() {
-            const btn = document.getElementById('start-btn');
-            const unlockAt = localStorage.getItem('test_unlock_time');
-            if(!unlockAt) return;
+        function setTestLock() {
+            const unlockTime = Date.now() + (6 * 60 * 60 * 1000);
+            localStorage.setItem('test_unlock_time', unlockTime);
+            updateLockUI();
+        }
+        function updateLockUI() {
+            const btn = document.getElementById('start-btn');
+            const unlockAt = localStorage.getItem('test_unlock_time');
+            if(!unlockAt) return;
+            clearInterval(lockInterval);
+            lockInterval = setInterval(() => {
+                const diff = unlockAt - Date.now();
+                if(diff <= 0) {
+                    clearInterval(lockInterval);
+                    localStorage.removeItem('test_unlock_time');
+                    btn.disabled = false; btn.innerText = "ЗАПУСТИТЬ ТЕСТ";
+                } else {
+                    btn.disabled = true;
+                    const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    btn.innerText = `БЛОКИРОВКА: ${h}:${m}:${s}`;
+                }
+            }, 1000);
+        }
 
-            clearInterval(lockInterval);
-            lockInterval = setInterval(() => {
-                const diff = unlockAt - Date.now();
-                if(diff <= 0) {
-                    clearInterval(lockInterval);
-                    localStorage.removeItem('test_unlock_time');
-                    btn.disabled = false;
-                    btn.innerText = "ЗАПУСТИТЬ ТЕСТ";
-                } else {
-                    btn.disabled = true;
-                    const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
-                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-                    btn.innerText = `БЛОКИРОВКА: ${h}:${m}:${s}`;
-                }
-            }, 1000);
-        }
+        function logFocusEvent(status, detail = "") {
+            let logs = JSON.parse(localStorage.getItem('focus_logs') || "[]");
+            const entry = {
+                time: new Date().toLocaleString('ru-RU', {hour: '2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}),
+                status: status, type: detail
+            };
+            logs.unshift(entry);
+            if(logs.length > 50) logs.pop();
+            localStorage.setItem('focus_logs', JSON.stringify(logs));
+        }
 
-        // FOCUS LOGIC
-        function initFocus(mins) {
-            const endTime = Date.now() + mins * 60 * 1000;
-            localStorage.setItem('focus_end_time', endTime);
-            document.getElementById('active-focus-label').style.display = 'block';
-            runFocusUI(endTime);
-        }
-        function runFocusUI(endTime) {
-            sw('s-focus-timer'); clearInterval(focusTimerInterval);
-            focusTimerInterval = setInterval(() => {
-                const diff = endTime - Date.now();
-                if (diff <= 0) { 
-                    clearInterval(focusTimerInterval); 
-                    localStorage.removeItem('focus_end_time'); 
-                    document.getElementById('active-focus-label').style.display = 'none';
-                    sw('s-focus-res'); 
-                }
-                else {
-                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-                    const timeStr = `00:${m}:${s}`;
-                    document.getElementById('focus-countdown').innerText = timeStr;
-                    document.getElementById('active-focus-label').innerText = timeStr;
-                }
-            }, 1000);
-        }
-        function abortFocus() { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); document.getElementById('active-focus-label').style.display = 'none'; sw('s-main'); }
-        
-        function selectFail(key) {
-            document.querySelectorAll('.f-circle').forEach(el => el.classList.remove('selected-fail'));
-            document.getElementById('fail-' + key).classList.add('selected-fail');
-            showFailDetail(key);
-        }
+        function showHistory() {
+            const logs = JSON.parse(localStorage.getItem('focus_logs') || "[]");
+            const container = document.getElementById('history-content');
+            container.innerHTML = logs.length === 0 ? "<div style='opacity:0.5'>NO_DATA_FOUND</div>" : 
+                logs.map(l => `<div><span style="color:var(--oracle)">[${l.time}]</span> <span style="color:${l.status==='SUCCESS'?'var(--neon)':'var(--red)'}">${l.status}</span><br><span style="opacity:0.6; font-size:9px;">${l.type}</span></div>`).join('');
+            toggleModal('m-history', true);
+        }
 
-        function showFailDetail(key) {
-            document.getElementById('fail-title').innerText = key;
-            document.getElementById('fail-desc').innerHTML = `<b>${FAIL_DATA[key].t}</b><br><br>${FAIL_DATA[key].d}`;
-            toggleModal('m-fail-detail', true);
-        }
+        function clearHistory(e) { e.stopPropagation(); if(confirm('ERASE LOGS?')) { localStorage.removeItem('focus_logs'); showHistory(); } }
 
-        function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('b-intro'); }
-        function renderQ() {
-            const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
-            const box = document.getElementById('q-options'); box.innerHTML = "";
-            q.o.forEach(o => {
-                const b = document.createElement('button'); b.className = "btn"; b.innerText = o.t;
-                b.onclick = () => { playSound(400 + curQ*50, 0.1); score[o.a] = (score[o.a] || 0) + 1; curQ++; if(curQ < QUESTIONS.length) renderQ(); else sw('b-react'); };
-                box.appendChild(b);
-            });
-        }
-        function startReactTest() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); updateAttLabel(); renderReactGrid(); startTimer(); }
-        function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - reactStartTime) / 1000).toFixed(3); }, 41); }
-        function updateAttLabel() { document.getElementById('att-label').innerText = "[ " + "■ ".repeat(attempts) + "□ ".repeat(3-attempts) + "]"; }
-        function renderReactGrid() {
-            const g = document.getElementById('react-grid'); g.innerHTML = "";
-            let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
-            ns.forEach(n => {
-                const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
-                c.onclick = () => { if(n === target) { playSound(800 + n*30, 0.05); target++; if(target > 16) { clearInterval(timerInterval); finalReactTime = (Date.now()-reactStartTime)/1000; sw('b-mem'); } else renderReactGrid(); } else { playSound(100, 0.2, 'square'); attempts--; updateAttLabel(); if(attempts <= 0) sw('b-mem'); }};
-                g.appendChild(c);
-            });
-        }
+        function initFocus(mins) {
+            const endTime = Date.now() + mins * 60 * 1000;
+            localStorage.setItem('focus_end_time', endTime);
+            document.getElementById('active-focus-label').style.display = 'block';
+            runFocusUI(endTime);
+        }
 
-        function startMemTest() { memStep = 0; sw('s-mem'); nextMemRound(); }
-        function nextMemRound() {
-            memSeq = Array.from({length: 4 + memStep}, () => Math.floor(Math.random()*9));
-            const mg = document.getElementById('mem-grid'); mg.innerHTML = "";
-            for(let i=0; i<9; i++) { const c = document.createElement('div'); c.className = "cell"; c.onclick = () => handleMemClick(i, c); mg.appendChild(c); }
-            playMemSequence();
-        }
-        async function playMemSequence() {
-            const cells = document.getElementById('mem-grid').children;
-            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); playSound(1000, 0.05); cells[id].style.background = "var(--oracle)"; await new Promise(r => setTimeout(r, 400)); cells[id].style.background = "rgba(0,0,0,0.85)"; }
-            memIdx = 0;
-        }
-        function handleMemClick(id, el) { 
-            playSound(1100, 0.03);
-            if(id === memSeq[memIdx]) { 
-                el.classList.add('ok'); setTimeout(() => el.classList.remove('ok'), 200);
-                memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); } 
-            } else { 
-                playSound(60, 0.4, 'sawtooth'); el.classList.add('err'); setTimeout(() => sw('b-sync'), 300); 
-            } 
-        }
+        function runFocusUI(endTime) {
+            sw('s-focus-timer'); clearInterval(focusTimerInterval);
+            focusTimerInterval = setInterval(() => {
+                const diff = endTime - Date.now();
+                if (diff <= 0) { 
+                    clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); 
+                    document.getElementById('active-focus-label').style.display = 'none'; sw('s-focus-res'); 
+                } else {
+                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    document.getElementById('focus-countdown').innerText = `00:${m}:${s}`;
+                    document.getElementById('active-focus-label').innerText = `00:${m}:${s}`;
+                }
+            }, 1000);
+        }
 
-        function startSyncTest() {
-            sw('s-sync'); selectedWordsCount = 0; activeWordsOnScreen = 0; const container = document.getElementById('words-container'); container.innerHTML = "";
-            function spawn() {
-                if (selectedWordsCount >= 2 || !document.getElementById('s-sync').classList.contains('active')) return;
-                if (activeWordsOnScreen < 4) {
-                    const word = SYNC_WORDS[Math.floor(Math.random()*SYNC_WORDS.length)];
-                    const w = document.createElement('div'); w.className = "sync-word"; w.innerText = word.t;
-                    w.style.left = Math.random()*70 + 15 + "%"; w.style.top = Math.random()*70 + 15 + "%";
-                    container.appendChild(w); activeWordsOnScreen++;
-                    setTimeout(() => w.style.opacity = 1, 50);
-                    w.onclick = () => { score[word.a] = (score[word.a] || 0) + 2; selectedWordsCount++; if(selectedWordsCount === 2) finalize(); };
-                    setTimeout(() => { w.remove(); activeWordsOnScreen--; }, 3000);
-                }
-                setTimeout(spawn, 800);
-            }
-            spawn();
-        }
+        function abortFocus() { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); document.getElementById('active-focus-label').style.display = 'none'; sw('s-main'); }
+        
+        function logFocus(status) {
+            if(status === 'success') { logFocusEvent('SUCCESS', 'SYNCHRONIZED'); playSound(800, 0.5); sw('s-main'); }
+        }
 
-        function finalize() {
-            let type = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "АНАЛИТИК";
-            currentProfile = type; isDone = true;
-            localStorage.setItem('psy_profile', type);
-            localStorage.setItem('psy_done', 'true');
-            setTestLock(); // LOCK BUTTON
-            updateUIProfile(type);
-            document.getElementById('v-card').classList.add('open');
-            renderDiagnostic(type);
-        }
+        function selectFail(key) {
+            document.querySelectorAll('.f-circle').forEach(el => el.classList.remove('selected-fail'));
+            document.getElementById('fail-' + key).classList.add('selected-fail');
+            logFocusEvent('CRITICAL_FAIL', key);
+            showFailDetail(key);
+        }
 
-        function updateUIProfile(type) {
-            document.getElementById('v-type').innerText = type;
-            document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
-            document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
-            document.getElementById('focus-module').style.display = 'block';
-            document.getElementById('id-tag').innerText = type;
-            document.getElementById('id-tag').style.display = 'block';
-            document.getElementById('hub-oracle-btn').style.display = 'block';
-            
-            setTimeout(() => {
-                document.getElementById('v-bar-log').style.width = PROFILES[type].log + "%";
-                document.getElementById('v-bar-react').style.width = "75%";
-                document.getElementById('v-bar-mem').style.width = "66%";
-            }, 500);
-        }
+        function showFailDetail(key) {
+            document.getElementById('fail-title').innerText = key;
+            document.getElementById('fail-desc').innerHTML = `<b>${FAIL_DATA[key].t}</b><br><br>${FAIL_DATA[key].d}`;
+            toggleModal('m-fail-detail', true);
+        }
 
-        function backToHub() { document.getElementById('v-card').classList.remove('open'); sw('s-main'); }
-        function showStoredProfile() { if(isDone) { document.getElementById('v-card').classList.add('open'); renderDiagnostic(currentProfile); } }
-        function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
+        function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('b-intro'); }
+        function renderQ() {
+            const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
+            const box = document.getElementById('q-options'); box.innerHTML = "";
+            q.o.forEach(o => {
+                const b = document.createElement('button'); b.className = "btn"; b.innerText = o.t;
+                b.onclick = () => { playSound(400 + curQ*50, 0.1); score[o.a] = (score[o.a] || 0) + 1; curQ++; if(curQ < QUESTIONS.length) renderQ(); else sw('b-react'); };
+                box.appendChild(b);
+            });
+        }
 
-        function drawShape(ctx, type, x, y, size, frame, active) {
-            ctx.save(); ctx.translate(x, y);
-            ctx.strokeStyle = active ? '#00ff41' : 'rgba(0, 255, 65, 0.15)';
-            ctx.lineWidth = active ? 2 : 1;
-            ctx.beginPath();
-            if(type === "АРХИТЕКТОР") { for(let i=0; i<6; i++) { let a = (active ? frame : 0) + i*Math.PI/3; ctx.lineTo(Math.cos(a)*size, Math.sin(a)*size); } ctx.closePath(); }
-            else if(type === "ИМПУЛЬС") { ctx.moveTo(0,0); for(let i=0; i<25; i++){ let r=i*(size/20); let a=(active ? frame*2.5 : 0)+i*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); } }
-            else if(type === "АНАЛИТИК") { if(active) ctx.rotate(frame); ctx.strokeRect(-size/1.2, -size/1.2, size*1.5, size*1.5); ctx.strokeRect(-size/4, -size/4, size/2, size/2); }
-            else if(type === "СКАНЕР") { if(active) ctx.rotate(frame); ctx.arc(0,0, size, 0, Math.PI*2); ctx.moveTo(-size,0); ctx.lineTo(size,0); ctx.moveTo(0,-size); ctx.lineTo(0,size); }
-            ctx.stroke(); ctx.restore();
-        }
+        function startReactTest() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); updateAttLabel(); renderReactGrid(); startTimer(); }
+        function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - reactStartTime) / 1000).toFixed(3); }, 41); }
+        function updateAttLabel() { document.getElementById('att-label').innerText = "[ " + "■ ".repeat(attempts) + "□ ".repeat(3-attempts) + "]"; }
+        function renderReactGrid() {
+            const g = document.getElementById('react-grid'); g.innerHTML = "";
+            let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
+            ns.forEach(n => {
+                const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
+                c.onclick = () => { if(n === target) { playSound(800 + n*30, 0.05); target++; if(target > 16) { clearInterval(timerInterval); sw('b-mem'); } else renderReactGrid(); } else { playSound(100, 0.2, 'square'); attempts--; updateAttLabel(); if(attempts <= 0) sw('b-mem'); }};
+                g.appendChild(c);
+            });
+        }
 
-        const hC = document.getElementById('hub-canvas'); const hX = hC.getContext('2d');
-        hC.width = 190; hC.height = 190; let hFrame = 0;
-        function animateHub() { hX.clearRect(0,0,190,190); if(isDone && currentProfile) drawShape(hX, currentProfile, 95, 95, 60, hFrame, true); hFrame += 0.02; requestAnimationFrame(animateHub); }
-        animateHub();
+        function startMemTest() { memStep = 0; sw('s-mem'); nextMemRound(); }
+        function nextMemRound() {
+            memSeq = Array.from({length: 4 + memStep}, () => Math.floor(Math.random()*9));
+            const mg = document.getElementById('mem-grid'); mg.innerHTML = "";
+            for(let i=0; i<9; i++) { const c = document.createElement('div'); c.className = "cell"; c.onclick = () => handleMemClick(i, c); mg.appendChild(c); }
+            playMemSequence();
+        }
+        async function playMemSequence() {
+            const cells = document.getElementById('mem-grid').children;
+            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); playSound(1000, 0.05); cells[id].style.background = "var(--oracle)"; await new Promise(r => setTimeout(r, 400)); cells[id].style.background = "rgba(0,0,0,0.85)"; }
+            memIdx = 0;
+        }
+        function handleMemClick(id, el) { 
+            playSound(1100, 0.03);
+            if(id === memSeq[memIdx]) { 
+                el.classList.add('ok'); setTimeout(() => el.classList.remove('ok'), 200);
+                memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); } 
+            } else { playSound(60, 0.4, 'sawtooth'); el.classList.add('err'); setTimeout(() => sw('b-sync'), 300); } 
+        }
 
-        let diagAnimId;
-        function renderDiagnostic(activeType) {
-            const c = document.getElementById('diag-canvas'); const ctx = c.getContext('2d');
-            c.width = 260; c.height = 260; let dFrame = 0;
-            const pts = { "АРХИТЕКТОР": [130, 50], "ИМПУЛЬС": [130, 210], "АНАЛИТИК": [50, 130], "СКАНЕР": [210, 130] };
-            if(diagAnimId) cancelAnimationFrame(diagAnimId);
-            function anim() {
-                if(!document.getElementById('v-card').classList.contains('open')) return;
-                ctx.clearRect(0,0,260,260);
+        function startSyncTest() {
+            sw('s-sync'); selectedWordsCount = 0; activeWordsOnScreen = 0; const container = document.getElementById('words-container'); container.innerHTML = "";
+            function spawn() {
+                if (selectedWordsCount >= 2 || !document.getElementById('s-sync').classList.contains('active')) return;
+                if (activeWordsOnScreen < 4) {
+                    const word = SYNC_WORDS[Math.floor(Math.random()*SYNC_WORDS.length)];
+                    const w = document.createElement('div'); w.className = "sync-word"; w.innerText = word.t;
+                    w.style.left = Math.random()*70 + 15 + "%"; w.style.top = Math.random()*70 + 15 + "%";
+                    container.appendChild(w); activeWordsOnScreen++;
+                    setTimeout(() => w.style.opacity = 1, 50);
+                    w.onclick = () => { score[word.a] = (score[word.a] || 0) + 2; selectedWordsCount++; if(selectedWordsCount === 2) finalize(); };
+                    setTimeout(() => { w.remove(); activeWordsOnScreen--; }, 3000);
+                }
+                setTimeout(spawn, 800);
+            }
+            spawn();
+        }
+
+        function finalize() {
+            let type = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "АНАЛИТИК";
+            currentProfile = type; isDone = true;
+            localStorage.setItem('psy_profile', type); localStorage.setItem('psy_done', 'true');
+            setTestLock(); updateUIProfile(type);
+            document.getElementById('v-card').classList.add('open'); renderDiagnostic(type);
+        }
+
+        function updateUIProfile(type) {
+            document.getElementById('v-type').innerText = type;
+            document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
+            document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
+            document.getElementById('focus-module').style.display = 'block';
+            document.getElementById('id-tag').innerText = type; document.getElementById('id-tag').style.display = 'block';
+            document.getElementById('hub-oracle-btn').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('v-bar-log').style.width = PROFILES[type].log + "%";
+                document.getElementById('v-bar-react').style.width = "75%";
+                document.getElementById('v-bar-mem').style.width = "66%";
+            }, 500);
+        }
+
+        function backToHub() { document.getElementById('v-card').classList.remove('open'); sw('s-main'); }
+        function showStoredProfile() { if(isDone) { document.getElementById('v-card').classList.add('open'); renderDiagnostic(currentProfile); } }
+        function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
+
+        function drawShape(ctx, type, x, y, size, frame, active) {
+            ctx.save(); ctx.translate(x, y); ctx.strokeStyle = active ? '#00ff41' : 'rgba(0, 255, 65, 0.15)'; ctx.lineWidth = active ? 2 : 1; ctx.beginPath();
+            if(type === "АРХИТЕКТОР") { for(let i=0; i<6; i++) { let a = (active ? frame : 0) + i*Math.PI/3; ctx.lineTo(Math.cos(a)*size, Math.sin(a)*size); } ctx.closePath(); }
+            else if(type === "ИМПУЛЬС") { ctx.moveTo(0,0); for(let i=0; i<25; i++){ let r=i*(size/20); let a=(active ? frame*2.5 : 0)+i*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); } }
+            else if(type === "АНАЛИТИК") { if(active) ctx.rotate(frame); ctx.strokeRect(-size/1.2, -size/1.2, size*1.5, size*1.5); ctx.strokeRect(-size/4, -size/4, size/2, size/2); }
+            else if(type === "СКАНЕР") { if(active) ctx.rotate(frame); ctx.arc(0,0, size, 0, Math.PI*2); ctx.moveTo(-size,0); ctx.lineTo(size,0); ctx.moveTo(0,-size); ctx.lineTo(0,size); }
+            ctx.stroke(); ctx.restore();
+        }
+
+        const hC = document.getElementById('hub-canvas'); const hX = hC.getContext('2d');
+        hC.width = 190; hC.height = 190; let hFrame = 0;
+        function animateHub() { hX.clearRect(0,0,190,190); if(isDone && currentProfile) drawShape(hX, currentProfile, 95, 95, 60, hFrame, true); hFrame += 0.02; requestAnimationFrame(animateHub); }
+        animateHub();
+
+        let diagAnimId;
+        function renderDiagnostic(activeType) {
+            const c = document.getElementById('diag-canvas'); const ctx = c.getContext('2d');
+            c.width = 260; c.height = 260; let dFrame = 0;
+            const pts = { "АРХИТЕКТОР": [130, 50], "ИМПУЛЬС": [130, 210], "АНАЛИТИК": [50, 130], "СКАНЕР": [210, 130] };
+            if(diagAnimId) cancelAnimationFrame(diagAnimId);
+            function anim() {
+                if(!document.getElementById('v-card').classList.contains('open')) return;
+                ctx.clearRect(0,0,260,260); for(let t in pts) drawShape(ctx, t, pts[t][0], pts[t][1], 25, dFrame, (t === activeType));
+                dFrame += 0.03; diagAnimId = requestAnimationFrame(anim);
+            }
+            anim();
+        }
+
+        const mc = document.getElementById('m-bg'); const mx = mc.getContext('2d');
+        let mw = mc.width = window.innerWidth, mh = mc.height = window.innerHeight;
+        const drops = Array(Math.floor(mw/25)).fill(1);
+        function drawM() {
+            mx.fillStyle = 'rgba(0,0,0,0.1)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41'; mx.font = '14px monospace';
+            drops.forEach((y, i) => { mx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*25, y*25); if(y*25 > mh && Math.random() > 0.99) drops[i] = 0; drops[i]++; });
+            for(let i=1; i<=5; i++) { const el = document.getElementById('g'+i); if(el) el.innerText = String.fromCharCode(0x30A0 + Math.random()*96); }
+        }
+        setInterval(drawM, 70);
+
+        window.onload = () => {
+            const savedProfile = localStorage.getItem('psy_profile');
+            if (savedProfile && localStorage.getItem('psy_done') === 'true') {
+                currentProfile = savedProfile; isDone = true;
+                updateUIProfile(currentProfile); updateLockUI();
+            }
+            const savedEnd = localStorage.getItem('focus_end_time');
+            if (savedEnd && parseInt(savedEnd) > Date.now()) { startAudioEngine(); runFocusUI(parseInt(savedEnd)); }
+        };
+    </script>
+</body>
+</html>
