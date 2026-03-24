@@ -62,6 +62,10 @@
             display: none; 
             text-shadow: 0 0 15px var(--neon);
             font-weight: 100;
+            cursor: pointer;
+            pointer-events: auto;
+            position: relative;
+            z-index: 1001;
         }
 
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; max-width: 90vw; }
@@ -123,7 +127,7 @@
     <canvas id="m-bg"></canvas>
 
     <div id="s-main" class="screen active">
-        <div id="active-focus-label">00:00</div>
+        <div id="active-focus-label" onclick="sw('s-focus-timer')">00:00</div>
         
         <div class="hub-container" onclick="showStoredProfile()">
             <canvas id="hub-canvas"></canvas>
@@ -132,7 +136,7 @@
 
         <div id="focus-module" style="display:none; margin-top: 25px; width: 100%; max-width: 320px; border: 1px solid rgba(0, 255, 65, 0.1); padding: 15px; box-sizing: border-box;">
             <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%;">
-                <span onclick="showHistory()" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid; letter-spacing: 1px;">[ H ] HISTORY</span>
+                <span onclick="showHistory()" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid; letter-spacing: 1px;">HISTORY</span>
                 <span style="font-size: 10px; letter-spacing: 3px; opacity: 0.9; color: var(--neon);">FOCUS_PROTOCOL</span>
                 <span onclick="toggleModal('m-info-1', true)" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid">[ i ] INFO</span>
             </div>
@@ -153,9 +157,7 @@
             <p>Запуск протокола определения психо-когнитивного профиля. Будьте сосредоточены. Система анализирует паттерны нейронного отклика в реальном времени.</p>
         </div>
         <button class="btn" onclick="sw('s-psych'); renderQ();">ПРОДОЛЖИТЬ</button>
-    </div>
-
-    <div id="s-psych" class="screen">
+    </div><div id="s-psych" class="screen">
         <p id="q-text" style="letter-spacing:1px;"></p>
         <div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div>
     </div>
@@ -203,6 +205,7 @@
         <div id="focus-countdown" class="timer-val">00:00:00</div>
         <button class="btn" style="border-color:var(--neon)" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
         <button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
+        <div onclick="localStorage.setItem('focus_end_time', Date.now() + 1000); runFocusUI(Date.now() + 1000);" style="width:100%; height:40px; opacity:0; cursor:pointer; margin-top:10px;">DEBUG_SKIP</div>
     </div>
 
     <div id="s-focus-res" class="screen">
@@ -240,7 +243,7 @@
                 ДИРЕКТИВА:<br>
                 1. Устраните цифровые шумы.<br>
                 2. После активации таймера аппарат сознания должен быть замкнут на одной целевой задаче.<br>
-                3. По завершении цикла подтвердите статус сессии.
+                3. По завершении цикла подтвержите статус сессии.
             </p>
             <button class="btn" onclick="toggleModal('m-info-2', false)">ПРИНЯТЬ</button>
         </div>
@@ -271,7 +274,9 @@
         <div class="ability-badge" onclick="toggleAbility()">МОДУЛЬ: <span id="v-ability-name"></span></div>
         <div id="v-ability-desc" class="ability-info"></div>
         <button class="btn" style="margin-top: 20px;" onclick="backToHub()">ВЕРНУТЬСЯ</button>
-    </div><script>
+    </div>
+
+    <script>
         let aCtx, masterGain, thrillerFilter, lfo;
         let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
         let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
@@ -351,7 +356,7 @@
                     localStorage.removeItem('test_unlock_time');
                     btn.disabled = false; btn.innerText = "ЗАПУСТИТЬ ТЕСТ";
                 } else {
-                    btn.disabled = true;
+                    // btn.disabled = true; // ВРЕМЕННО ОТКЛЮЧЕНО ПО ЗАПРОСУ
                     const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
                     const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
                     const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
