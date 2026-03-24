@@ -10,7 +10,6 @@
         body, html { 
             margin: 0; padding: 0; height: 100%; 
             background: var(--bg); color: var(--neon); 
-            /* Исправленный шрифт для единообразия */
             font-family: 'Courier New', Courier, monospace; 
             font-weight: 100;
             -webkit-font-smoothing: antialiased;
@@ -32,7 +31,7 @@
             font-family: 'Courier New', Courier, monospace; 
             font-weight: 100; 
             font-size: 13px; 
-            letter-spacing: 3px; /* Тонкий вид для RU */
+            letter-spacing: 3px; 
             width: 100%; 
             max-width: 280px; 
             margin: 10px 0; 
@@ -116,6 +115,8 @@
         .ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05); padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); letter-spacing: 1px; }
 
         .sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; font-weight: 100; }
+        
+        #history-content div { border-bottom: 1px solid rgba(0, 255, 65, 0.1); padding: 5px 0; }
     </style>
 </head>
 <body>
@@ -129,9 +130,10 @@
             <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
         </div>
 
-        <div id="focus-module" style="display:none; margin-top: 25px; width: 100%; max-width: 280px;">
-            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 10px; letter-spacing: 3px; opacity: 0.7;">FOCUS_PROTOCOL</span>
+        <div id="focus-module" style="display:none; margin-top: 25px; width: 100%; max-width: 320px; border: 1px solid rgba(0, 255, 65, 0.1); padding: 15px; box-sizing: border-box;">
+            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%;">
+                <span onclick="showHistory()" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid; letter-spacing: 1px;">[ H ] HISTORY</span>
+                <span style="font-size: 10px; letter-spacing: 3px; opacity: 0.9; color: var(--neon);">FOCUS_PROTOCOL</span>
                 <span onclick="toggleModal('m-info-1', true)" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid">[ i ] INFO</span>
             </div>
             <div style="display:flex; gap:5px; width:100%;">
@@ -201,7 +203,6 @@
         <div id="focus-countdown" class="timer-val">00:00:00</div>
         <button class="btn" style="border-color:var(--neon)" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
         <button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
-        <button onclick="const newEnd = Date.now() + 1000; localStorage.setItem('focus_end_time', newEnd); runFocusUI(newEnd);" style="background:transparent; border:none; color:transparent; cursor:pointer; margin-top:10px; font-size:10px; width:100%; max-width:280px;">[ DEBUG: FORCE_FINISH ]</button>
     </div>
 
     <div id="s-focus-res" class="screen">
@@ -226,7 +227,7 @@
         <div class="modal-content">
             <h3 style="color:var(--oracle); letter-spacing:2px;">FOCUS_PROTOCOL: INFO [1/2]</h3>
             <p style="text-align:left; line-height:1.6; font-size:12px;">
-                FOCUS_PROTOCOL — это режим принудительной синхронизации когнитивного процесса. Внимание — это единственный конечный ресурс вашей нейронной сети. Любое внешнее отвлечение вызывает фрагментацию сознания, требуя до 23 минут на восстановление исходной глубины погружения.
+                FOCUS_PROTOCOL — это режим принудительной синхронизации когнитивного процесса. Внимание — это единственный конечный ресурс вашей нейронной сети. Любое внешнее отвлечение вызывает фрагментацию сознания.
             </p>
             <button class="btn" onclick="toggleModal('m-info-1', false); toggleModal('m-info-2', true);">ДАЛЕЕ</button>
         </div>
@@ -238,10 +239,18 @@
             <p style="text-align:left; line-height:1.6; font-size:12px;">
                 ДИРЕКТИВА:<br>
                 1. Устраните цифровые шумы.<br>
-                2. После активации таймера аппарат сознания должен быть замкнут на одной целевой задаче. Любое переключение внимания — критический сбой.<br>
+                2. После активации таймера аппарат сознания должен быть замкнут на одной целевой задаче.<br>
                 3. По завершении цикла подтвердите статус сессии.
             </p>
             <button class="btn" onclick="toggleModal('m-info-2', false)">ПРИНЯТЬ</button>
+        </div>
+    </div>
+
+    <div id="m-history" class="modal" onclick="toggleModal('m-history', false)">
+        <div class="modal-content" style="border-color:var(--oracle); max-width: 340px;">
+            <h3 style="color:var(--oracle); letter-spacing:2px;">LOG_DATA_STREAM</h3>
+            <div id="history-content" style="text-align:left; max-height: 300px; overflow-y: auto; font-size: 11px; font-family: monospace;"></div>
+            <button class="btn btn-blue" style="margin-top:20px;" onclick="clearHistory(event)">CLEAR_LOGS</button>
         </div>
     </div>
 
@@ -262,21 +271,41 @@
         <div class="ability-badge" onclick="toggleAbility()">МОДУЛЬ: <span id="v-ability-name"></span></div>
         <div id="v-ability-desc" class="ability-info"></div>
         <button class="btn" style="margin-top: 20px;" onclick="backToHub()">ВЕРНУТЬСЯ</button>
-    </div>
-
-    <script>
+    </div><script>
         let aCtx, masterGain, thrillerFilter, lfo;
         let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
         let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
         let selectedWordsCount = 0, activeWordsOnScreen = 0, focusTimerInterval, lockInterval;
 
         const FAIL_DATA = {
-            'COGNITIVE_ESCAPE': { t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу.', d: 'Стремление мозга избежать когнитивного давления путем переключения на знакомые, легкие действия (соцсети, новости).' },
-            'INTERNAL_LOOP': { t: '[ INTERNAL_LOOP ] — Зацикленность на мыслях.', d: 'Потеря фокуса из-за внутренней рефлексии или бесконечного обдумывания побочных идей, не связанных с задачей.' },
-            'ENV_DISCOMFORT': { t: '[ ENV_DISCOMFORT ] — Дискомфорт среды.', d: 'Внешние физические факторы (шум, свет, эргономика), подрывающие стабильность концентрации.' },
-            'FALSE_URGENCY': { t: '[ FALSE_URGENCY ] — Внезапные важные дела.', d: 'Иллюзия необходимости немедленного решения второстепенных задач, возникающая как форма саботажа.' },
-            'RES_EXHAUSTION': { t: '[ RES_EXHAUSTION ] — Истощение ресурса.', d: 'Критическое снижение уровня нейропластичности и глюкозы. Внимание — это единственный конечный ресурс вашей нейронной сети.' }
+            'COGNITIVE_ESCAPE': { t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу.', d: 'Стремление мозга избежать когнитивного давления путем переключения на знакомые, легкие действия.' },
+            'INTERNAL_LOOP': { t: '[ INTERNAL_LOOP ] — Зацикленность на мыслях.', d: 'Потеря фокуса из-за внутренней рефлексии или бесконечного обдумывания побочных идей.' },
+            'ENV_DISCOMFORT': { t: '[ ENV_DISCOMFORT ] — Дискомфорт среды.', d: 'Внешние физические факторы (шум, свет), подрывающие концентрацию.' },
+            'FALSE_URGENCY': { t: '[ FALSE_URGENCY ] — Внезапные важные дела.', d: 'Иллюзия необходимости немедленного решения второстепенных задач.' },
+            'RES_EXHAUSTION': { t: '[ RES_EXHAUSTION ] — Истощение ресурса.', d: 'Критическое снижение уровня нейропластичности. Внимание исчерпано.' }
         };
+
+        const PROFILES = {
+            "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий." },
+            "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов." },
+            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме." },
+            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в контурах." }
+        };
+
+        const QUESTIONS = [
+            {q: "Система взломана. Твой первый шаг?", o: [{t: "Анализ кода", a: "АРХИТЕКТОР"}, {t: "Удаление сектора", a: "ИМПУЛЬС"}]},
+            {q: "Доступ к сети ценой личности. Согласишься?", o: [{t: "Оценка рисков", a: "АНАЛИТИК"}, {t: "Усиление щитов", a: "СКАНЕР"}]},
+            {q: "Что важнее: структура или динамика?", o: [{t: "Структура", a: "АРХИТЕКТОР"}, {t: "Динамика", a: "ИМПУЛЬС"}]},
+            {q: "Чужой сигнал в твоем канале. Действия?", o: [{t: "Отслеживание", a: "АНАЛИТИК"}, {t: "Агрессивный ответ", a: "СКАНЕР"}]},
+            {q: "Код — это язык или оружие?", o: [{t: "Язык", a: "АРХИТЕКТОР"}, {t: "Оружие", a: "ИМПУЛЬС"}]},
+            {q: "Неизвестный файл в карантине. Что делать?", o: [{t: "Изоляция", a: "СКАНЕР"}, {t: "Дешифровка", a: "АНАЛИТИК"}]},
+            {q: "Где корень ошибок: в человеке или в коде?", o: [{t: "В человеке", a: "АРХИТЕКТОР"}, {t: "В коде", a: "ИМПУЛЬС"}]},
+            {q: "Источник силы: данные или чутье?", o: [{t: "Данные", a: "АНАЛИТИК"}, {t: "Чутье", a: "СКАНЕР"}]},
+            {q: "Тишина вызывает покой или тревогу?", o: [{t: "Тревогу", a: "СКАНЕР"}, {t: "Покой", a: "АРХИТЕКТОР"}]},
+            {q: "Твоя цель: абсолютный контроль или мощь?", o: [{t: "Контроль", a: "АРХИТЕКТОР"}, {t: "Мощь", a: "ИМПУЛЬС"}]}
+        ];
+
+        const SYNC_WORDS = [{t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"}, {t: "Δ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ω", a: "АНАЛИТИК"}, {t: "Ψ", a: "СКАНЕР"}, {t: "КОНТРОЛЬ", a: "АРХИТЕКТОР"}, {t: "ПОТОК", a: "ИМПУЛЬС"}, {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "Ξ", a: "СКАНЕР"}, {t: "ИМПУЛЬС", a: "ИМПУЛЬС"}, {t: "λ", a: "АРХИТЕКТОР"}, {t: "МАТРИЦА", a: "АНАЛИТИК"}, {t: "ВЕКТОР", a: "АРХИТЕКТОР"}, {t: "Ø", a: "АНАЛИТИК"}, {t: "ТЕНЬ", a: "СКАНЕР"}, {t: "КАНАЛ", a: "ИМПУЛЬС"}, {t: "ВЗЛОМ", a: "СКАНЕР"}];
 
         function startAudioEngine() {
             if (aCtx) return;
@@ -302,32 +331,9 @@
             o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
         }
 
-        const PROFILES = {
-            "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий." },
-            "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов." },
-            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме." },
-            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в контурах." }
-        };
-
-        const QUESTIONS = [
-            {q: "Система взломана. Твой первый шаг?", o: [{t: "Анализ кода", a: "АРХИТЕКТОР"}, {t: "Удаление сектора", a: "ИМПУЛЬС"}]},
-            {q: "Доступ к сети ценой личности. Согласишься?", o: [{t: "Оценка рисков", a: "АНАЛИТИК"}, {t: "Усиление щитов", a: "СКАНЕР"}]},
-            {q: "Что важнее: структура или динамика?", o: [{t: "Структура", a: "АРХИТЕКТОР"}, {t: "Динамика", a: "ИМПУЛЬС"}]},
-            {q: "Чужой сигнал в твоем канале. Действия?", o: [{t: "Отслеживание", a: "АНАЛИТИК"}, {t: "Агрессивный ответ", a: "СКАНЕР"}]},
-            {q: "Код — это язык или оружие?", o: [{t: "Язык", a: "АРХИТЕКТОР"}, {t: "Оружие", a: "ИМПУЛЬС"}]},
-            {q: "Неизвестный файл в карантине. Что делать?", o: [{t: "Изоляция", a: "СКАНЕР"}, {t: "Дешифровка", a: "АНАЛИТИК"}]},
-            {q: "Где корень ошибок: в человеке или в коде?", o: [{t: "В человеке", a: "АРХИТЕКТОР"}, {t: "В коде", a: "ИМПУЛЬС"}]},
-            {q: "Источник силы: данные или чутье?", o: [{t: "Данные", a: "АНАЛИТИК"}, {t: "Чутье", a: "СКАНЕР"}]},
-            {q: "Тишина вызывает покой или тревогу?", o: [{t: "Тревогу", a: "СКАНЕР"}, {t: "Покой", a: "АРХИТЕКТОР"}]},
-            {q: "Твоя цель: абсолютный контроль или мощь?", o: [{t: "Контроль", a: "АРХИТЕКТОР"}, {t: "Мощь", a: "ИМПУЛЬС"}]}
-        ];
-
-        const SYNC_WORDS = [{t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"}, {t: "Δ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ω", a: "АНАЛИТИК"}, {t: "Ψ", a: "СКАНЕР"}, {t: "КОНТРОЛЬ", a: "АРХИТЕКТОР"}, {t: "ПОТОК", a: "ИМПУЛЬС"}, {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "Ξ", a: "СКАНЕР"}, {t: "ИМПУЛЬС", a: "ИМПУЛЬС"}, {t: "λ", a: "АРХИТЕКТОР"}, {t: "МАТРИЦА", a: "АНАЛИТИК"}, {t: "ВЕКТОР", a: "АРХИТЕКТОР"}, {t: "Ø", a: "АНАЛИТИК"}, {t: "ТЕНЬ", a: "СКАНЕР"}, {t: "КАНАЛ", a: "ИМПУЛЬС"}, {t: "ВЗЛОМ", a: "СКАНЕР"}];
-
         function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
-        // LOCK SYSTEM (6 HOURS)
         function setTestLock() {
             const unlockTime = Date.now() + (6 * 60 * 60 * 1000);
             localStorage.setItem('test_unlock_time', unlockTime);
@@ -337,15 +343,13 @@
             const btn = document.getElementById('start-btn');
             const unlockAt = localStorage.getItem('test_unlock_time');
             if(!unlockAt) return;
-
             clearInterval(lockInterval);
             lockInterval = setInterval(() => {
                 const diff = unlockAt - Date.now();
                 if(diff <= 0) {
                     clearInterval(lockInterval);
                     localStorage.removeItem('test_unlock_time');
-                    btn.disabled = false;
-                    btn.innerText = "ЗАПУСТИТЬ ТЕСТ";
+                    btn.disabled = false; btn.innerText = "ЗАПУСТИТЬ ТЕСТ";
                 } else {
                     btn.disabled = true;
                     const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
@@ -356,37 +360,60 @@
             }, 1000);
         }
 
-        // FOCUS LOGIC
+        function logFocusEvent(status, detail = "") {
+            let logs = JSON.parse(localStorage.getItem('focus_logs') || "[]");
+            const entry = {
+                time: new Date().toLocaleString('ru-RU', {hour: '2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}),
+                status: status, type: detail
+            };
+            logs.unshift(entry);
+            if(logs.length > 50) logs.pop();
+            localStorage.setItem('focus_logs', JSON.stringify(logs));
+        }
+
+        function showHistory() {
+            const logs = JSON.parse(localStorage.getItem('focus_logs') || "[]");
+            const container = document.getElementById('history-content');
+            container.innerHTML = logs.length === 0 ? "<div style='opacity:0.5'>NO_DATA_FOUND</div>" : 
+                logs.map(l => `<div><span style="color:var(--oracle)">[${l.time}]</span> <span style="color:${l.status==='SUCCESS'?'var(--neon)':'var(--red)'}">${l.status}</span><br><span style="opacity:0.6; font-size:9px;">${l.type}</span></div>`).join('');
+            toggleModal('m-history', true);
+        }
+
+        function clearHistory(e) { e.stopPropagation(); if(confirm('ERASE LOGS?')) { localStorage.removeItem('focus_logs'); showHistory(); } }
+
         function initFocus(mins) {
             const endTime = Date.now() + mins * 60 * 1000;
             localStorage.setItem('focus_end_time', endTime);
             document.getElementById('active-focus-label').style.display = 'block';
             runFocusUI(endTime);
         }
+
         function runFocusUI(endTime) {
             sw('s-focus-timer'); clearInterval(focusTimerInterval);
             focusTimerInterval = setInterval(() => {
                 const diff = endTime - Date.now();
                 if (diff <= 0) { 
-                    clearInterval(focusTimerInterval); 
-                    localStorage.removeItem('focus_end_time'); 
-                    document.getElementById('active-focus-label').style.display = 'none';
-                    sw('s-focus-res'); 
-                }
-                else {
+                    clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); 
+                    document.getElementById('active-focus-label').style.display = 'none'; sw('s-focus-res'); 
+                } else {
                     const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
                     const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-                    const timeStr = `00:${m}:${s}`;
-                    document.getElementById('focus-countdown').innerText = timeStr;
-                    document.getElementById('active-focus-label').innerText = timeStr;
+                    document.getElementById('focus-countdown').innerText = `00:${m}:${s}`;
+                    document.getElementById('active-focus-label').innerText = `00:${m}:${s}`;
                 }
             }, 1000);
         }
+
         function abortFocus() { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); document.getElementById('active-focus-label').style.display = 'none'; sw('s-main'); }
         
+        function logFocus(status) {
+            if(status === 'success') { logFocusEvent('SUCCESS', 'SYNCHRONIZED'); playSound(800, 0.5); sw('s-main'); }
+        }
+
         function selectFail(key) {
             document.querySelectorAll('.f-circle').forEach(el => el.classList.remove('selected-fail'));
             document.getElementById('fail-' + key).classList.add('selected-fail');
+            logFocusEvent('CRITICAL_FAIL', key);
             showFailDetail(key);
         }
 
@@ -406,6 +433,7 @@
                 box.appendChild(b);
             });
         }
+
         function startReactTest() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); updateAttLabel(); renderReactGrid(); startTimer(); }
         function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - reactStartTime) / 1000).toFixed(3); }, 41); }
         function updateAttLabel() { document.getElementById('att-label').innerText = "[ " + "■ ".repeat(attempts) + "□ ".repeat(3-attempts) + "]"; }
@@ -414,7 +442,7 @@
             let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
             ns.forEach(n => {
                 const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
-                c.onclick = () => { if(n === target) { playSound(800 + n*30, 0.05); target++; if(target > 16) { clearInterval(timerInterval); finalReactTime = (Date.now()-reactStartTime)/1000; sw('b-mem'); } else renderReactGrid(); } else { playSound(100, 0.2, 'square'); attempts--; updateAttLabel(); if(attempts <= 0) sw('b-mem'); }};
+                c.onclick = () => { if(n === target) { playSound(800 + n*30, 0.05); target++; if(target > 16) { clearInterval(timerInterval); sw('b-mem'); } else renderReactGrid(); } else { playSound(100, 0.2, 'square'); attempts--; updateAttLabel(); if(attempts <= 0) sw('b-mem'); }};
                 g.appendChild(c);
             });
         }
@@ -436,9 +464,7 @@
             if(id === memSeq[memIdx]) { 
                 el.classList.add('ok'); setTimeout(() => el.classList.remove('ok'), 200);
                 memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); } 
-            } else { 
-                playSound(60, 0.4, 'sawtooth'); el.classList.add('err'); setTimeout(() => sw('b-sync'), 300); 
-            } 
+            } else { playSound(60, 0.4, 'sawtooth'); el.classList.add('err'); setTimeout(() => sw('b-sync'), 300); } 
         }
 
         function startSyncTest() {
@@ -462,12 +488,9 @@
         function finalize() {
             let type = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "АНАЛИТИК";
             currentProfile = type; isDone = true;
-            localStorage.setItem('psy_profile', type);
-            localStorage.setItem('psy_done', 'true');
-            setTestLock(); // LOCK BUTTON
-            updateUIProfile(type);
-            document.getElementById('v-card').classList.add('open');
-            renderDiagnostic(type);
+            localStorage.setItem('psy_profile', type); localStorage.setItem('psy_done', 'true');
+            setTestLock(); updateUIProfile(type);
+            document.getElementById('v-card').classList.add('open'); renderDiagnostic(type);
         }
 
         function updateUIProfile(type) {
@@ -475,10 +498,8 @@
             document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
             document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
             document.getElementById('focus-module').style.display = 'block';
-            document.getElementById('id-tag').innerText = type;
-            document.getElementById('id-tag').style.display = 'block';
+            document.getElementById('id-tag').innerText = type; document.getElementById('id-tag').style.display = 'block';
             document.getElementById('hub-oracle-btn').style.display = 'block';
-            
             setTimeout(() => {
                 document.getElementById('v-bar-log').style.width = PROFILES[type].log + "%";
                 document.getElementById('v-bar-react').style.width = "75%";
@@ -491,10 +512,7 @@
         function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
 
         function drawShape(ctx, type, x, y, size, frame, active) {
-            ctx.save(); ctx.translate(x, y);
-            ctx.strokeStyle = active ? '#00ff41' : 'rgba(0, 255, 65, 0.15)';
-            ctx.lineWidth = active ? 2 : 1;
-            ctx.beginPath();
+            ctx.save(); ctx.translate(x, y); ctx.strokeStyle = active ? '#00ff41' : 'rgba(0, 255, 65, 0.15)'; ctx.lineWidth = active ? 2 : 1; ctx.beginPath();
             if(type === "АРХИТЕКТОР") { for(let i=0; i<6; i++) { let a = (active ? frame : 0) + i*Math.PI/3; ctx.lineTo(Math.cos(a)*size, Math.sin(a)*size); } ctx.closePath(); }
             else if(type === "ИМПУЛЬС") { ctx.moveTo(0,0); for(let i=0; i<25; i++){ let r=i*(size/20); let a=(active ? frame*2.5 : 0)+i*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); } }
             else if(type === "АНАЛИТИК") { if(active) ctx.rotate(frame); ctx.strokeRect(-size/1.2, -size/1.2, size*1.5, size*1.5); ctx.strokeRect(-size/4, -size/4, size/2, size/2); }
@@ -515,8 +533,7 @@
             if(diagAnimId) cancelAnimationFrame(diagAnimId);
             function anim() {
                 if(!document.getElementById('v-card').classList.contains('open')) return;
-                ctx.clearRect(0,0,260,260);
-                for(let t in pts) drawShape(ctx, t, pts[t][0], pts[t][1], 25, dFrame, (t === activeType));
+                ctx.clearRect(0,0,260,260); for(let t in pts) drawShape(ctx, t, pts[t][0], pts[t][1], 25, dFrame, (t === activeType));
                 dFrame += 0.03; diagAnimId = requestAnimationFrame(anim);
             }
             anim();
@@ -527,35 +544,19 @@
         const drops = Array(Math.floor(mw/25)).fill(1);
         function drawM() {
             mx.fillStyle = 'rgba(0,0,0,0.1)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41'; mx.font = '14px monospace';
-            drops.forEach((y, i) => {
-                mx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*25, y*25);
-                if(y*25 > mh && Math.random() > 0.99) drops[i] = 0; drops[i]++;
-            });
+            drops.forEach((y, i) => { mx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*25, y*25); if(y*25 > mh && Math.random() > 0.99) drops[i] = 0; drops[i]++; });
             for(let i=1; i<=5; i++) { const el = document.getElementById('g'+i); if(el) el.innerText = String.fromCharCode(0x30A0 + Math.random()*96); }
         }
         setInterval(drawM, 70);
 
         window.onload = () => {
             const savedProfile = localStorage.getItem('psy_profile');
-            const savedDone = localStorage.getItem('psy_done');
-            if (savedProfile && savedDone === 'true') {
-                currentProfile = savedProfile;
-                isDone = true;
-                updateUIProfile(currentProfile);
-                updateLockUI(); // Восстанавливаем блокировку
+            if (savedProfile && localStorage.getItem('psy_done') === 'true') {
+                currentProfile = savedProfile; isDone = true;
+                updateUIProfile(currentProfile); updateLockUI();
             }
-
             const savedEnd = localStorage.getItem('focus_end_time');
-            if (savedEnd) {
-                const diff = parseInt(savedEnd) - Date.now();
-                if (diff > 0) {
-                    startAudioEngine();
-                    document.getElementById('active-focus-label').style.display = 'block';
-                    runFocusUI(parseInt(savedEnd));
-                } else {
-                    localStorage.removeItem('focus_end_time');
-                }
-            }
+            if (savedEnd && parseInt(savedEnd) > Date.now()) { startAudioEngine(); runFocusUI(parseInt(savedEnd)); }
         };
     </script>
 </body>
