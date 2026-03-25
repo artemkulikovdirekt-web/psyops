@@ -65,9 +65,8 @@
             z-index: 1001;
         }
 
-        /* Обновленные стили протоколов */
         #protocols-container {
-            display: none; /* Flex-column установится через JS */
+            display: none; 
             flex-direction: column;
             align-items: center;
             width: 100%;
@@ -75,14 +74,20 @@
         }
         .proto-wrap {
             width: 100%;
-            max-width: 240px; /* Суженые кнопки */
-            margin-bottom: 12px;
+            max-width: 260px;
+            margin-bottom: 5px;
         }
-        .proto-wrap .btn {
-            margin: 0 0 5px 0;
-            padding: 14px;
-            font-size: 13px;
+        
+        /* Кнопки протоколов теперь со стилем как на активном экране */
+        .proto-btn {
+            margin: 5px 0;
+            padding: 16px;
+            font-size: 12px;
+            letter-spacing: 8px;
+            text-shadow: 0 0 8px var(--neon);
+            width: 100%;
         }
+
         .proto-sub {
             display: flex;
             justify-content: space-between;
@@ -90,6 +95,7 @@
             color: var(--oracle);
             letter-spacing: 1px;
             padding: 0 5px;
+            margin-bottom: 2px;
         }
         .proto-sub span {
             cursor: pointer;
@@ -99,18 +105,20 @@
         }
         .proto-sub span:hover { color: var(--neon); border-color: var(--neon); }
 
-        .time-selector-overlay {
-            position: fixed; bottom: -100%; left: 0; width: 100%;
-            background: rgba(5, 5, 10, 0.98); backdrop-filter: blur(15px);
-            border-top: 1px solid var(--neon); border-radius: 20px 20px 0 0;
-            transition: bottom 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-            z-index: 2000; padding: 25px; box-sizing: border-box;
+        /* Встроенные опции времени */
+        .time-opts {
+            display: none; /* скрыто по умолчанию */
+            justify-content: space-between;
+            gap: 5px;
+            width: 100%;
+            margin-bottom: 15px;
         }
-        .time-selector-overlay.open { bottom: 0; }
-        .time-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .time-btn {
-            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 255, 65, 0.3);
-            color: var(--neon); padding: 15px 5px; font-family: monospace; font-size: 14px; cursor: pointer;
+        .time-opt-btn {
+            margin: 0;
+            padding: 12px 5px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            flex: 1;
         }
 
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; max-width: 90vw; }
@@ -181,43 +189,48 @@
 
         <div id="protocols-container">
             <div class="proto-wrap">
-                <button class="btn" onclick="openProtocol('focus')">FOCUS PROTOCOL</button>
                 <div class="proto-sub">
                     <span onclick="showInfo('focus')">[ i ] INFO</span>
                     <span onclick="showHistory('focus')">HISTORY</span>
                 </div>
+                <button class="btn proto-btn" onclick="toggleTimeOpts('focus')">FOCUS PROTOCOL</button>
+                <div id="time-opts-focus" class="time-opts">
+                    <button class="btn time-opt-btn" onclick="initProtocol('focus', 10)">10 M</button>
+                    <button class="btn time-opt-btn" onclick="initProtocol('focus', 30)">30 M</button>
+                    <button class="btn time-opt-btn" onclick="initProtocol('focus', 60)">60 M</button>
+                </div>
             </div>
+            
             <div class="proto-wrap">
-                <button class="btn" onclick="openProtocol('execution')">EXECUTION PROTOCOL</button>
                 <div class="proto-sub">
                     <span onclick="showInfo('execution')">[ i ] INFO</span>
                     <span onclick="showHistory('execution')">HISTORY</span>
                 </div>
+                <button class="btn proto-btn" onclick="toggleTimeOpts('execution')">EXECUTION PROTOCOL</button>
+                <div id="time-opts-execution" class="time-opts">
+                    <button class="btn time-opt-btn" onclick="initProtocol('execution', 10)">10 M</button>
+                    <button class="btn time-opt-btn" onclick="initProtocol('execution', 30)">30 M</button>
+                    <button class="btn time-opt-btn" onclick="initProtocol('execution', 60)">60 M</button>
+                </div>
             </div>
+            
             <div class="proto-wrap">
-                <button class="btn" onclick="openProtocol('liquidation')">LIQUIDATION PROTOCOL</button>
                 <div class="proto-sub">
                     <span onclick="showInfo('liquidation')">[ i ] INFO</span>
                     <span onclick="showHistory('liquidation')">HISTORY</span>
                 </div>
+                <button class="btn proto-btn" onclick="toggleTimeOpts('liquidation')">LIQUIDATION PROTOCOL</button>
+                <div id="time-opts-liquidation" class="time-opts">
+                    <button class="btn time-opt-btn" onclick="initProtocol('liquidation', 10)">10 M</button>
+                    <button class="btn time-opt-btn" onclick="initProtocol('liquidation', 30)">30 M</button>
+                    <button class="btn time-opt-btn" onclick="initProtocol('liquidation', 60)">60 M</button>
+                </div>
             </div>
         </div>
 
-        <div style="margin-top: 40px; width: 100%; display: flex; flex-direction: column; align-items: center;">
+        <div style="margin-top: 30px; width: 100%; display: flex; flex-direction: column; align-items: center;">
             <button id="start-btn" class="btn" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
             <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;">ОРАКУЛ</button>
-        </div>
-    </div>
-
-    <div id="timeSelector" class="time-selector-overlay">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 id="protocolTitle" style="margin: 0; color: var(--neon); letter-spacing: 2px;">SELECT_CYCLE</h3>
-            <button onclick="closeTimeSelector()" style="background: none; border: none; color: var(--red); font-size: 24px;">×</button>
-        </div>
-        <div class="time-grid">
-            <button class="time-btn" onclick="initProtocol(10)">10 M</button>
-            <button class="time-btn" onclick="initProtocol(30)">30 M</button>
-            <button class="time-btn" onclick="initProtocol(60)">60 M</button>
         </div>
     </div>
 
@@ -273,7 +286,7 @@
     </div>
 
     <div id="s-focus-timer" class="screen">
-        <div id="active-timer-type" style="letter-spacing:10px; opacity:0.5; font-size:12px; color: var(--neon);">PROTOCOL_ACTIVE</div>
+        <div id="active-timer-type" style="letter-spacing:8px; opacity:0.8; font-size:12px; color: var(--neon); text-shadow: 0 0 8px var(--neon);">PROTOCOL_ACTIVE</div>
         <div id="focus-countdown" class="timer-val" style="color: var(--neon);">00:00:00</div>
         <button class="btn" style="border-color:var(--neon)" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
         <button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
@@ -410,17 +423,14 @@
         function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
-        /* Логика выбора протоколов */
-        function openProtocol(type) {
-            currentActiveProtocol = type;
-            const data = PROTOCOL_DATA[type];
-            document.getElementById('protocolTitle').innerText = data.t;
-            document.getElementById('timeSelector').classList.add('open');
+        /* Логика выбора времени через раскрытие встроенного меню */
+        function toggleTimeOpts(type) {
+            ['focus', 'execution', 'liquidation'].forEach(t => {
+                if(t !== type) document.getElementById('time-opts-' + t).style.display = 'none';
+            });
+            const opts = document.getElementById('time-opts-' + type);
+            opts.style.display = opts.style.display === 'flex' ? 'none' : 'flex';
             playSound(600, 0.1);
-        }
-
-        function closeTimeSelector() {
-            document.getElementById('timeSelector').classList.remove('open');
         }
 
         function showInfo(type) {
@@ -430,8 +440,9 @@
             playSound(500, 0.1);
         }
 
-        function initProtocol(mins) {
-            closeTimeSelector();
+        function initProtocol(type, mins) {
+            currentActiveProtocol = type;
+            document.getElementById('time-opts-' + type).style.display = 'none'; // закрываем меню времени
             startAudioEngine();
             const endTime = Date.now() + mins * 60 * 1000;
             localStorage.setItem('focus_end_time', endTime);
@@ -446,13 +457,13 @@
             clearInterval(focusTimerInterval);
             
             document.getElementById('active-timer-type').innerText = PROTOCOL_DATA[protoType].t;
-            document.getElementById('active-focus-label').style.display = 'block'; // Показываем таймер в хабе
+            document.getElementById('active-focus-label').style.display = 'block'; 
             
             focusTimerInterval = setInterval(() => {
                 const diff = endTime - Date.now();
                 if (diff <= 0) { 
                     clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); 
-                    document.getElementById('active-focus-label').style.display = 'none'; // Прячем по завершении
+                    document.getElementById('active-focus-label').style.display = 'none'; 
                     sw('s-focus-res'); 
                 } else {
                     const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
@@ -489,7 +500,6 @@
             }, 1000);
         }
 
-        // Логирование теперь разделено по типам
         function logFocusEvent(status, detail = "") {
             const proto = localStorage.getItem('active_protocol_type') || 'focus';
             let logs = JSON.parse(localStorage.getItem(`logs_${proto}`) || "[]");
@@ -619,7 +629,7 @@
             document.getElementById('v-type').innerText = type;
             document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
             document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
-            document.getElementById('protocols-container').style.display = 'flex'; // Включаем блок кнопок
+            document.getElementById('protocols-container').style.display = 'flex'; 
             document.getElementById('id-tag').innerText = type; document.getElementById('id-tag').style.display = 'block';
             document.getElementById('hub-oracle-btn').style.display = 'block';
             setTimeout(() => {
