@@ -39,11 +39,7 @@
             transition: 0.2s; 
         }
         .btn:active { background: rgba(0, 255, 65, 0.2); }
-        .btn:disabled { 
-            border-color: rgba(0, 255, 65, 0.1); 
-            color: rgba(0, 255, 65, 0.2); 
-            cursor: default; 
-        }
+        .btn:disabled { border-color: rgba(0, 255, 65, 0.1); color: rgba(0, 255, 65, 0.2); cursor: default; }
         .btn-blue { border-color: rgba(0, 204, 255, 0.4); color: var(--oracle); }
         .btn-red { border-color: var(--red); color: var(--red); }
 
@@ -58,7 +54,7 @@
         #active-focus-label { 
             font-size: 32px; 
             color: var(--neon); 
-            margin-bottom: 5px; 
+            margin-bottom: 15px; 
             letter-spacing: 5px; 
             display: none; 
             text-shadow: 0 0 15px var(--neon);
@@ -69,41 +65,39 @@
             z-index: 1001;
         }
 
-        /* --- Стили новых протоколов --- */
-        .protocols-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            padding: 10px;
-            margin-top: 15px;
+        /* Обновленные стили протоколов */
+        #protocols-container {
+            display: none; /* Flex-column установится через JS */
+            flex-direction: column;
+            align-items: center;
             width: 100%;
-            max-width: 340px;
-            box-sizing: border-box;
-            display: none; /* Появится после теста */
+            margin-top: 15px;
         }
-        .protocol-card {
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(0, 255, 255, 0.3);
-            padding: 12px 4px;
-            text-align: center;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        .proto-wrap {
+            width: 100%;
+            max-width: 240px; /* Суженые кнопки */
+            margin-bottom: 12px;
+        }
+        .proto-wrap .btn {
+            margin: 0 0 5px 0;
+            padding: 14px;
+            font-size: 13px;
+        }
+        .proto-sub {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--oracle);
+            letter-spacing: 1px;
+            padding: 0 5px;
+        }
+        .proto-sub span {
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
+            border-bottom: 1px solid rgba(0, 204, 255, 0.3);
+            padding-bottom: 2px;
+            transition: 0.2s;
         }
-        .protocol-card:active { transform: scale(0.95); }
-        .protocol-card i { display: block; font-size: 1.4rem; margin-bottom: 6px; }
-        .protocol-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: #fff; }
-        .protocol-status { font-size: 0.5rem; color: rgba(255, 255, 255, 0.5); margin-top: 2px; }
-        
-        .protocol-focus { border-color: var(--oracle); box-shadow: 0 0 10px rgba(0, 204, 255, 0.1); }
-        .protocol-focus i { color: var(--oracle); text-shadow: 0 0 5px var(--oracle); }
-        
-        .protocol-execution { border-color: var(--orange); box-shadow: 0 0 10px rgba(255, 170, 0, 0.1); }
-        .protocol-execution i { color: var(--orange); text-shadow: 0 0 5px var(--orange); }
-        
-        .protocol-liquidation { border-color: var(--magenta); box-shadow: 0 0 10px rgba(255, 0, 85, 0.1); }
-        .protocol-liquidation i { color: var(--magenta); text-shadow: 0 0 5px var(--magenta); }
+        .proto-sub span:hover { color: var(--neon); border-color: var(--neon); }
 
         .time-selector-overlay {
             position: fixed; bottom: -100%; left: 0; width: 100%;
@@ -118,7 +112,6 @@
             background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 255, 65, 0.3);
             color: var(--neon); padding: 15px 5px; font-family: monospace; font-size: 14px; cursor: pointer;
         }
-        /* --- Конец новых стилей --- */
 
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; max-width: 90vw; }
         .cell { 
@@ -173,8 +166,6 @@
         .sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; font-weight: 100; }
         
         #history-content div { border-bottom: 1px solid rgba(0, 255, 65, 0.1); padding: 5px 0; }
-
-        #active-protocol-indicator { font-size: 9px; letter-spacing: 3px; color: var(--oracle); margin-bottom: 10px; }
     </style>
 </head>
 <body>
@@ -182,51 +173,52 @@
 
     <div id="s-main" class="screen active">
         <div id="active-focus-label" onclick="sw('s-focus-timer')">00:00</div>
-        <div id="active-protocol-indicator">SYSTEM_IDLE</div>
         
         <div class="hub-container" onclick="showStoredProfile()">
             <canvas id="hub-canvas"></canvas>
             <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
         </div>
 
-        <div id="protocols-container" class="protocols-grid">
-            <div class="protocol-card protocol-focus" onclick="openProtocol('focus')">
-                <i class="fas fa-eye"></i>
-                <div class="protocol-label">Focus</div>
-                <div class="protocol-status">Ready</div>
+        <div id="protocols-container">
+            <div class="proto-wrap">
+                <button class="btn" onclick="openProtocol('focus')">FOCUS PROTOCOL</button>
+                <div class="proto-sub">
+                    <span onclick="showInfo('focus')">[ i ] INFO</span>
+                    <span onclick="showHistory('focus')">HISTORY</span>
+                </div>
             </div>
-            <div class="protocol-card protocol-execution" onclick="openProtocol('execution')">
-                <i class="fas fa-crosshairs"></i>
-                <div class="protocol-label">Execution</div>
-                <div class="protocol-status">Standby</div>
+            <div class="proto-wrap">
+                <button class="btn" onclick="openProtocol('execution')">EXECUTION PROTOCOL</button>
+                <div class="proto-sub">
+                    <span onclick="showInfo('execution')">[ i ] INFO</span>
+                    <span onclick="showHistory('execution')">HISTORY</span>
+                </div>
             </div>
-            <div class="protocol-card protocol-liquidation" onclick="openProtocol('liquidation')">
-                <i class="fas fa-skull-crossbones"></i>
-                <div class="protocol-label">Liquidation</div>
-                <div class="protocol-status">Armed</div>
+            <div class="proto-wrap">
+                <button class="btn" onclick="openProtocol('liquidation')">LIQUIDATION PROTOCOL</button>
+                <div class="proto-sub">
+                    <span onclick="showInfo('liquidation')">[ i ] INFO</span>
+                    <span onclick="showHistory('liquidation')">HISTORY</span>
+                </div>
             </div>
-        </div>
-        
-        <div style="margin-top: 15px; width: 100%; max-width: 320px; text-align: center;">
-             <span onclick="showHistory()" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid; letter-spacing: 1px;">HISTORY</span>
         </div>
 
-        <button id="start-btn" class="btn" style="margin-top: 30px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
-        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;">ОРАКУЛ</button>
+        <div style="margin-top: 40px; width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <button id="start-btn" class="btn" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
+            <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;">ОРАКУЛ</button>
+        </div>
     </div>
 
     <div id="timeSelector" class="time-selector-overlay">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 id="protocolTitle" style="margin: 0; color: #fff; letter-spacing: 2px;">SELECT_CYCLE</h3>
+            <h3 id="protocolTitle" style="margin: 0; color: var(--neon); letter-spacing: 2px;">SELECT_CYCLE</h3>
             <button onclick="closeTimeSelector()" style="background: none; border: none; color: var(--red); font-size: 24px;">×</button>
         </div>
-        <p id="protocolDesc" style="font-size: 11px; color: rgba(255,255,255,0.6); margin: 15px 0; text-align: left; line-height: 1.4;"></p>
         <div class="time-grid">
             <button class="time-btn" onclick="initProtocol(10)">10 M</button>
             <button class="time-btn" onclick="initProtocol(30)">30 M</button>
             <button class="time-btn" onclick="initProtocol(60)">60 M</button>
         </div>
-        <div onclick="toggleModal('m-info-1', true)" style="margin-top:20px; font-size:10px; color:var(--oracle); text-align:center;">[ i ] PROTOCOL_INFO</div>
     </div>
 
     <div id="b-intro" class="screen">
@@ -281,8 +273,8 @@
     </div>
 
     <div id="s-focus-timer" class="screen">
-        <div id="active-timer-type" style="letter-spacing:10px; opacity:0.5; font-size:12px;">PROTOCOL_ACTIVE</div>
-        <div id="focus-countdown" class="timer-val">00:00:00</div>
+        <div id="active-timer-type" style="letter-spacing:10px; opacity:0.5; font-size:12px; color: var(--neon);">PROTOCOL_ACTIVE</div>
+        <div id="focus-countdown" class="timer-val" style="color: var(--neon);">00:00:00</div>
         <button class="btn" style="border-color:var(--neon)" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
         <button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
         <div onclick="localStorage.setItem('focus_end_time', Date.now() + 1000); runFocusUI(Date.now() + 1000);" style="width:100%; height:40px; opacity:0; cursor:pointer; margin-top:10px;">DEBUG_SKIP</div>
@@ -306,40 +298,34 @@
         <button class="btn" style="margin-top:40px; border-color:rgba(0,255,65,0.2)" onclick="sw('s-main')">ВЕРНУТЬСЯ</button>
     </div>
 
-    <div id="m-info-1" class="modal">
-        <div class="modal-content">
-            <h3 style="color:var(--oracle); letter-spacing:2px;">PROTOCOL: INFO [1/2]</h3>
+    <div id="m-info-1" class="modal" onclick="toggleModal('m-info-1', false)">
+        <div class="modal-content" style="border-color:var(--oracle)" onclick="event.stopPropagation()">
+            <h3 style="color:var(--oracle); letter-spacing:2px;">PROTOCOL_INFO</h3>
             <p id="info-text-dynamic" style="text-align:left; line-height:1.6; font-size:12px;"></p>
-            <button class="btn" onclick="toggleModal('m-info-1', false); toggleModal('m-info-2', true);">ДАЛЕЕ</button>
-        </div>
-    </div>
-
-    <div id="m-info-2" class="modal">
-        <div class="modal-content">
-            <h3 style="color:var(--oracle); letter-spacing:2px;">PROTOCOL: INFO [2/2]</h3>
-            <p style="text-align:left; line-height:1.6; font-size:12px;">
+            <p style="text-align:left; line-height:1.6; font-size:12px; margin-top: 15px;">
                 ДИРЕКТИВА:<br>
                 1. Устраните цифровые шумы.<br>
-                2. Аппарат сознания должен быть замкнут на одной целевой задаче.<br>
-                3. По завершении цикла подтвердите статус сессии.
+                2. Аппарат сознания должен быть замкнут на задаче.<br>
+                3. По завершении цикла подтвердите статус.
             </p>
-            <button class="btn" onclick="toggleModal('m-info-2', false)">ПРИНЯТЬ</button>
+            <button class="btn" onclick="toggleModal('m-info-1', false)">ПРИНЯТЬ</button>
         </div>
     </div>
 
     <div id="m-history" class="modal" onclick="toggleModal('m-history', false)">
-        <div class="modal-content" style="border-color:var(--oracle); max-width: 340px;">
-            <h3 style="color:var(--oracle); letter-spacing:2px;">LOG_DATA_STREAM</h3>
+        <div class="modal-content" style="border-color:var(--oracle); max-width: 340px;" onclick="event.stopPropagation()">
+            <h3 id="history-title" style="color:var(--oracle); letter-spacing:2px;">LOG_DATA_STREAM</h3>
             <div id="history-content" style="text-align:left; max-height: 300px; overflow-y: auto; font-size: 11px; font-family: monospace;"></div>
-            <button class="btn btn-blue" style="margin-top:20px;" onclick="clearHistory(event)">CLEAR_LOGS</button>
+            <button id="clear-history-btn" class="btn btn-blue" style="margin-top:20px;">CLEAR_LOGS</button>
+            <button class="btn" style="margin-top:10px; border-color:rgba(0,255,65,0.2)" onclick="toggleModal('m-history', false)">ЗАКРЫТЬ</button>
         </div>
     </div>
 
     <div id="m-fail-detail" class="modal" onclick="toggleModal('m-fail-detail', false)">
-        <div class="modal-content" style="border-color:var(--red)">
+        <div class="modal-content" style="border-color:var(--red)" onclick="event.stopPropagation()">
             <h3 id="fail-title" style="color:var(--red); letter-spacing:2px;"></h3>
             <p id="fail-desc" style="text-align:left; line-height:1.6;"></p>
-            <p style="font-size:10px; opacity:0.5; margin-top:20px;">[ НАЖМИТЕ ДЛЯ ЗАКРЫТИЯ ]</p>
+            <button class="btn btn-red" style="margin-top:20px;" onclick="toggleModal('m-fail-detail', false)">ЗАКРЫТЬ</button>
         </div>
     </div>
 
@@ -362,9 +348,9 @@
         let currentActiveProtocol = 'focus';
 
         const PROTOCOL_DATA = {
-            'focus': { t: 'FOCUS_PROTOCOL', d: 'Принудительная синхронизация внимания на одной задаче. Устранение фрагментации сознания.', color: '#00ccff' },
-            'execution': { t: 'EXECUTION_PROTOCOL', d: 'Режим высокой производительности. Реализация накопленного потенциала в действие.', color: '#ffaa00' },
-            'liquidation': { t: 'LIQUIDATION_PROTOCOL', d: 'Полная зачистка незавершенных циклов и когнитивного долга. Максимальный приоритет.', color: '#ff0055' }
+            'focus': { t: 'FOCUS PROTOCOL', d: 'Принудительная синхронизация внимания на одной задаче. Устранение фрагментации сознания.' },
+            'execution': { t: 'EXECUTION PROTOCOL', d: 'Режим высокой производительности. Реализация накопленного потенциала в действие.' },
+            'liquidation': { t: 'LIQUIDATION PROTOCOL', d: 'Полная зачистка незавершенных циклов и когнитивного долга. Максимальный приоритет.' }
         };
 
         const FAIL_DATA = {
@@ -429,9 +415,6 @@
             currentActiveProtocol = type;
             const data = PROTOCOL_DATA[type];
             document.getElementById('protocolTitle').innerText = data.t;
-            document.getElementById('protocolTitle').style.color = data.color;
-            document.getElementById('protocolDesc').innerText = data.d;
-            document.getElementById('info-text-dynamic').innerText = data.d;
             document.getElementById('timeSelector').classList.add('open');
             playSound(600, 0.1);
         }
@@ -440,15 +423,19 @@
             document.getElementById('timeSelector').classList.remove('open');
         }
 
+        function showInfo(type) {
+            const data = PROTOCOL_DATA[type];
+            document.getElementById('info-text-dynamic').innerText = data.d;
+            toggleModal('m-info-1', true);
+            playSound(500, 0.1);
+        }
+
         function initProtocol(mins) {
             closeTimeSelector();
             startAudioEngine();
             const endTime = Date.now() + mins * 60 * 1000;
             localStorage.setItem('focus_end_time', endTime);
             localStorage.setItem('active_protocol_type', currentActiveProtocol);
-            
-            document.getElementById('active-focus-label').style.display = 'block';
-            document.getElementById('active-focus-label').style.color = PROTOCOL_DATA[currentActiveProtocol].color;
             
             runFocusUI(endTime);
         }
@@ -459,15 +446,13 @@
             clearInterval(focusTimerInterval);
             
             document.getElementById('active-timer-type').innerText = PROTOCOL_DATA[protoType].t;
-            document.getElementById('active-timer-type').style.color = PROTOCOL_DATA[protoType].color;
-            document.getElementById('focus-countdown').style.color = PROTOCOL_DATA[protoType].color;
-
+            document.getElementById('active-focus-label').style.display = 'block'; // Показываем таймер в хабе
+            
             focusTimerInterval = setInterval(() => {
                 const diff = endTime - Date.now();
                 if (diff <= 0) { 
                     clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); 
-                    document.getElementById('active-focus-label').style.display = 'none'; 
-                    document.getElementById('active-protocol-indicator').innerText = "SYSTEM_IDLE";
+                    document.getElementById('active-focus-label').style.display = 'none'; // Прячем по завершении
                     sw('s-focus-res'); 
                 } else {
                     const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
@@ -475,7 +460,6 @@
                     const timeStr = `00:${m}:${s}`;
                     document.getElementById('focus-countdown').innerText = timeStr;
                     document.getElementById('active-focus-label').innerText = timeStr;
-                    document.getElementById('active-protocol-indicator').innerText = PROTOCOL_DATA[protoType].t;
                 }
             }, 1000);
         }
@@ -497,7 +481,6 @@
                     localStorage.removeItem('test_unlock_time');
                     btn.disabled = false; btn.innerText = "ЗАПУСТИТЬ ТЕСТ";
                 } else {
-                    // btn.disabled = true; // Блокировка отключена по запросу
                     const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
                     const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
                     const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
@@ -506,29 +489,44 @@
             }, 1000);
         }
 
+        // Логирование теперь разделено по типам
         function logFocusEvent(status, detail = "") {
-            let logs = JSON.parse(localStorage.getItem('focus_logs') || "[]");
             const proto = localStorage.getItem('active_protocol_type') || 'focus';
+            let logs = JSON.parse(localStorage.getItem(`logs_${proto}`) || "[]");
             const entry = {
                 time: new Date().toLocaleString('ru-RU', {hour: '2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}),
-                status: status, type: proto.toUpperCase() + ": " + detail
+                status: status, type: detail
             };
             logs.unshift(entry);
             if(logs.length > 50) logs.pop();
-            localStorage.setItem('focus_logs', JSON.stringify(logs));
+            localStorage.setItem(`logs_${proto}`, JSON.stringify(logs));
         }
 
-        function showHistory() {
-            const logs = JSON.parse(localStorage.getItem('focus_logs') || "[]");
+        function showHistory(type) {
+            const logs = JSON.parse(localStorage.getItem(`logs_${type}`) || "[]");
             const container = document.getElementById('history-content');
+            document.getElementById('history-title').innerText = type.toUpperCase() + "_LOGS";
             container.innerHTML = logs.length === 0 ? "<div style='opacity:0.5'>NO_DATA_FOUND</div>" : 
                 logs.map(l => `<div><span style="color:var(--oracle)">[${l.time}]</span> <span style="color:${l.status==='SUCCESS'?'var(--neon)':'var(--red)'}">${l.status}</span><br><span style="opacity:0.6; font-size:9px;">${l.type}</span></div>`).join('');
+            
+            document.getElementById('clear-history-btn').onclick = () => clearHistory(type);
             toggleModal('m-history', true);
+            playSound(400, 0.1);
         }
 
-        function clearHistory(e) { e.stopPropagation(); if(confirm('ERASE LOGS?')) { localStorage.removeItem('focus_logs'); showHistory(); } }
+        function clearHistory(type) { 
+            if(confirm('ERASE LOGS FOR ' + type.toUpperCase() + '?')) { 
+                localStorage.removeItem(`logs_${type}`); 
+                showHistory(type); 
+            } 
+        }
 
-        function abortFocus() { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); document.getElementById('active-focus-label').style.display = 'none'; document.getElementById('active-protocol-indicator').innerText = "SYSTEM_IDLE"; sw('s-main'); }
+        function abortFocus() { 
+            clearInterval(focusTimerInterval); 
+            localStorage.removeItem('focus_end_time'); 
+            document.getElementById('active-focus-label').style.display = 'none'; 
+            sw('s-main'); 
+        }
         
         function logFocus(status) {
             if(status === 'success') { logFocusEvent('SUCCESS', 'SYNCHRONIZED'); playSound(800, 0.5); sw('s-main'); }
@@ -621,7 +619,7 @@
             document.getElementById('v-type').innerText = type;
             document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
             document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
-            document.getElementById('protocols-container').style.display = 'grid';
+            document.getElementById('protocols-container').style.display = 'flex'; // Включаем блок кнопок
             document.getElementById('id-tag').innerText = type; document.getElementById('id-tag').style.display = 'block';
             document.getElementById('hub-oracle-btn').style.display = 'block';
             setTimeout(() => {
