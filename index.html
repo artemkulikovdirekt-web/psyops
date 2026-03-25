@@ -3,196 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PSY-OPS CORE v.26.0 HD MONOLITH</title>
+    <title>PSY-OPS CORE v.27.0 FULL HD</title>
     <style>
-        :root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; --orange: #ffaa00; --magenta: #ff0055; }
+        :root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; --orange: #ffaa00; }
         
         body, html { 
             margin: 0; padding: 0; height: 100%; 
             background: var(--bg); color: var(--neon); 
             font-family: 'Courier New', Courier, monospace; 
             font-weight: 100;
-            -webkit-font-smoothing: antialiased;
-            overflow-x: hidden; touch-action: none; 
+            overflow: hidden; touch-action: none; 
         }
         
-        canvas#m-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.55; z-index: 0; pointer-events: none; }
+        canvas#m-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.5; z-index: 0; pointer-events: none; }
         
         .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; text-align: center; padding: 20px; box-sizing: border-box; }
         .active { display: flex; }
 
-        /* HD Шрифт и Неоновый стиль */
-        .hd-style {
+        /* Тот самый HD стиль текста */
+        .hd-text {
             font-family: 'Courier New', Courier, monospace;
-            font-weight: 100;
             text-transform: uppercase;
             letter-spacing: 8px;
             color: var(--neon);
-            text-shadow: 0 0 12px rgba(0, 255, 65, 0.9), 0 0 25px rgba(0, 255, 65, 0.4);
-            filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.6));
+            text-shadow: 0 0 15px rgba(0, 255, 65, 0.8), 0 0 30px rgba(0, 255, 65, 0.3);
+            filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.5));
         }
 
-        /* Монолитный блок кнопок */
-        .monolith-container {
-            width: 320px;
-            margin: 15px 0;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-        }
-
+        /* МОНОЛИТНЫЙ БЛОК */
         .monolith-row {
             display: flex;
-            width: 100%;
+            width: 340px;
             height: 55px;
+            margin: 15px 0;
             border: 1px solid rgba(0, 255, 65, 0.4);
             background: rgba(0, 255, 65, 0.05);
-            overflow: hidden;
             position: relative;
+            overflow: hidden;
         }
 
         .mono-part {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s;
             border-right: 1px solid rgba(0, 255, 65, 0.3);
-            font-size: 10px;
-            letter-spacing: 2px;
-            color: var(--neon);
+            font-size: 10px; letter-spacing: 2px;
         }
         .mono-part:last-child { border-right: none; }
         .mono-part:active { background: rgba(0, 255, 65, 0.2); }
 
-        .side-btn { width: 75px; opacity: 0.7; font-size: 9px; letter-spacing: 1px; }
-        .main-btn { flex-grow: 1; font-size: 13px; font-weight: bold; }
+        .side-btn { width: 75px; opacity: 0.7; font-size: 9px; }
+        .main-btn { flex-grow: 1; font-size: 14px; font-weight: bold; }
 
-        /* Встроенный выбор времени */
+        /* Встроенное время */
         .time-overlay {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg);
-            display: none;
-            grid-template-columns: 1fr 1fr 1fr;
-            z-index: 10;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; display: none; grid-template-columns: 1fr 1fr 1fr; z-index: 10;
         }
         .time-opt {
             display: flex; align-items: center; justify-content: center;
-            border-right: 1px solid rgba(0, 255, 65, 0.3);
-            font-size: 12px; cursor: pointer; transition: 0.2s;
-        }
-        .time-opt:active { background: var(--neon); color: #000; }
-
-        .btn-standard { 
-            background: transparent; 
-            border: 1px solid var(--neon); 
-            color: var(--neon); 
-            padding: 18px; 
-            cursor: pointer; 
-            width: 100%; 
-            max-width: 280px; 
-            margin: 20px 0;
-            transition: 0.2s;
+            border-right: 1px solid rgba(0, 255, 65, 0.3); font-size: 13px; cursor: pointer;
         }
 
-        .hub-container { 
-            width: 240px; height: 240px; 
-            border: 1px solid rgba(0, 255, 65, 0.2); 
-            display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            position: relative; 
+        .btn-standard {
+            background: transparent; border: 1px solid var(--neon); color: var(--neon);
+            padding: 20px; width: 280px; cursor: pointer; margin-top: 30px; transition: 0.3s;
         }
-        #hub-canvas { width: 180px; height: 180px; }
+        .btn-standard:disabled { opacity: 0.2; border-color: #222; }
 
-        /* Текст на экране активного таймера */
-        .timer-val { font-size: 58px; margin: 25px 0; }
+        .hub-container { width: 220px; height: 220px; position: relative; display: flex; align-items: center; justify-content: center; }
+        #hub-canvas { width: 100%; height: 100%; }
 
-        /* Сетки для тестов */
+        /* Сетки тестов */
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; }
-        .cell { 
-            aspect-ratio: 1; border: 1px solid rgba(0, 255, 65, 0.3); 
-            display: flex; align-items: center; justify-content: center; 
-            font-size: 20px; cursor: pointer; background: rgba(0,0,0,0.8);
-        }
+        .cell { aspect-ratio: 1; border: 1px solid rgba(0, 255, 65, 0.3); display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; background: rgba(0,0,0,0.8); }
         .cell.ok { background: var(--neon) !important; color: #000; }
-        .cell.err { background: var(--red) !important; color: #fff; }
+        .cell.err { background: var(--red) !important; }
 
+        .timer-val { font-size: 60px; margin: 30px 0; }
+
+        /* Модалки */
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:3000; display:none; align-items:center; justify-content:center; }
         .modal-content { border: 1px solid var(--neon); padding: 25px; width: 310px; background:#000; }
 
-        #active-focus-label { 
-            position: absolute; top: 40px; font-size: 30px; display: none; cursor: pointer; z-index: 1001;
-        }
+        #active-focus-label { position: absolute; top: 30px; font-size: 28px; display: none; cursor: pointer; z-index: 1001; }
     </style>
 </head>
 <body>
     <canvas id="m-bg"></canvas>
 
     <div id="s-main" class="screen active">
-        <div id="active-focus-label" class="hd-style" onclick="sw('s-focus-timer')">00:00</div>
+        <div id="active-focus-label" class="hd-text" onclick="sw('s-focus-timer')">00:00</div>
         
         <div class="hub-container" onclick="showStoredProfile()">
             <canvas id="hub-canvas"></canvas>
-            <div id="id-tag" class="hd-style" style="margin-top: 20px; font-size: 12px; display: none;"></div>
+            <div id="id-tag" class="hd-text" style="position: absolute; bottom: -30px; font-size: 12px; display: none;"></div>
         </div>
 
-        <div id="proto-ui" style="display:none; margin-top: 20px;">
-            <div class="monolith-container">
-                <div class="monolith-row">
-                    <div class="mono-part side-btn" onclick="showInfo('focus')">INFO</div>
-                    <div class="mono-part main-btn hd-style" onclick="openTime('focus')">FOCUS</div>
-                    <div class="mono-part side-btn" onclick="showHistory('focus')">LOGS</div>
-                    <div id="time-focus" class="time-overlay">
-                        <div class="time-opt hd-style" onclick="initProtocol('focus', 10)">10M</div>
-                        <div class="time-opt hd-style" onclick="initProtocol('focus', 30)">30M</div>
-                        <div class="time-opt hd-style" onclick="initProtocol('focus', 60)">60M</div>
-                    </div>
+        <div id="proto-ui" style="display:none; margin-top: 40px;">
+            <div class="monolith-row">
+                <div class="mono-part side-btn" onclick="showInfo('focus')">INFO</div>
+                <div class="mono-part main-btn hd-text" onclick="openTime('focus')">FOCUS</div>
+                <div class="mono-part side-btn" onclick="showHistory('focus')">LOGS</div>
+                <div id="time-focus" class="time-overlay">
+                    <div class="time-opt hd-text" onclick="initProtocol('focus', 10)">10M</div>
+                    <div class="time-opt hd-text" onclick="initProtocol('focus', 30)">30M</div>
+                    <div class="time-opt hd-text" onclick="initProtocol('focus', 60)">60M</div>
                 </div>
             </div>
-
-            <div class="monolith-container">
-                <div class="monolith-row">
-                    <div class="mono-part side-btn" onclick="showInfo('execution')">INFO</div>
-                    <div class="mono-part main-btn hd-style" onclick="openTime('execution')">EXECUTION</div>
-                    <div class="mono-part side-btn" onclick="showHistory('execution')">LOGS</div>
-                    <div id="time-execution" class="time-overlay">
-                        <div class="time-opt hd-style" onclick="initProtocol('execution', 10)">10M</div>
-                        <div class="time-opt hd-style" onclick="initProtocol('execution', 30)">30M</div>
-                        <div class="time-opt hd-style" onclick="initProtocol('execution', 60)">60M</div>
-                    </div>
+            <div class="monolith-row">
+                <div class="mono-part side-btn" onclick="showInfo('execution')">INFO</div>
+                <div class="mono-part main-btn hd-text" onclick="openTime('execution')">EXECUTION</div>
+                <div class="mono-part side-btn" onclick="showHistory('execution')">LOGS</div>
+                <div id="time-execution" class="time-overlay">
+                    <div class="time-opt hd-text" onclick="initProtocol('execution', 10)">10M</div>
+                    <div class="time-opt hd-text" onclick="initProtocol('execution', 30)">30M</div>
+                    <div class="time-opt hd-text" onclick="initProtocol('execution', 60)">60M</div>
                 </div>
             </div>
-
-            <div class="monolith-container">
-                <div class="monolith-row">
-                    <div class="mono-part side-btn" onclick="showInfo('liquidation')">INFO</div>
-                    <div class="mono-part main-btn hd-style" onclick="openTime('liquidation')">LIQUIDATION</div>
-                    <div class="mono-part side-btn" onclick="showHistory('liquidation')">LOGS</div>
-                    <div id="time-liquidation" class="time-overlay">
-                        <div class="time-opt hd-style" onclick="initProtocol('liquidation', 10)">10M</div>
-                        <div class="time-opt hd-style" onclick="initProtocol('liquidation', 30)">30M</div>
-                        <div class="time-opt hd-style" onclick="initProtocol('liquidation', 60)">60M</div>
-                    </div>
+            <div class="monolith-row">
+                <div class="mono-part side-btn" onclick="showInfo('liquidation')">INFO</div>
+                <div class="mono-part main-btn hd-text" onclick="openTime('liquidation')">LIQUIDATION</div>
+                <div class="mono-part side-btn" onclick="showHistory('liquidation')">LOGS</div>
+                <div id="time-liquidation" class="time-overlay">
+                    <div class="time-opt hd-text" onclick="initProtocol('liquidation', 10)">10M</div>
+                    <div class="time-opt hd-text" onclick="initProtocol('liquidation', 30)">30M</div>
+                    <div class="time-opt hd-text" onclick="initProtocol('liquidation', 60)">60M</div>
                 </div>
             </div>
         </div>
 
-        <button id="start-btn" class="btn-standard hd-style" onclick="startSequence()">START_TEST</button>
+        <button id="start-btn" class="btn-standard hd-text" onclick="startSequence()">START_TEST</button>
     </div>
 
     <div id="s-psych" class="screen">
-        <p id="q-text" class="hd-style" style="font-size: 16px; margin-bottom: 30px;"></p>
+        <p id="q-text" class="hd-text" style="font-size: 16px; margin-bottom: 30px;"></p>
         <div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div>
     </div>
 
     <div id="s-react" class="screen">
-        <div id="timer-display" class="hd-style" style="font-size: 20px; color: var(--oracle); margin-bottom: 15px;">0.000</div>
+        <div id="timer-display" class="hd-text" style="font-size: 20px; color: var(--oracle); margin-bottom: 15px;">0.000</div>
         <div id="react-grid" class="grid"></div>
         <div id="att-label" style="margin-top: 20px; color: var(--red); letter-spacing: 5px;"></div>
     </div>
 
     <div id="s-mem" class="screen">
-        <div class="hd-style" style="margin-bottom: 20px;">MEMORY_SYNC</div>
+        <div class="hd-text" style="margin-bottom: 20px;">MEMORY_SYNC</div>
         <div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 280px;"></div>
     </div>
 
@@ -201,70 +156,46 @@
     </div>
 
     <div id="s-focus-timer" class="screen">
-        <div id="active-timer-type" class="hd-style" style="font-size: 14px; opacity: 0.7;">PROTOCOL_ACTIVE</div>
-        <div id="focus-countdown" class="timer-val hd-style">00:00:00</div>
-        <button class="btn-standard hd-style" onclick="sw('s-main')">HUB</button>
-        <button class="btn-standard hd-style" style="color:var(--red); border-color:var(--red);" onclick="abortFocus()">ABORT</button>
+        <div id="active-timer-type" class="hd-text" style="font-size: 14px; opacity: 0.7;">PROTOCOL_ACTIVE</div>
+        <div id="focus-countdown" class="timer-val hd-text">00:00:00</div>
+        <button class="btn-standard hd-text" onclick="sw('s-main')">HUB</button>
+        <button class="btn-standard hd-text" style="color:var(--red); border-color:var(--red);" onclick="abortFocus()">ABORT</button>
     </div>
 
-    <div id="m-info" class="modal" onclick="this.style.display='none'">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 class="hd-style" style="font-size: 14px;">PROTOCOL_DATA</h3>
-            <p id="info-body" style="font-size: 12px; line-height: 1.6; opacity: 0.8;"></p>
-            <button class="btn-standard hd-style" onclick="document.getElementById('m-info').style.display='none'">CLOSE</button>
-        </div>
-    </div>
-
-    <div id="m-history" class="modal" onclick="this.style.display='none'">
-        <div class="modal-content" style="width: 320px;" onclick="event.stopPropagation()">
-            <h3 class="hd-style" style="font-size: 14px;">EVENT_LOGS</h3>
-            <div id="history-list" style="max-height: 300px; overflow-y: auto; font-size: 10px; font-family: monospace;"></div>
-            <button class="btn-standard hd-style" onclick="document.getElementById('m-history').style.display='none'">CLOSE</button>
-        </div>
-    </div>
+    <div id="m-info" class="modal" onclick="this.style.display='none'"><div class="modal-content" onclick="event.stopPropagation()"><h3 class="hd-text" style="font-size: 14px;">DATA</h3><p id="info-body"></p></div></div>
+    <div id="m-history" class="modal" onclick="this.style.display='none'"><div class="modal-content" style="width: 320px;" onclick="event.stopPropagation()"><h3 class="hd-text" style="font-size: 14px;">LOGS</h3><div id="history-list"></div></div></div>
 
     <script>
-        // Звуковой движок и переменные
-        let aCtx, masterGain, thrillerFilter, lfo;
+        let aCtx, masterGain, thrillerFilter;
         let score = {}, curQ = 0, focusTimerInterval, lockInterval;
         let target = 1, attempts = 3, reactStartTime, timerInt;
         let memSeq = [], memIdx = 0, memStep = 0;
 
-        const PROFILES = {
-            "ARCHITECT": { log: 95, color: '#00ff41' },
-            "IMPULSE": { log: 40, color: '#ff3333' },
-            "ANALYST": { log: 85, color: '#00ccff' },
-            "SCANNER": { log: 70, color: '#ffaa00' }
-        };
-
         const QUESTIONS = [
-            {q: "SYSTEM BREACH. ACTION?", o: [{t: "ANALYZE CODE", a: "ARCHITECT"}, {t: "PURGE SECTOR", a: "IMPULSE"}]},
-            {q: "IDENTITY OR ACCESS?", o: [{t: "EVALUATE RISKS", a: "ANALYST"}, {t: "FORCE SHIELDS", a: "SCANNER"}]},
-            {q: "DATA IS...", o: [{t: "A LANGUAGE", a: "ARCHITECT"}, {t: "A WEAPON", a: "IMPULSE"}]}
+            {q: "SYSTEM BREACH. ACTION?", o: [{t: "ANALYZE", a: "ARCHITECT"}, {t: "PURGE", a: "IMPULSE"}]},
+            {q: "STRUCTURE OR FLOW?", o: [{t: "STRUCTURE", a: "ARCHITECT"}, {t: "FLOW", a: "IMPULSE"}]},
+            {q: "DATA IS...", o: [{t: "LANGUAGE", a: "ANALYST"}, {t: "WEAPON", a: "SCANNER"}]}
         ];
-
-        const SYNC_WORDS = [{t: "LOGIC", a: "ARCHITECT"}, {t: "SPEED", a: "IMPULSE"}, {t: "GRID", a: "ANALYST"}, {t: "VOID", a: "SCANNER"}, {t: "FLOW", a: "IMPULSE"}];
+        const SYNC_WORDS = [{t: "LOGIC", a: "ARCHITECT"}, {t: "SPEED", a: "IMPULSE"}, {t: "GRID", a: "ANALYST"}, {t: "VOID", a: "SCANNER"}];
 
         function startAudioEngine() {
             if (aCtx) return;
             aCtx = new (window.AudioContext || window.webkitAudioContext)();
-            masterGain = aCtx.createGain(); masterGain.gain.value = 0.15; masterGain.connect(aCtx.destination);
-            const osc1 = aCtx.createOscillator(); thrillerFilter = aCtx.createBiquadFilter();
-            osc1.type = 'sawtooth'; osc1.frequency.value = 42; thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180;
-            osc1.connect(thrillerFilter); thrillerFilter.connect(masterGain); osc1.start();
+            masterGain = aCtx.createGain(); masterGain.gain.value = 0.1; masterGain.connect(aCtx.destination);
+            const osc = aCtx.createOscillator(); thrillerFilter = aCtx.createBiquadFilter();
+            osc.type = 'sawtooth'; osc.frequency.value = 40; thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 200;
+            osc.connect(thrillerFilter); thrillerFilter.connect(masterGain); osc.start();
         }
 
-        function playSound(f, d, type='sine') {
+        function playSound(f, d) {
             if(!aCtx) return;
             const o = aCtx.createOscillator(); const g = aCtx.createGain();
-            o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime);
-            g.gain.setValueAtTime(0.1, aCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + d);
+            o.frequency.setValueAtTime(f, aCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + d);
             o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
         }
 
         function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
-        // --- УПРАВЛЕНИЕ МОНОЛИТАМИ ---
         function openTime(type) {
             document.querySelectorAll('.time-overlay').forEach(el => el.style.display = 'none');
             document.getElementById('time-' + type).style.display = 'grid';
@@ -272,7 +203,6 @@
         }
 
         function initProtocol(type, mins) {
-            document.querySelectorAll('.time-overlay').forEach(el => el.style.display = 'none');
             const end = Date.now() + mins * 60 * 1000;
             localStorage.setItem('focus_end_time', end);
             localStorage.setItem('active_proto', type);
@@ -283,16 +213,12 @@
         function runFocusUI(end, type) {
             sw('s-focus-timer');
             document.getElementById('active-focus-label').style.display = 'block';
-            document.getElementById('active-timer-type').innerText = type.toUpperCase() + "_PROTOCOL";
+            document.getElementById('active-timer-type').innerText = type.toUpperCase();
             clearInterval(focusTimerInterval);
             focusTimerInterval = setInterval(() => {
                 const diff = end - Date.now();
-                if(diff <= 0) { 
-                    clearInterval(focusTimerInterval); 
-                    logEvent(type, 'SUCCESS', 'SYNC_OK');
-                    document.getElementById('active-focus-label').style.display = 'none'; 
-                    sw('s-main'); 
-                } else {
+                if(diff <= 0) { clearInterval(focusTimerInterval); logEvent(type, 'DONE', 'SYNC'); sw('s-main'); }
+                else {
                     const m = Math.floor(diff/60000).toString().padStart(2,'0');
                     const s = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
                     const str = `00:${m}:${s}`;
@@ -303,49 +229,41 @@
         }
 
         function abortFocus() {
-            const type = localStorage.getItem('active_proto');
-            logEvent(type, 'ABORT', 'MANUAL');
-            clearInterval(focusTimerInterval);
-            localStorage.removeItem('focus_end_time');
-            document.getElementById('active-focus-label').style.display = 'none';
-            sw('s-main');
+            logEvent(localStorage.getItem('active_proto'), 'ABORT', 'USER');
+            clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time');
+            document.getElementById('active-focus-label').style.display = 'none'; sw('s-main');
         }
 
         function logEvent(proto, status, detail) {
             let logs = JSON.parse(localStorage.getItem('logs_' + proto) || "[]");
             logs.unshift({ t: new Date().toLocaleTimeString(), s: status, d: detail });
-            localStorage.setItem('logs_' + proto, JSON.stringify(logs.slice(0, 30)));
+            localStorage.setItem('logs_' + proto, JSON.stringify(logs.slice(0, 20)));
         }
 
         function showHistory(proto) {
             const logs = JSON.parse(localStorage.getItem('logs_' + proto) || "[]");
-            const list = document.getElementById('history-list');
-            list.innerHTML = logs.map(l => `<div style="margin-bottom:8px; border-bottom:1px solid #111">
-                [${l.t}] <span style="color:var(--oracle)">${l.s}</span> - ${l.d}
-            </div>`).join('') || "EMPTY_LOG";
+            document.getElementById('history-list').innerHTML = logs.map(l => `<div>[${l.t}] ${l.s} - ${l.d}</div>`).join('') || "NO_DATA";
             document.getElementById('m-history').style.display = 'flex';
         }
 
         function showInfo(type) {
-            const info = { focus: "Isolation of cognitive resources. Single thread mode.", execution: "High performance phase. Action implementation.", liquidation: "Debt purge. Buffer clearance." };
-            document.getElementById('info-body').innerText = info[type];
+            document.getElementById('info-body').innerText = type.toUpperCase() + " PROTOCOL ACTIVE.";
             document.getElementById('m-info').style.display = 'flex';
         }
 
-        // --- ЛОГИКА ТЕСТОВ (600 СТРОК+) ---
+        // --- ТЕСТЫ ---
         function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('s-psych'); renderQ(); }
         function renderQ() {
             const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
             const box = document.getElementById('q-options'); box.innerHTML = "";
             q.o.forEach(o => {
-                const b = document.createElement('button'); b.className = "btn-standard hd-style"; b.innerText = o.t;
+                const b = document.createElement('button'); b.className = "btn-standard hd-text"; b.innerText = o.t;
                 b.onclick = () => { score[o.a] = (score[o.a] || 0) + 1; curQ++; if(curQ < QUESTIONS.length) renderQ(); else startReact(); };
                 box.appendChild(b);
             });
         }
-
         function startReact() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); renderReactGrid(); 
-            timerInt = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - reactStartTime)/1000).toFixed(3); }, 47);
+            timerInt = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - reactStartTime)/1000).toFixed(3); }, 50);
         }
         function renderReactGrid() {
             const g = document.getElementById('react-grid'); g.innerHTML = "";
@@ -354,56 +272,50 @@
             ns.forEach(n => {
                 const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
                 c.onclick = () => {
-                    if(n === target) { playSound(800+n*20, 0.05); target++; if(target > 16) { clearInterval(timerInt); startMem(); } else renderReactGrid(); }
-                    else { playSound(100, 0.2, 'square'); attempts--; if(attempts <= 0) { clearInterval(timerInt); startMem(); } else renderReactGrid(); }
-                };
-                g.appendChild(c);
+                    if(n === target) { target++; if(target > 16) { clearInterval(timerInt); startMem(); } else renderReactGrid(); }
+                    else { attempts--; if(attempts <= 0) { clearInterval(timerInt); startMem(); } else renderReactGrid(); }
+                }; g.appendChild(c);
             });
         }
-
         function startMem() { sw('s-mem'); memStep = 0; nextMem(); }
         function nextMem() {
             memSeq = Array.from({length: 3 + memStep}, () => Math.floor(Math.random()*9));
             const mg = document.getElementById('mem-grid'); mg.innerHTML = "";
             for(let i=0; i<9; i++) { const c = document.createElement('div'); c.className = "cell"; c.onclick = () => {
-                if(i === memSeq[memIdx]) { c.classList.add('ok'); memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMem(); else startSync(); } }
-                else { c.classList.add('err'); setTimeout(startSync, 300); }
+                if(i === memSeq[memIdx]) { c.classList.add('ok'); memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 2) nextMem(); else startSync(); } }
+                else startSync();
             }; mg.appendChild(c); }
             playMemSeq();
         }
         async function playMemSeq() {
             const cells = document.getElementById('mem-grid').children; memIdx = 0;
-            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); cells[id].classList.add('ok'); playSound(1000, 0.05); await new Promise(r => setTimeout(r, 400)); cells[id].classList.remove('ok'); }
+            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); cells[id].classList.add('ok'); await new Promise(r => setTimeout(r, 400)); cells[id].classList.remove('ok'); }
         }
-
         function startSync() {
             sw('s-sync'); let picked = 0; const container = document.getElementById('words-container');
             const loop = setInterval(() => {
                 if(picked >= 2) { clearInterval(loop); finalize(); return; }
                 const wData = SYNC_WORDS[Math.floor(Math.random()*SYNC_WORDS.length)];
-                const w = document.createElement('div'); w.className = "hd-style"; w.innerText = wData.t;
+                const w = document.createElement('div'); w.className = "hd-text"; w.innerText = wData.t;
                 w.style.position = "absolute"; w.style.left = Math.random()*70+10+"%"; w.style.top = Math.random()*70+10+"%";
                 w.style.fontSize = "14px"; w.style.cursor = "pointer"; container.appendChild(w);
                 w.onclick = () => { score[wData.a] = (score[wData.a]||0) + 2; picked++; w.remove(); };
-                setTimeout(() => w.remove(), 2500);
+                setTimeout(() => w.remove(), 2000);
             }, 1000);
         }
-
         function finalize() {
             let res = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "ANALYST";
-            localStorage.setItem('psy_profile', res);
-            localStorage.setItem('psy_done', 'true');
-            localStorage.setItem('lock_until', Date.now() + 21600000);
-            location.reload(); 
+            localStorage.setItem('psy_profile', res); localStorage.setItem('psy_done', 'true');
+            localStorage.setItem('lock_until', Date.now() + 21600000); location.reload(); 
         }
 
         // --- АНИМАЦИИ ---
         const hC = document.getElementById('hub-canvas'); const hX = hC.getContext('2d');
-        hC.width = 180; hC.height = 180;
+        hC.width = 220; hC.height = 220;
         function drawHub() {
-            hX.clearRect(0,0,180,180); hX.strokeStyle = '#00ff41'; hX.lineWidth = 1;
-            hX.beginPath(); hX.arc(90, 90, 70 + Math.sin(Date.now()/500)*4, 0, Math.PI*2); hX.stroke();
-            hX.setLineDash([4, 12]); hX.beginPath(); hX.arc(90, 90, 50, Date.now()/1000, Date.now()/1000 + Math.PI); hX.stroke();
+            hX.clearRect(0,0,220,220); hX.strokeStyle = '#00ff41'; hX.lineWidth = 1;
+            hX.beginPath(); hX.arc(110, 110, 80 + Math.sin(Date.now()/500)*5, 0, Math.PI*2); hX.stroke();
+            hX.setLineDash([5, 15]); hX.beginPath(); hX.arc(110, 110, 60, Date.now()/1000, Date.now()/1000 + Math.PI); hX.stroke();
             hX.setLineDash([]); requestAnimationFrame(drawHub);
         }
         drawHub();
@@ -412,7 +324,7 @@
         let mw = mc.width = window.innerWidth, mh = mc.height = window.innerHeight;
         const drops = Array(Math.floor(mw/20)).fill(1);
         function drawM() {
-            mx.fillStyle = 'rgba(0,0,0,0.07)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41'; mx.font = '15px monospace';
+            mx.fillStyle = 'rgba(0,0,0,0.05)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41'; mx.font = '15px monospace';
             drops.forEach((y, i) => {
                 mx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*20, y*20);
                 if(y*20 > mh && Math.random() > 0.98) drops[i] = 0; drops[i]++;
@@ -423,22 +335,18 @@
         window.onload = () => {
             const end = localStorage.getItem('focus_end_time');
             if(end && parseInt(end) > Date.now()) { startAudioEngine(); runFocusUI(parseInt(end), localStorage.getItem('active_proto')); }
-            
             if(localStorage.getItem('psy_done') === 'true') {
                 document.getElementById('proto-ui').style.display = 'block';
-                document.getElementById('id-tag').innerText = "ID: " + localStorage.getItem('psy_profile');
+                document.getElementById('id-tag').innerText = "CORE_ID: " + localStorage.getItem('psy_profile');
                 document.getElementById('id-tag').style.display = 'block';
                 document.getElementById('start-btn').disabled = true;
-                
                 const lockUntil = localStorage.getItem('lock_until');
                 if(lockUntil && parseInt(lockUntil) > Date.now()) {
                     lockInterval = setInterval(() => {
                         const d = lockUntil - Date.now();
-                        if(d <= 0) { clearInterval(lockInterval); document.getElementById('start-btn').disabled = false; document.getElementById('start-btn').innerText = "START_TEST"; }
+                        if(d <= 0) { clearInterval(lockInterval); document.getElementById('start-btn').disabled = false; }
                         else { 
-                            const h = Math.floor(d/3600000).toString().padStart(2,'0');
-                            const m = Math.floor((d%3600000)/60000).toString().padStart(2,'0');
-                            const s = Math.floor((d%60000)/1000).toString().padStart(2,'0');
+                            const h = Math.floor(d/3600000); const m = Math.floor((d%3600000)/60000); const s = Math.floor((d%60000)/1000);
                             document.getElementById('start-btn').innerText = `LOCK: ${h}:${m}:${s}`;
                         }
                     }, 1000);
