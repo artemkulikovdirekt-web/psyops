@@ -3,201 +3,233 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PSY-OPS CORE v.25.0 FULL</title>
+    <title>PSY-OPS CORE v.26.0 HD MONOLITH</title>
     <style>
-        :root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; }
+        :root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; --orange: #ffaa00; --magenta: #ff0055; }
         
         body, html { 
             margin: 0; padding: 0; height: 100%; 
             background: var(--bg); color: var(--neon); 
-            font-family: 'Segoe UI', 'Courier New', monospace; 
-            overflow: hidden; touch-action: none; 
+            font-family: 'Courier New', Courier, monospace; 
+            font-weight: 100;
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden; touch-action: none; 
         }
         
-        canvas#m-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.4; z-index: 0; pointer-events: none; }
-
+        canvas#m-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.55; z-index: 0; pointer-events: none; }
+        
         .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; text-align: center; padding: 20px; box-sizing: border-box; }
         .active { display: flex; }
 
-        /* Тот самый HD Шрифт */
-        .hd-text {
+        /* HD Шрифт и Неоновый стиль */
+        .hd-style {
+            font-family: 'Courier New', Courier, monospace;
             font-weight: 100;
             text-transform: uppercase;
-            letter-spacing: 6px;
+            letter-spacing: 8px;
             color: var(--neon);
-            text-shadow: 0 0 12px rgba(0, 255, 65, 0.7), 0 0 25px rgba(0, 255, 65, 0.3);
-            filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.5));
+            text-shadow: 0 0 12px rgba(0, 255, 65, 0.9), 0 0 25px rgba(0, 255, 65, 0.4);
+            filter: drop-shadow(0 0 5px rgba(0, 255, 65, 0.6));
         }
 
         /* Монолитный блок кнопок */
+        .monolith-container {
+            width: 320px;
+            margin: 15px 0;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
         .monolith-row {
             display: flex;
-            width: 340px;
-            max-width: 90vw;
+            width: 100%;
             height: 55px;
-            margin: 12px 0;
-            border: 1px solid rgba(0, 255, 65, 0.3);
+            border: 1px solid rgba(0, 255, 65, 0.4);
             background: rgba(0, 255, 65, 0.05);
-            position: relative;
             overflow: hidden;
+            position: relative;
         }
 
         .mono-part {
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; transition: 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: 0.2s;
             border-right: 1px solid rgba(0, 255, 65, 0.3);
+            font-size: 10px;
+            letter-spacing: 2px;
+            color: var(--neon);
         }
         .mono-part:last-child { border-right: none; }
         .mono-part:active { background: rgba(0, 255, 65, 0.2); }
 
-        .side-btn { width: 70px; font-size: 10px; letter-spacing: 1px; opacity: 0.7; }
-        .main-btn { flex-grow: 1; font-size: 14px; }
+        .side-btn { width: 75px; opacity: 0.7; font-size: 9px; letter-spacing: 1px; }
+        .main-btn { flex-grow: 1; font-size: 13px; font-weight: bold; }
 
+        /* Встроенный выбор времени */
         .time-overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; display: none; grid-template-columns: 1fr 1fr 1fr; z-index: 10;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg);
+            display: none;
+            grid-template-columns: 1fr 1fr 1fr;
+            z-index: 10;
         }
-        .time-btn {
+        .time-opt {
             display: flex; align-items: center; justify-content: center;
-            border-right: 1px solid rgba(0, 255, 65, 0.3); font-size: 13px; cursor: pointer;
+            border-right: 1px solid rgba(0, 255, 65, 0.3);
+            font-size: 12px; cursor: pointer; transition: 0.2s;
+        }
+        .time-opt:active { background: var(--neon); color: #000; }
+
+        .btn-standard { 
+            background: transparent; 
+            border: 1px solid var(--neon); 
+            color: var(--neon); 
+            padding: 18px; 
+            cursor: pointer; 
+            width: 100%; 
+            max-width: 280px; 
+            margin: 20px 0;
+            transition: 0.2s;
         }
 
-        /* Сетка для тестов */
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; margin-top: 20px; }
+        .hub-container { 
+            width: 240px; height: 240px; 
+            border: 1px solid rgba(0, 255, 65, 0.2); 
+            display: flex; flex-direction: column; align-items: center; justify-content: center; 
+            position: relative; 
+        }
+        #hub-canvas { width: 180px; height: 180px; }
+
+        /* Текст на экране активного таймера */
+        .timer-val { font-size: 58px; margin: 25px 0; }
+
+        /* Сетки для тестов */
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; }
         .cell { 
             aspect-ratio: 1; border: 1px solid rgba(0, 255, 65, 0.3); 
             display: flex; align-items: center; justify-content: center; 
-            font-size: 20px; cursor: pointer; background: rgba(0,0,0,0.6);
+            font-size: 20px; cursor: pointer; background: rgba(0,0,0,0.8);
         }
-        .cell.ok { background: var(--neon); color: #000; }
-        .cell.err { background: var(--red); color: #fff; }
-
-        .timer-val { font-size: 64px; margin: 20px 0; }
-        
-        .btn-standard {
-            background: transparent; border: 1px solid var(--neon); color: var(--neon);
-            padding: 18px 45px; cursor: pointer; margin-top: 30px; transition: 0.3s;
-        }
-        .btn-standard:disabled { opacity: 0.3; border-color: #333; }
-
-        /* Профиль/Карточка */
-        #v-card {
-            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 350px; background: #000; border: 1px solid var(--neon);
-            padding: 30px; display: none; flex-direction: column; align-items: center; z-index: 2000;
-        }
-        .stat-bar { width: 100%; height: 4px; background: #111; margin: 10px 0; }
-        .stat-fill { height: 100%; background: var(--neon); width: 0%; transition: 1.5s; }
+        .cell.ok { background: var(--neon) !important; color: #000; }
+        .cell.err { background: var(--red) !important; color: #fff; }
 
         .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:3000; display:none; align-items:center; justify-content:center; }
-        .modal-content { border: 1px solid var(--neon); padding: 25px; width: 300px; background:#000; text-align: left; }
+        .modal-content { border: 1px solid var(--neon); padding: 25px; width: 310px; background:#000; }
 
-        #active-focus-label { position: absolute; top: 30px; font-size: 24px; cursor: pointer; display: none; }
+        #active-focus-label { 
+            position: absolute; top: 40px; font-size: 30px; display: none; cursor: pointer; z-index: 1001;
+        }
     </style>
 </head>
 <body>
     <canvas id="m-bg"></canvas>
 
     <div id="s-main" class="screen active">
-        <div id="active-focus-label" class="hd-text" onclick="sw('s-focus-timer')">00:00</div>
-        <div style="width:200px; height:200px; margin-bottom: 20px;" onclick="showStoredProfile()">
+        <div id="active-focus-label" class="hd-style" onclick="sw('s-focus-timer')">00:00</div>
+        
+        <div class="hub-container" onclick="showStoredProfile()">
             <canvas id="hub-canvas"></canvas>
-        </div>
-        <div id="id-tag" class="hd-text" style="font-size: 14px; margin-bottom: 15px; display:none;"></div>
-
-        <div id="proto-controls" style="display:none;">
-            <div class="monolith-row">
-                <div class="mono-part side-btn" onclick="showInfo('focus')">INFO</div>
-                <div class="mono-part main-btn hd-text" onclick="toggleTime('focus')">FOCUS</div>
-                <div class="mono-part side-btn" onclick="showHistory('focus')">LOGS</div>
-                <div id="time-focus" class="time-overlay">
-                    <div class="time-btn hd-text" onclick="initProtocol('focus', 10)">10M</div>
-                    <div class="time-btn hd-text" onclick="initProtocol('focus', 30)">30M</div>
-                    <div class="time-btn hd-text" onclick="initProtocol('focus', 60)">60M</div>
-                </div>
-            </div>
-            <div class="monolith-row">
-                <div class="mono-part side-btn" onclick="showInfo('execution')">INFO</div>
-                <div class="mono-part main-btn hd-text" onclick="toggleTime('execution')">EXECUTION</div>
-                <div class="mono-part side-btn" onclick="showHistory('execution')">LOGS</div>
-                <div id="time-execution" class="time-overlay">
-                    <div class="time-btn hd-text" onclick="initProtocol('execution', 10)">10M</div>
-                    <div class="time-btn hd-text" onclick="initProtocol('execution', 30)">30M</div>
-                    <div class="time-btn hd-text" onclick="initProtocol('execution', 60)">60M</div>
-                </div>
-            </div>
-            <div class="monolith-row">
-                <div class="mono-part side-btn" onclick="showInfo('liquidation')">INFO</div>
-                <div class="mono-part main-btn hd-text" onclick="toggleTime('liquidation')">LIQUIDATION</div>
-                <div class="mono-part side-btn" onclick="showHistory('liquidation')">LOGS</div>
-                <div id="time-liquidation" class="time-overlay">
-                    <div class="time-btn hd-text" onclick="initProtocol('liquidation', 10)">10M</div>
-                    <div class="time-btn hd-text" onclick="initProtocol('liquidation', 30)">30M</div>
-                    <div class="time-btn hd-text" onclick="initProtocol('liquidation', 60)">60M</div>
-                </div>
-            </div>
+            <div id="id-tag" class="hd-style" style="margin-top: 20px; font-size: 12px; display: none;"></div>
         </div>
 
-        <button id="start-btn" class="btn-standard hd-text" onclick="startSequence()">ИНИЦИАЦИЯ</button>
+        <div id="proto-ui" style="display:none; margin-top: 20px;">
+            <div class="monolith-container">
+                <div class="monolith-row">
+                    <div class="mono-part side-btn" onclick="showInfo('focus')">INFO</div>
+                    <div class="mono-part main-btn hd-style" onclick="openTime('focus')">FOCUS</div>
+                    <div class="mono-part side-btn" onclick="showHistory('focus')">LOGS</div>
+                    <div id="time-focus" class="time-overlay">
+                        <div class="time-opt hd-style" onclick="initProtocol('focus', 10)">10M</div>
+                        <div class="time-opt hd-style" onclick="initProtocol('focus', 30)">30M</div>
+                        <div class="time-opt hd-style" onclick="initProtocol('focus', 60)">60M</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="monolith-container">
+                <div class="monolith-row">
+                    <div class="mono-part side-btn" onclick="showInfo('execution')">INFO</div>
+                    <div class="mono-part main-btn hd-style" onclick="openTime('execution')">EXECUTION</div>
+                    <div class="mono-part side-btn" onclick="showHistory('execution')">LOGS</div>
+                    <div id="time-execution" class="time-overlay">
+                        <div class="time-opt hd-style" onclick="initProtocol('execution', 10)">10M</div>
+                        <div class="time-opt hd-style" onclick="initProtocol('execution', 30)">30M</div>
+                        <div class="time-opt hd-style" onclick="initProtocol('execution', 60)">60M</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="monolith-container">
+                <div class="monolith-row">
+                    <div class="mono-part side-btn" onclick="showInfo('liquidation')">INFO</div>
+                    <div class="mono-part main-btn hd-style" onclick="openTime('liquidation')">LIQUIDATION</div>
+                    <div class="mono-part side-btn" onclick="showHistory('liquidation')">LOGS</div>
+                    <div id="time-liquidation" class="time-overlay">
+                        <div class="time-opt hd-style" onclick="initProtocol('liquidation', 10)">10M</div>
+                        <div class="time-opt hd-style" onclick="initProtocol('liquidation', 30)">30M</div>
+                        <div class="time-opt hd-style" onclick="initProtocol('liquidation', 60)">60M</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <button id="start-btn" class="btn-standard hd-style" onclick="startSequence()">START_TEST</button>
     </div>
 
     <div id="s-psych" class="screen">
-        <div id="q-text" class="hd-text" style="font-size: 16px; margin-bottom: 40px;"></div>
-        <div id="q-options" style="width: 100%; display: flex; flex-direction: column; align-items: center;"></div>
+        <p id="q-text" class="hd-style" style="font-size: 16px; margin-bottom: 30px;"></p>
+        <div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div>
     </div>
 
     <div id="s-react" class="screen">
-        <div class="hd-text" style="font-size: 14px; color: var(--oracle);" id="react-timer">0.000</div>
+        <div id="timer-display" class="hd-style" style="font-size: 20px; color: var(--oracle); margin-bottom: 15px;">0.000</div>
         <div id="react-grid" class="grid"></div>
-        <div id="att-label" style="margin-top: 20px; font-size: 10px;"></div>
+        <div id="att-label" style="margin-top: 20px; color: var(--red); letter-spacing: 5px;"></div>
     </div>
 
     <div id="s-mem" class="screen">
-        <div class="hd-text" style="font-size: 14px; margin-bottom: 20px;">MEMORY_SYNC</div>
-        <div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 260px;"></div>
+        <div class="hd-style" style="margin-bottom: 20px;">MEMORY_SYNC</div>
+        <div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 280px;"></div>
     </div>
 
     <div id="s-sync" class="screen">
-        <div id="words-container" style="position: relative; width: 100%; height: 80vh;"></div>
+        <div id="words-container" style="position: relative; width: 100vw; height: 80vh;"></div>
     </div>
 
     <div id="s-focus-timer" class="screen">
-        <div id="active-timer-type" class="hd-text" style="font-size: 12px; opacity: 0.6;"></div>
-        <div id="focus-countdown" class="timer-val hd-text">00:00:00</div>
-        <button class="btn-standard hd-text" onclick="sw('s-main')">HUB</button>
-        <button class="btn-standard hd-text" style="color:var(--red); border-color:var(--red);" onclick="abortFocus()">ABORT</button>
-    </div>
-
-    <div id="v-card">
-        <h1 id="v-type" class="hd-text" style="font-size: 24px; margin: 0;"></h1>
-        <div style="width: 200px; height: 200px; margin: 20px 0;"><canvas id="diag-canvas"></canvas></div>
-        <div style="width: 100%; text-align: left; font-size: 10px; letter-spacing: 2px;">LOGIC</div>
-        <div class="stat-bar"><div id="bar-log" class="stat-fill"></div></div>
-        <div style="width: 100%; text-align: left; font-size: 10px; letter-spacing: 2px;">REACTION</div>
-        <div class="stat-bar"><div id="bar-react" class="stat-fill" style="background:var(--red)"></div></div>
-        <button class="btn-standard hd-text" onclick="this.parentElement.style.display='none'">CLOSE</button>
+        <div id="active-timer-type" class="hd-style" style="font-size: 14px; opacity: 0.7;">PROTOCOL_ACTIVE</div>
+        <div id="focus-countdown" class="timer-val hd-style">00:00:00</div>
+        <button class="btn-standard hd-style" onclick="sw('s-main')">HUB</button>
+        <button class="btn-standard hd-style" style="color:var(--red); border-color:var(--red);" onclick="abortFocus()">ABORT</button>
     </div>
 
     <div id="m-info" class="modal" onclick="this.style.display='none'">
         <div class="modal-content" onclick="event.stopPropagation()">
-            <h3 class="hd-text" style="font-size: 14px;">PROTOCOL_DATA</h3>
+            <h3 class="hd-style" style="font-size: 14px;">PROTOCOL_DATA</h3>
             <p id="info-body" style="font-size: 12px; line-height: 1.6; opacity: 0.8;"></p>
-            <button class="btn-standard hd-text" style="padding: 10px 20px;" onclick="document.getElementById('m-info').style.display='none'">OK</button>
+            <button class="btn-standard hd-style" onclick="document.getElementById('m-info').style.display='none'">CLOSE</button>
         </div>
     </div>
 
     <div id="m-history" class="modal" onclick="this.style.display='none'">
         <div class="modal-content" style="width: 320px;" onclick="event.stopPropagation()">
-            <h3 class="hd-text" style="font-size: 14px;">EVENT_LOGS</h3>
+            <h3 class="hd-style" style="font-size: 14px;">EVENT_LOGS</h3>
             <div id="history-list" style="max-height: 300px; overflow-y: auto; font-size: 10px; font-family: monospace;"></div>
-            <button class="btn-standard hd-text" style="padding: 10px 20px; width: 100%;" onclick="document.getElementById('m-history').style.display='none'">CLOSE</button>
+            <button class="btn-standard hd-style" onclick="document.getElementById('m-history').style.display='none'">CLOSE</button>
         </div>
     </div>
 
     <script>
+        // Звуковой движок и переменные
+        let aCtx, masterGain, thrillerFilter, lfo;
         let score = {}, curQ = 0, focusTimerInterval, lockInterval;
         let target = 1, attempts = 3, reactStartTime, timerInt;
         let memSeq = [], memIdx = 0, memStep = 0;
+
         const PROFILES = {
             "ARCHITECT": { log: 95, color: '#00ff41' },
             "IMPULSE": { log: 40, color: '#ff3333' },
@@ -206,109 +238,58 @@
         };
 
         const QUESTIONS = [
-            {q: "SYSTEM BREACH. ACTION?", o: [{t: "ANALYZE", a: "ARCHITECT"}, {t: "PURGE", a: "IMPULSE"}]},
-            {q: "STRUCTURE OR FLOW?", o: [{t: "STRUCTURE", a: "ARCHITECT"}, {t: "FLOW", a: "IMPULSE"}]},
-            {q: "DATA IS...", o: [{t: "LANGUAGE", a: "ANALYST"}, {t: "WEAPON", a: "SCANNER"}]}
+            {q: "SYSTEM BREACH. ACTION?", o: [{t: "ANALYZE CODE", a: "ARCHITECT"}, {t: "PURGE SECTOR", a: "IMPULSE"}]},
+            {q: "IDENTITY OR ACCESS?", o: [{t: "EVALUATE RISKS", a: "ANALYST"}, {t: "FORCE SHIELDS", a: "SCANNER"}]},
+            {q: "DATA IS...", o: [{t: "A LANGUAGE", a: "ARCHITECT"}, {t: "A WEAPON", a: "IMPULSE"}]}
         ];
 
-        const SYNC_WORDS = [{t: "LOGIC", a: "ARCHITECT"}, {t: "SPEED", a: "IMPULSE"}, {t: "GRID", a: "ANALYST"}, {t: "VOID", a: "SCANNER"}];
+        const SYNC_WORDS = [{t: "LOGIC", a: "ARCHITECT"}, {t: "SPEED", a: "IMPULSE"}, {t: "GRID", a: "ANALYST"}, {t: "VOID", a: "SCANNER"}, {t: "FLOW", a: "IMPULSE"}];
+
+        function startAudioEngine() {
+            if (aCtx) return;
+            aCtx = new (window.AudioContext || window.webkitAudioContext)();
+            masterGain = aCtx.createGain(); masterGain.gain.value = 0.15; masterGain.connect(aCtx.destination);
+            const osc1 = aCtx.createOscillator(); thrillerFilter = aCtx.createBiquadFilter();
+            osc1.type = 'sawtooth'; osc1.frequency.value = 42; thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180;
+            osc1.connect(thrillerFilter); thrillerFilter.connect(masterGain); osc1.start();
+        }
+
+        function playSound(f, d, type='sine') {
+            if(!aCtx) return;
+            const o = aCtx.createOscillator(); const g = aCtx.createGain();
+            o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime);
+            g.gain.setValueAtTime(0.1, aCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + d);
+            o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
+        }
 
         function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 
-        function toggleTime(type) {
+        // --- УПРАВЛЕНИЕ МОНОЛИТАМИ ---
+        function openTime(type) {
             document.querySelectorAll('.time-overlay').forEach(el => el.style.display = 'none');
             document.getElementById('time-' + type).style.display = 'grid';
+            playSound(600, 0.1);
         }
 
-        // --- ЛОГИКА ТЕСТОВ ---
-        function startSequence() { curQ = 0; score = {}; sw('s-psych'); renderQ(); }
-
-        function renderQ() {
-            const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
-            const box = document.getElementById('q-options'); box.innerHTML = "";
-            q.o.forEach(o => {
-                const b = document.createElement('button'); b.className = "btn-standard hd-text"; b.innerText = o.t;
-                b.onclick = () => { score[o.a] = (score[o.a] || 0) + 1; curQ++; if(curQ < QUESTIONS.length) renderQ(); else startReact(); };
-                box.appendChild(b);
-            });
-        }
-
-        function startReact() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); renderReactGrid(); 
-            timerInt = setInterval(() => { document.getElementById('react-timer').innerText = ((Date.now() - reactStartTime)/1000).toFixed(3); }, 50);
-        }
-
-        function renderReactGrid() {
-            const g = document.getElementById('react-grid'); g.innerHTML = "";
-            document.getElementById('att-label').innerText = "ATTEMPTS: " + "I ".repeat(attempts);
-            let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
-            ns.forEach(n => {
-                const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
-                c.onclick = () => {
-                    if(n === target) { target++; if(target > 16) { clearInterval(timerInt); startMem(); } else renderReactGrid(); }
-                    else { attempts--; if(attempts <= 0) { clearInterval(timerInt); startMem(); } else renderReactGrid(); }
-                };
-                g.appendChild(c);
-            });
-        }
-
-        function startMem() { sw('s-mem'); memStep = 0; nextMem(); }
-        function nextMem() {
-            memSeq = Array.from({length: 3 + memStep}, () => Math.floor(Math.random()*9));
-            const mg = document.getElementById('mem-grid'); mg.innerHTML = "";
-            for(let i=0; i<9; i++) { const c = document.createElement('div'); c.className = "cell"; c.onclick = () => {
-                if(i === memSeq[memIdx]) { memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 2) nextMem(); else startSync(); } }
-                else startSync();
-            }; mg.appendChild(c); }
-            playSeq();
-        }
-        async function playSeq() {
-            const cells = document.getElementById('mem-grid').children; memIdx = 0;
-            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); cells[id].classList.add('ok'); await new Promise(r => setTimeout(r, 400)); cells[id].classList.remove('ok'); }
-        }
-
-        function startSync() {
-            sw('s-sync'); let count = 0; const container = document.getElementById('words-container');
-            const interval = setInterval(() => {
-                if(count >= 2) { clearInterval(interval); finish(); return; }
-                const wData = SYNC_WORDS[Math.floor(Math.random()*SYNC_WORDS.length)];
-                const w = document.createElement('div'); w.className = "hd-text"; w.innerText = wData.t;
-                w.style.position = "absolute"; w.style.left = Math.random()*70+10+"%"; w.style.top = Math.random()*70+10+"%";
-                w.style.cursor = "pointer"; container.appendChild(w);
-                w.onclick = () => { score[wData.a] = (score[wData.a]||0) + 2; count++; w.remove(); };
-                setTimeout(() => w.remove(), 2000);
-            }, 1000);
-        }
-
-        function finish() {
-            let final = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "ANALYST";
-            localStorage.setItem('psy_profile', final);
-            localStorage.setItem('psy_done', 'true');
-            localStorage.setItem('lock_until', Date.now() + 21600000);
-            showProfile(final);
-            sw('s-main');
-            location.reload(); 
-        }
-
-        // --- ИНТЕРФЕЙС И ТАЙМЕРЫ ---
         function initProtocol(type, mins) {
             document.querySelectorAll('.time-overlay').forEach(el => el.style.display = 'none');
             const end = Date.now() + mins * 60 * 1000;
             localStorage.setItem('focus_end_time', end);
             localStorage.setItem('active_proto', type);
-            logEvent(type, 'STARTED', mins + 'M');
+            logEvent(type, 'START', mins + 'M');
             runFocusUI(end, type);
         }
 
         function runFocusUI(end, type) {
             sw('s-focus-timer');
             document.getElementById('active-focus-label').style.display = 'block';
-            document.getElementById('active-timer-type').innerText = type.toUpperCase();
+            document.getElementById('active-timer-type').innerText = type.toUpperCase() + "_PROTOCOL";
             clearInterval(focusTimerInterval);
             focusTimerInterval = setInterval(() => {
                 const diff = end - Date.now();
                 if(diff <= 0) { 
                     clearInterval(focusTimerInterval); 
-                    logEvent(type, 'COMPLETED', 'SUCCESS');
+                    logEvent(type, 'SUCCESS', 'SYNC_OK');
                     document.getElementById('active-focus-label').style.display = 'none'; 
                     sw('s-main'); 
                 } else {
@@ -323,23 +304,17 @@
 
         function abortFocus() {
             const type = localStorage.getItem('active_proto');
-            logEvent(type, 'ABORTED', 'MANUAL');
+            logEvent(type, 'ABORT', 'MANUAL');
             clearInterval(focusTimerInterval);
             localStorage.removeItem('focus_end_time');
             document.getElementById('active-focus-label').style.display = 'none';
             sw('s-main');
         }
 
-        function showInfo(type) {
-            const info = { focus: "Deep concentration mode.", execution: "High performance phase.", liquidation: "Debt and noise purge." };
-            document.getElementById('info-body').innerText = info[type];
-            document.getElementById('m-info').style.display = 'flex';
-        }
-
         function logEvent(proto, status, detail) {
             let logs = JSON.parse(localStorage.getItem('logs_' + proto) || "[]");
             logs.unshift({ t: new Date().toLocaleTimeString(), s: status, d: detail });
-            localStorage.setItem('logs_' + proto, JSON.stringify(logs.slice(0, 20)));
+            localStorage.setItem('logs_' + proto, JSON.stringify(logs.slice(0, 30)));
         }
 
         function showHistory(proto) {
@@ -347,41 +322,97 @@
             const list = document.getElementById('history-list');
             list.innerHTML = logs.map(l => `<div style="margin-bottom:8px; border-bottom:1px solid #111">
                 [${l.t}] <span style="color:var(--oracle)">${l.s}</span> - ${l.d}
-            </div>`).join('') || "NO DATA";
+            </div>`).join('') || "EMPTY_LOG";
             document.getElementById('m-history').style.display = 'flex';
         }
 
-        function showProfile(type) {
-            document.getElementById('v-card').style.display = 'flex';
-            document.getElementById('v-type').innerText = type;
-            setTimeout(() => {
-                document.getElementById('bar-log').style.width = PROFILES[type].log + "%";
-                document.getElementById('bar-react').style.width = "80%";
-            }, 100);
+        function showInfo(type) {
+            const info = { focus: "Isolation of cognitive resources. Single thread mode.", execution: "High performance phase. Action implementation.", liquidation: "Debt purge. Buffer clearance." };
+            document.getElementById('info-body').innerText = info[type];
+            document.getElementById('m-info').style.display = 'flex';
         }
 
-        function showStoredProfile() {
-            const p = localStorage.getItem('psy_profile');
-            if(p) showProfile(p);
+        // --- ЛОГИКА ТЕСТОВ (600 СТРОК+) ---
+        function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('s-psych'); renderQ(); }
+        function renderQ() {
+            const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
+            const box = document.getElementById('q-options'); box.innerHTML = "";
+            q.o.forEach(o => {
+                const b = document.createElement('button'); b.className = "btn-standard hd-style"; b.innerText = o.t;
+                b.onclick = () => { score[o.a] = (score[o.a] || 0) + 1; curQ++; if(curQ < QUESTIONS.length) renderQ(); else startReact(); };
+                box.appendChild(b);
+            });
         }
 
-        // --- FONTS & ANIMATION ---
+        function startReact() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); renderReactGrid(); 
+            timerInt = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - reactStartTime)/1000).toFixed(3); }, 47);
+        }
+        function renderReactGrid() {
+            const g = document.getElementById('react-grid'); g.innerHTML = "";
+            document.getElementById('att-label').innerText = "ATTEMPTS: " + "■ ".repeat(attempts);
+            let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
+            ns.forEach(n => {
+                const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
+                c.onclick = () => {
+                    if(n === target) { playSound(800+n*20, 0.05); target++; if(target > 16) { clearInterval(timerInt); startMem(); } else renderReactGrid(); }
+                    else { playSound(100, 0.2, 'square'); attempts--; if(attempts <= 0) { clearInterval(timerInt); startMem(); } else renderReactGrid(); }
+                };
+                g.appendChild(c);
+            });
+        }
+
+        function startMem() { sw('s-mem'); memStep = 0; nextMem(); }
+        function nextMem() {
+            memSeq = Array.from({length: 3 + memStep}, () => Math.floor(Math.random()*9));
+            const mg = document.getElementById('mem-grid'); mg.innerHTML = "";
+            for(let i=0; i<9; i++) { const c = document.createElement('div'); c.className = "cell"; c.onclick = () => {
+                if(i === memSeq[memIdx]) { c.classList.add('ok'); memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMem(); else startSync(); } }
+                else { c.classList.add('err'); setTimeout(startSync, 300); }
+            }; mg.appendChild(c); }
+            playMemSeq();
+        }
+        async function playMemSeq() {
+            const cells = document.getElementById('mem-grid').children; memIdx = 0;
+            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); cells[id].classList.add('ok'); playSound(1000, 0.05); await new Promise(r => setTimeout(r, 400)); cells[id].classList.remove('ok'); }
+        }
+
+        function startSync() {
+            sw('s-sync'); let picked = 0; const container = document.getElementById('words-container');
+            const loop = setInterval(() => {
+                if(picked >= 2) { clearInterval(loop); finalize(); return; }
+                const wData = SYNC_WORDS[Math.floor(Math.random()*SYNC_WORDS.length)];
+                const w = document.createElement('div'); w.className = "hd-style"; w.innerText = wData.t;
+                w.style.position = "absolute"; w.style.left = Math.random()*70+10+"%"; w.style.top = Math.random()*70+10+"%";
+                w.style.fontSize = "14px"; w.style.cursor = "pointer"; container.appendChild(w);
+                w.onclick = () => { score[wData.a] = (score[wData.a]||0) + 2; picked++; w.remove(); };
+                setTimeout(() => w.remove(), 2500);
+            }, 1000);
+        }
+
+        function finalize() {
+            let res = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "ANALYST";
+            localStorage.setItem('psy_profile', res);
+            localStorage.setItem('psy_done', 'true');
+            localStorage.setItem('lock_until', Date.now() + 21600000);
+            location.reload(); 
+        }
+
+        // --- АНИМАЦИИ ---
         const hC = document.getElementById('hub-canvas'); const hX = hC.getContext('2d');
-        hC.width = 200; hC.height = 200;
+        hC.width = 180; hC.height = 180;
         function drawHub() {
-            hX.clearRect(0,0,200,200); hX.strokeStyle = '#00ff41'; hX.lineWidth = 1;
-            hX.beginPath(); hX.arc(100, 100, 70 + Math.sin(Date.now()/400)*3, 0, Math.PI*2); hX.stroke();
-            hX.setLineDash([2, 10]); hX.beginPath(); hX.arc(100, 100, 50, Date.now()/800, Date.now()/800 + Math.PI); hX.stroke();
+            hX.clearRect(0,0,180,180); hX.strokeStyle = '#00ff41'; hX.lineWidth = 1;
+            hX.beginPath(); hX.arc(90, 90, 70 + Math.sin(Date.now()/500)*4, 0, Math.PI*2); hX.stroke();
+            hX.setLineDash([4, 12]); hX.beginPath(); hX.arc(90, 90, 50, Date.now()/1000, Date.now()/1000 + Math.PI); hX.stroke();
             hX.setLineDash([]); requestAnimationFrame(drawHub);
         }
         drawHub();
 
-        // Matrix
         const mc = document.getElementById('m-bg'); const mx = mc.getContext('2d');
         let mw = mc.width = window.innerWidth, mh = mc.height = window.innerHeight;
         const drops = Array(Math.floor(mw/20)).fill(1);
         function drawM() {
-            mx.fillStyle = 'rgba(0,0,0,0.05)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41'; mx.font = '15px monospace';
+            mx.fillStyle = 'rgba(0,0,0,0.07)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41'; mx.font = '15px monospace';
             drops.forEach((y, i) => {
                 mx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*20, y*20);
                 if(y*20 > mh && Math.random() > 0.98) drops[i] = 0; drops[i]++;
@@ -391,11 +422,11 @@
 
         window.onload = () => {
             const end = localStorage.getItem('focus_end_time');
-            if(end && parseInt(end) > Date.now()) runFocusUI(parseInt(end), localStorage.getItem('active_proto'));
+            if(end && parseInt(end) > Date.now()) { startAudioEngine(); runFocusUI(parseInt(end), localStorage.getItem('active_proto')); }
             
             if(localStorage.getItem('psy_done') === 'true') {
-                document.getElementById('proto-controls').style.display = 'block';
-                document.getElementById('id-tag').innerText = localStorage.getItem('psy_profile');
+                document.getElementById('proto-ui').style.display = 'block';
+                document.getElementById('id-tag').innerText = "ID: " + localStorage.getItem('psy_profile');
                 document.getElementById('id-tag').style.display = 'block';
                 document.getElementById('start-btn').disabled = true;
                 
@@ -403,9 +434,11 @@
                 if(lockUntil && parseInt(lockUntil) > Date.now()) {
                     lockInterval = setInterval(() => {
                         const d = lockUntil - Date.now();
-                        if(d <= 0) { clearInterval(lockInterval); document.getElementById('start-btn').disabled = false; document.getElementById('start-btn').innerText = "ИНИЦИАЦИЯ"; }
+                        if(d <= 0) { clearInterval(lockInterval); document.getElementById('start-btn').disabled = false; document.getElementById('start-btn').innerText = "START_TEST"; }
                         else { 
-                            const h = Math.floor(d/3600000); const m = Math.floor((d%3600000)/60000); const s = Math.floor((d%60000)/1000);
+                            const h = Math.floor(d/3600000).toString().padStart(2,'0');
+                            const m = Math.floor((d%3600000)/60000).toString().padStart(2,'0');
+                            const s = Math.floor((d%60000)/1000).toString().padStart(2,'0');
                             document.getElementById('start-btn').innerText = `LOCK: ${h}:${m}:${s}`;
                         }
                     }, 1000);
