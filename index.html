@@ -3,15 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PSY-OPS CORE v.24.8</title>
+    <title>PSY-OPS CORE v.24.6</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; }
+        :root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; --orange: #ffaa00; --magenta: #ff0055; }
         
         body, html { 
             margin: 0; padding: 0; height: 100%; 
             background: var(--bg); color: var(--neon); 
             font-family: 'Courier New', Courier, monospace; 
-            font-weight: 100; -webkit-font-smoothing: antialiased;
+            font-weight: 100;
+            -webkit-font-smoothing: antialiased;
             overflow-x: hidden; touch-action: none; 
         }
         
@@ -21,204 +23,363 @@
         .active { display: flex; }
 
         .btn { 
-            background: transparent; border: 1px solid rgba(0, 255, 65, 0.4); 
-            color: var(--neon); padding: 18px; cursor: pointer; 
-            text-transform: uppercase; font-family: 'Courier New', Courier, monospace; 
-            font-size: 13px; letter-spacing: 3px; width: 100%; max-width: 280px; 
-            margin: 10px 0; transition: 0.2s; 
+            background: transparent; 
+            border: 1px solid rgba(0, 255, 65, 0.4); 
+            color: var(--neon); 
+            padding: 18px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            font-family: 'Courier New', Courier, monospace; 
+            font-weight: 100; 
+            font-size: 13px; 
+            letter-spacing: 3px; 
+            width: 100%; 
+            max-width: 280px; 
+            margin: 10px 0; 
+            transition: 0.2s; 
         }
         .btn:active { background: rgba(0, 255, 65, 0.2); }
+        .btn:disabled { 
+            border-color: rgba(0, 255, 65, 0.1); 
+            color: rgba(0, 255, 65, 0.2); 
+            cursor: default; 
+        }
         .btn-blue { border-color: rgba(0, 204, 255, 0.4); color: var(--oracle); }
         .btn-red { border-color: var(--red); color: var(--red); }
 
-        /* Стили блоков протоколов */
-        .protocol-block {
-            width: 100%; max-width: 280px; margin: 8px 0;
-            border: 1px solid rgba(0, 255, 65, 0.3);
-            background: rgba(0, 5, 0, 0.8); padding: 0;
-        }
-        .protocol-main-btn {
-            width: 100%; background: transparent; border: none;
-            color: var(--neon); padding: 15px 0; font-size: 14px;
-            letter-spacing: 5px; cursor: pointer; text-transform: uppercase;
-            font-family: 'Courier New', monospace;
-        }
-        .protocol-main-btn:active { background: rgba(0, 255, 65, 0.1); }
-        
-        .protocol-subs {
-            display: flex; border-top: 1px solid rgba(0, 255, 65, 0.15);
-        }
-        .sub-btn {
-            flex: 1; background: transparent; border: none;
-            color: var(--oracle); font-size: 9px; padding: 6px 0;
-            letter-spacing: 1px; cursor: pointer; opacity: 0.7;
-            text-transform: uppercase;
-        }
-        .sub-btn:first-child { border-right: 1px solid rgba(0, 255, 65, 0.15); }
-        .sub-btn:active { opacity: 1; background: rgba(0, 204, 255, 0.1); }
-
         .hub-container { 
-            width: 240px; height: 240px; 
-            border: 1px solid rgba(0, 255, 65, 0.15); 
+            width: 260px; height: 260px; 
+            border: 1px solid rgba(0, 255, 65, 0.2); 
             display: flex; flex-direction: column; align-items: center; justify-content: center; 
-            position: relative; margin-top: -20px;
+            position: relative; 
         }
-        #hub-canvas { width: 180px; height: 180px; }
+        #hub-canvas { width: 190px; height: 190px; }
 
         #active-focus-label { 
-            font-size: 36px; color: var(--neon); margin-bottom: 10px; 
-            letter-spacing: 8px; display: none; text-shadow: 0 0 15px var(--neon);
-            cursor: pointer; position: relative; z-index: 1001;
+            font-size: 32px; 
+            color: var(--neon); 
+            margin-bottom: 5px; 
+            letter-spacing: 5px; 
+            display: none; 
+            text-shadow: 0 0 15px var(--neon);
+            font-weight: 100;
+            cursor: pointer;
+            pointer-events: auto;
+            position: relative;
+            z-index: 1001;
         }
+
+        /* --- Стили новых протоколов --- */
+        .protocols-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            width: 100%;
+            max-width: 340px;
+            box-sizing: border-box;
+            display: none; /* Появится после теста */
+        }
+        .protocol-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            padding: 12px 4px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        .protocol-card:active { transform: scale(0.95); }
+        .protocol-card i { display: block; font-size: 1.4rem; margin-bottom: 6px; }
+        .protocol-label { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 1px; color: #fff; }
+        .protocol-status { font-size: 0.5rem; color: rgba(255, 255, 255, 0.5); margin-top: 2px; }
+        
+        .protocol-focus { border-color: var(--oracle); box-shadow: 0 0 10px rgba(0, 204, 255, 0.1); }
+        .protocol-focus i { color: var(--oracle); text-shadow: 0 0 5px var(--oracle); }
+        
+        .protocol-execution { border-color: var(--orange); box-shadow: 0 0 10px rgba(255, 170, 0, 0.1); }
+        .protocol-execution i { color: var(--orange); text-shadow: 0 0 5px var(--orange); }
+        
+        .protocol-liquidation { border-color: var(--magenta); box-shadow: 0 0 10px rgba(255, 0, 85, 0.1); }
+        .protocol-liquidation i { color: var(--magenta); text-shadow: 0 0 5px var(--magenta); }
 
         .time-selector-overlay {
             position: fixed; bottom: -100%; left: 0; width: 100%;
-            background: rgba(0, 0, 0, 0.98); border-top: 1px solid var(--neon);
-            transition: bottom 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2000;
-            padding: 30px 20px; box-sizing: border-box;
+            background: rgba(5, 5, 10, 0.98); backdrop-filter: blur(15px);
+            border-top: 1px solid var(--neon); border-radius: 20px 20px 0 0;
+            transition: bottom 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+            z-index: 2000; padding: 25px; box-sizing: border-box;
         }
         .time-selector-overlay.open { bottom: 0; }
-        .time-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin: 20px 0; }
+        .time-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
         .time-btn {
-            background: transparent; border: 1px solid var(--neon);
-            color: var(--neon); padding: 15px; font-family: monospace; font-size: 16px;
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(0, 255, 65, 0.3);
+            color: var(--neon); padding: 15px 5px; font-family: monospace; font-size: 14px; cursor: pointer;
         }
+        /* --- Конец новых стилей --- */
 
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; }
-        .cell { aspect-ratio: 1; background: #000; border: 1px solid rgba(255, 255, 255, 0.1); display: flex; align-items: center; justify-content: center; color: var(--neon); }
-        .cell.err { background: var(--red) !important; }
+        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; max-width: 90vw; }
+        .cell { 
+            aspect-ratio: 1; background: rgba(0, 0, 0, 0.85); 
+            border: 1px solid rgba(255, 255, 255, 0.15); 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 20px; color: var(--neon); transition: 0.1s; 
+            font-weight: 100;
+        }
+        .cell.err { background: var(--red) !important; color: #fff; }
         .cell.ok { background: var(--neon) !important; color: #000; }
 
-        .briefing { max-width: 340px; text-align: left; border-left: 1px solid var(--neon); padding-left: 20px; margin-bottom: 30px; }
-        .timer-val { font-size: 58px; text-shadow: 0 0 20px var(--neon); margin: 20px 0; letter-spacing: 5px; }
+        .briefing { max-width: 340px; width: 90vw; text-align: left; border-left: 1px solid rgba(0, 255, 65, 0.4); padding-left: 20px; margin-bottom: 40px; }
+        .briefing h2 { color: var(--oracle); letter-spacing: 6px; font-weight: 100; font-size: 16px; margin-bottom: 12px; }
+        .briefing p { font-size: 13px; line-height: 1.6; opacity: 0.8; letter-spacing: 1px; }
+
+        .timer-val { font-size: 54px; text-shadow: 0 0 20px var(--neon); margin: 20px 0; letter-spacing: 5px; font-weight: 100; }
         
-        .fail-circles { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; }
-        .f-circle { width: 85px; height: 85px; border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 8px; text-align: center; padding: 5px; box-sizing: border-box; }
-        .f-circle.selected-fail { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); }
+        .fail-circles { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 340px; }
+        .f-circle { 
+            width: 85px; height: 85px; border: 1px solid rgba(0, 255, 65, 0.3); 
+            border-radius: 50%; display: flex; flex-direction: column; 
+            align-items: center; justify-content: center; cursor: pointer;
+            font-size: 8px; text-align: center; padding: 5px; box-sizing: border-box;
+            transition: 0.3s; font-weight: 100; letter-spacing: 1px;
+        }
+        .f-circle.selected-fail { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); color: var(--neon); }
+        .f-circle span { font-size: 18px; color: var(--oracle); margin-top: 5px; }
 
-        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:3000; display:none; align-items:center; justify-content:center; }
-        .modal-content { border: 1px solid var(--neon); padding: 25px; width: 90%; max-width: 320px; background:#000; }
+        .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px; box-sizing: border-box; }
+        .modal-content { border: 1px solid var(--neon); padding: 25px; width: 100%; max-width: 320px; font-size: 13px; background:#000; color: var(--neon); position: relative; letter-spacing: 1px; }
 
-        #v-card { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 370px; background: #000; border: 1px solid var(--neon); padding: 30px 20px; z-index: 1000; display: none; flex-direction: column; align-items: center; }
-        .diag-box { width: 260px; height: 260px; }
-        .stat-row { width: 100%; margin: 8px 0; font-size: 9px; letter-spacing: 2px; }
-        .bar { width: 100%; height: 2px; background: #111; margin-top: 6px; }
-        .fill { height: 100%; width: 0%; background: var(--neon); transition: 2s; }
-        .sync-word { position: absolute; color: var(--neon); font-size: 14px; opacity: 0; transition: 0.5s; }
+        #v-card { 
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 92%; max-width: 370px; background: #000; 
+            border: 1px solid rgba(0, 255, 65, 0.6); 
+            padding: 30px 20px; z-index: 1000; 
+            display: none; flex-direction: column; align-items: center; 
+        }
+        #v-card.open { display: flex; }
+
+        .diag-box { position: relative; width: 260px; height: 260px; margin: 10px 0; }
+        #diag-canvas { width: 260px; height: 260px; }
+
+        .stat-row { width: 100%; margin: 8px 0; font-size: 9px; letter-spacing: 2px; opacity: 0.8; text-align: left; }
+        .bar { width: 100%; height: 2px; background: #0a0a0a; margin-top: 6px; }
+        .fill { height: 100%; width: 0%; background: var(--neon); transition: 2s cubic-bezier(0.1, 0, 0, 1); }
+
+        .ability-badge { border: 1px solid rgba(0, 204, 255, 0.3); padding: 14px; font-size: 11px; margin-top: 15px; cursor: pointer; text-align: center; width: 100%; box-sizing: border-box; color: var(--oracle); letter-spacing: 3px; }
+        .ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05); padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); letter-spacing: 1px; }
+
+        .sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; font-weight: 100; }
+        
+        #history-content div { border-bottom: 1px solid rgba(0, 255, 65, 0.1); padding: 5px 0; }
+
+        #active-protocol-indicator { font-size: 9px; letter-spacing: 3px; color: var(--oracle); margin-bottom: 10px; }
     </style>
 </head>
 <body>
     <canvas id="m-bg"></canvas>
 
     <div id="s-main" class="screen active">
-        <div id="active-focus-label" onclick="sw('s-focus-timer')"></div>
+        <div id="active-focus-label" onclick="sw('s-focus-timer')">00:00</div>
+        <div id="active-protocol-indicator">SYSTEM_IDLE</div>
         
         <div class="hub-container" onclick="showStoredProfile()">
             <canvas id="hub-canvas"></canvas>
-            <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none; font-size: 12px;"></div>
+            <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
         </div>
 
-        <div id="protocols-ui" style="display:none; margin-top: 20px; width: 100%; display: flex; flex-direction: column; align-items: center;">
-            <div class="protocol-block">
-                <button class="protocol-main-btn" onclick="openProtocol('focus')">FOCUS_PROTOCOL</button>
-                <div class="protocol-subs">
-                    <button class="sub-btn" onclick="showInfo('focus')">INFO</button>
-                    <button class="sub-btn" onclick="showHistory('focus')">HISTORY</button>
-                </div>
+        <div id="protocols-container" class="protocols-grid">
+            <div class="protocol-card protocol-focus" onclick="openProtocol('focus')">
+                <i class="fas fa-eye"></i>
+                <div class="protocol-label">Focus</div>
+                <div class="protocol-status">Ready</div>
             </div>
-            <div class="protocol-block">
-                <button class="protocol-main-btn" onclick="openProtocol('execution')">EXECUTION_PROTOCOL</button>
-                <div class="protocol-subs">
-                    <button class="sub-btn" onclick="showInfo('execution')">INFO</button>
-                    <button class="sub-btn" onclick="showHistory('execution')">HISTORY</button>
-                </div>
+            <div class="protocol-card protocol-execution" onclick="openProtocol('execution')">
+                <i class="fas fa-crosshairs"></i>
+                <div class="protocol-label">Execution</div>
+                <div class="protocol-status">Standby</div>
             </div>
-            <div class="protocol-block">
-                <button class="protocol-main-btn" onclick="openProtocol('liquidation')">LIQUIDATION_PROTOCOL</button>
-                <div class="protocol-subs">
-                    <button class="sub-btn" onclick="showInfo('liquidation')">INFO</button>
-                    <button class="sub-btn" onclick="showHistory('liquidation')">HISTORY</button>
-                </div>
+            <div class="protocol-card protocol-liquidation" onclick="openProtocol('liquidation')">
+                <i class="fas fa-skull-crossbones"></i>
+                <div class="protocol-label">Liquidation</div>
+                <div class="protocol-status">Armed</div>
             </div>
         </div>
+        
+        <div style="margin-top: 15px; width: 100%; max-width: 320px; text-align: center;">
+             <span onclick="showHistory()" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid; letter-spacing: 1px;">HISTORY</span>
+        </div>
 
-        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none; margin-top: 20px;">ОРАКУЛ</button>
-        <button id="start-btn" class="btn" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
+        <button id="start-btn" class="btn" style="margin-top: 30px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
+        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;">ОРАКУЛ</button>
     </div>
 
     <div id="timeSelector" class="time-selector-overlay">
-        <h3 id="protocolTitle" style="margin: 0; color: var(--neon); letter-spacing: 3px;"></h3>
-        <div class="time-grid">
-            <button class="time-btn" onclick="initProtocol(10)">10 MIN</button>
-            <button class="time-btn" onclick="initProtocol(30)">30 MIN</button>
-            <button class="time-btn" onclick="initProtocol(60)">60 MIN</button>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 id="protocolTitle" style="margin: 0; color: #fff; letter-spacing: 2px;">SELECT_CYCLE</h3>
+            <button onclick="closeTimeSelector()" style="background: none; border: none; color: var(--red); font-size: 24px;">×</button>
         </div>
-        <button class="btn btn-red" onclick="closeTimeSelector()">ОТМЕНА</button>
+        <p id="protocolDesc" style="font-size: 11px; color: rgba(255,255,255,0.6); margin: 15px 0; text-align: left; line-height: 1.4;"></p>
+        <div class="time-grid">
+            <button class="time-btn" onclick="initProtocol(10)">10 M</button>
+            <button class="time-btn" onclick="initProtocol(30)">30 M</button>
+            <button class="time-btn" onclick="initProtocol(60)">60 M</button>
+        </div>
+        <div onclick="toggleModal('m-info-1', true)" style="margin-top:20px; font-size:10px; color:var(--oracle); text-align:center;">[ i ] PROTOCOL_INFO</div>
     </div>
 
     <div id="b-intro" class="screen">
-        <div class="briefing"><h2>ИНИЦИАЦИЯ</h2><p>Запуск определения профиля. Система анализирует паттерны нейронного отклика.</p></div>
+        <div class="briefing">
+            <h2>ИНИЦИАЦИЯ</h2>
+            <p>Запуск протокола определения психо-когнитивного профиля. Будьте сосредоточены. Система анализирует паттерны нейронного отклика в реальном времени.</p>
+        </div>
         <button class="btn" onclick="sw('s-psych'); renderQ();">ПРОДОЛЖИТЬ</button>
     </div>
-    <div id="s-psych" class="screen"><p id="q-text"></p><div id="q-options"></div></div>
-    <div id="b-react" class="screen"><div class="briefing"><h2>ФАЗА I</h2><p>Скорость синхронизации. Найдите числа 1-16.</p></div><button class="btn" onclick="startReactTest()">ПУСК</button></div>
-    <div id="s-react" class="screen"><div id="timer-display" style="font-size:24px; color:var(--oracle)">0.000</div><div id="react-grid" class="grid"></div><div id="att-label" style="margin-top:20px; color:var(--red)"></div></div>
-    <div id="b-mem" class="screen"><div class="briefing"><h2>ФАЗА II</h2><p>Память. Повторите последовательность.</p></div><button class="btn" onclick="startMemTest()">ПУСК</button></div>
-    <div id="s-mem" class="screen"><div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr);"></div></div>
-    <div id="b-sync" class="screen"><div class="briefing"><h2>ФАЗА III</h2><p>Семантический вектор. Выберите 2 узла.</p></div><button class="btn" onclick="startSyncTest()">ПУСК</button></div>
-    <div id="s-sync" class="screen"><div id="words-container" style="position:relative; width:100vw; height:80vh;"></div></div>
+
+    <div id="s-psych" class="screen">
+        <p id="q-text" style="letter-spacing:1px;"></p>
+        <div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div>
+    </div>
+
+    <div id="b-react" class="screen">
+        <div class="briefing">
+            <h2>ФАЗА I: СКОРОСТЬ</h2>
+            <p>Синхронизация нейронного отклика. Найдите числа от 1 до 16. Любая ошибка блокирует систему на 200мс.</p>
+        </div>
+        <button class="btn" onclick="startReactTest()">ПОДТВЕРДИТЬ</button>
+    </div>
+
+    <div id="s-react" class="screen">
+        <div id="timer-display" style="font-size: 26px; color: var(--oracle); margin-bottom: 10px;">0.000</div>
+        <div id="react-grid" class="grid"></div>
+        <div id="att-label" style="margin-top: 30px; color: var(--red); letter-spacing: 12px; font-size: 10px;"></div>
+    </div>
+
+    <div id="b-mem" class="screen">
+        <div class="briefing">
+            <h2>ФАЗА II: ПАМЯТЬ</h2>
+            <p>Восстановление поврежденного сектора. Повторите последовательность световых импульсов в точном порядке.</p>
+        </div>
+        <button class="btn" onclick="startMemTest()">НАЧАТЬ</button>
+    </div>
+
+    <div id="s-mem" class="screen">
+        <div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 280px;"></div>
+    </div>
+
+    <div id="b-sync" class="screen">
+        <div class="briefing">
+            <h2>ФАЗА III: ВЕКТОР</h2>
+            <p>Определение семантических доминант. Выберите два приоритетных узла в потоке данных для завершения синхронизации.</p>
+        </div>
+        <button class="btn" onclick="startSyncTest()">ПРОДОЛЖИТЬ</button>
+    </div>
+
+    <div id="s-sync" class="screen">
+        <div id="words-container" style="position: relative; width: 100vw; height: 80vh;"></div>
+    </div>
 
     <div id="s-focus-timer" class="screen">
-        <div id="cur-proto-name" style="letter-spacing:5px; opacity:0.5; font-size:12px;"></div>
+        <div id="active-timer-type" style="letter-spacing:10px; opacity:0.5; font-size:12px;">PROTOCOL_ACTIVE</div>
         <div id="focus-countdown" class="timer-val">00:00:00</div>
-        <button class="btn" onclick="sw('s-main')">HUB</button>
-        <button class="btn btn-red" onclick="abortFocus()">ABORT</button>
-        <div onclick="localStorage.setItem('focus_end_time', Date.now()+1000); runFocusUI(Date.now()+1000);" style="width:100%; height:40px; opacity:0;"></div>
+        <button class="btn" style="border-color:var(--neon)" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
+        <button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
+        <div onclick="localStorage.setItem('focus_end_time', Date.now() + 1000); runFocusUI(Date.now() + 1000);" style="width:100%; height:40px; opacity:0; cursor:pointer; margin-top:10px;">DEBUG_SKIP</div>
     </div>
 
     <div id="s-focus-res" class="screen">
-        <h2>ЦИКЛ ЗАВЕРШЕН</h2>
-        <button class="btn" onclick="logFocus('SUCCESS')">СИНХРОНИЗАЦИЯ OK</button>
-        <button class="btn btn-red" onclick="sw('s-focus-fail')">FAIL</button>
+        <h2 style="letter-spacing:5px;">ЦИКЛ ЗАВЕРШЕН</h2>
+        <button class="btn" style="border-color:var(--neon)" onclick="logFocus('success')">СИНХРОНИЗАЦИЯ УСПЕШНА</button>
+        <button class="btn btn-red" onclick="sw('s-focus-fail')">КРИТИЧЕСКИЙ СБОЙ</button>
     </div>
 
     <div id="s-focus-fail" class="screen">
-        <h2>АНАЛИЗ СБОЯ</h2>
+        <h2 style="color:var(--red); letter-spacing:5px; margin-bottom:30px;">АНАЛИЗ СБОЯ</h2>
         <div class="fail-circles">
-            <div class="f-circle" onclick="logFocus('FAIL', 'ESCAPE')">ESCAPE</div>
-            <div class="f-circle" onclick="logFocus('FAIL', 'LOOP')">LOOP</div>
-            <div class="f-circle" onclick="logFocus('FAIL', 'ENV')">ENV</div>
-            <div class="f-circle" onclick="logFocus('FAIL', 'URGENCY')">URGENCY</div>
-            <div class="f-circle" onclick="logFocus('FAIL', 'RES')">RES</div>
+            <div class="f-circle" id="fail-COGNITIVE_ESCAPE" onclick="selectFail('COGNITIVE_ESCAPE')">ESCAPE<span id="g1"></span></div>
+            <div class="f-circle" id="fail-INTERNAL_LOOP" onclick="selectFail('INTERNAL_LOOP')">LOOP<span id="g2"></span></div>
+            <div class="f-circle" id="fail-ENV_DISCOMFORT" onclick="selectFail('ENV_DISCOMFORT')">ENV<span id="g3"></span></div>
+            <div class="f-circle" id="fail-FALSE_URGENCY" onclick="selectFail('FALSE_URGENCY')">URGENCY<span id="g4"></span></div>
+            <div class="f-circle" id="fail-RES_EXHAUSTION" onclick="selectFail('RES_EXHAUSTION')">RES<span id="g5"></span></div>
+        </div>
+        <button class="btn" style="margin-top:40px; border-color:rgba(0,255,65,0.2)" onclick="sw('s-main')">ВЕРНУТЬСЯ</button>
+    </div>
+
+    <div id="m-info-1" class="modal">
+        <div class="modal-content">
+            <h3 style="color:var(--oracle); letter-spacing:2px;">PROTOCOL: INFO [1/2]</h3>
+            <p id="info-text-dynamic" style="text-align:left; line-height:1.6; font-size:12px;"></p>
+            <button class="btn" onclick="toggleModal('m-info-1', false); toggleModal('m-info-2', true);">ДАЛЕЕ</button>
         </div>
     </div>
 
-    <div id="m-info" class="modal" onclick="toggleModal('m-info', false)">
-        <div class="modal-content"><h3 id="info-title" style="color:var(--oracle)"></h3><p id="info-body" style="text-align:left; font-size:12px; line-height:1.6"></p></div>
+    <div id="m-info-2" class="modal">
+        <div class="modal-content">
+            <h3 style="color:var(--oracle); letter-spacing:2px;">PROTOCOL: INFO [2/2]</h3>
+            <p style="text-align:left; line-height:1.6; font-size:12px;">
+                ДИРЕКТИВА:<br>
+                1. Устраните цифровые шумы.<br>
+                2. Аппарат сознания должен быть замкнут на одной целевой задаче.<br>
+                3. По завершении цикла подтвердите статус сессии.
+            </p>
+            <button class="btn" onclick="toggleModal('m-info-2', false)">ПРИНЯТЬ</button>
+        </div>
     </div>
+
     <div id="m-history" class="modal" onclick="toggleModal('m-history', false)">
-        <div class="modal-content"><h3 style="color:var(--oracle)">LOG_STREAM</h3><div id="history-content" style="text-align:left; max-height:300px; overflow-y:auto; font-size:10px;"></div><button class="btn btn-red" style="padding:10px" onclick="clearHistory(event)">ERASE</button></div>
+        <div class="modal-content" style="border-color:var(--oracle); max-width: 340px;">
+            <h3 style="color:var(--oracle); letter-spacing:2px;">LOG_DATA_STREAM</h3>
+            <div id="history-content" style="text-align:left; max-height: 300px; overflow-y: auto; font-size: 11px; font-family: monospace;"></div>
+            <button class="btn btn-blue" style="margin-top:20px;" onclick="clearHistory(event)">CLEAR_LOGS</button>
+        </div>
+    </div>
+
+    <div id="m-fail-detail" class="modal" onclick="toggleModal('m-fail-detail', false)">
+        <div class="modal-content" style="border-color:var(--red)">
+            <h3 id="fail-title" style="color:var(--red); letter-spacing:2px;"></h3>
+            <p id="fail-desc" style="text-align:left; line-height:1.6;"></p>
+            <p style="font-size:10px; opacity:0.5; margin-top:20px;">[ НАЖМИТЕ ДЛЯ ЗАКРЫТИЯ ]</p>
+        </div>
     </div>
 
     <div id="v-card">
-        <h1 id="v-type" style="letter-spacing:8px;"></h1>
+        <h1 id="v-type" style="letter-spacing: 10px; font-weight: 100; margin: 0;"></h1>
         <div class="diag-box"><canvas id="diag-canvas"></canvas></div>
-        <div class="stat-row">LOGIC <div class="bar"><div id="v-bar-log" class="fill"></div></div></div>
-        <div class="stat-row">REACT <div class="bar"><div id="v-bar-react" class="fill" style="background:var(--red)"></div></div></div>
-        <div class="stat-row">MEMORY <div class="bar"><div id="v-bar-mem" class="fill" style="background:var(--oracle)"></div></div></div>
-        <button class="btn" style="margin-top:20px" onclick="document.getElementById('v-card').style.display='none'; sw('s-main')">ACCEPT</button>
+        <div class="stat-row">ЛОГИКА <div class="bar"><div id="v-bar-log" class="fill"></div></div></div>
+        <div class="stat-row">ОТКЛИК <div class="bar"><div id="v-bar-react" class="fill" style="background:var(--red)"></div></div></div>
+        <div class="stat-row">ПАМЯТЬ <div class="bar"><div id="v-bar-mem" class="fill" style="background:var(--oracle)"></div></div></div>
+        <div class="ability-badge" onclick="toggleAbility()">МОДУЛЬ: <span id="v-ability-name"></span></div>
+        <div id="v-ability-desc" class="ability-info"></div>
+        <button class="btn" style="margin-top: 20px;" onclick="backToHub()">ВЕРНУТЬСЯ</button>
     </div>
 
     <script>
         let aCtx, masterGain, thrillerFilter, lfo;
         let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
-        let curQ = 0, reactStartTime, timerInterval, focusTimerInterval, lockInterval;
-        let currentProtocolKey = 'focus';
+        let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
+        let selectedWordsCount = 0, activeWordsOnScreen = 0, focusTimerInterval, lockInterval;
+        let currentActiveProtocol = 'focus';
 
-        const PROTO_DATA = {
-            'focus': { name: 'FOCUS', info: 'Принудительная концентрация на одной задаче. Устранение шумов.' },
-            'execution': { name: 'EXECUTION', info: 'Режим максимальной реализации. Перевод энергии в действие.' },
-            'liquidation': { name: 'LIQUIDATION', info: 'Устранение когнитивных долгов. Закрытие висящих циклов.' }
+        const PROTOCOL_DATA = {
+            'focus': { t: 'FOCUS_PROTOCOL', d: 'Принудительная синхронизация внимания на одной задаче. Устранение фрагментации сознания.', color: '#00ccff' },
+            'execution': { t: 'EXECUTION_PROTOCOL', d: 'Режим высокой производительности. Реализация накопленного потенциала в действие.', color: '#ffaa00' },
+            'liquidation': { t: 'LIQUIDATION_PROTOCOL', d: 'Полная зачистка незавершенных циклов и когнитивного долга. Максимальный приоритет.', color: '#ff0055' }
+        };
+
+        const FAIL_DATA = {
+            'COGNITIVE_ESCAPE': { t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу.', d: 'Стремление мозга избежать давления путем переключения на знакомые, легкие действия.' },
+            'INTERNAL_LOOP': { t: '[ INTERNAL_LOOP ] — Зацикленность на мыслях.', d: 'Потеря фокуса из-за внутренней рефлексии или обдумывания побочных идей.' },
+            'ENV_DISCOMFORT': { t: '[ ENV_DISCOMFORT ] — Дискомфорт среды.', d: 'Внешние физические факторы (шум, свет), подрывающие концентрацию.' },
+            'FALSE_URGENCY': { t: '[ FALSE_URGENCY ] — Внезапные важные дела.', d: 'Иллюзия необходимости немедленного решения второстепенных задач.' },
+            'RES_EXHAUSTION': { t: '[ RES_EXHAUSTION ] — Истощение ресурса.', d: 'Критическое снижение уровня нейропластичности. Внимание исчерпано.' }
+        };
+
+        const PROFILES = {
+            "АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий." },
+            "ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов." },
+            "АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме." },
+            "СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в контурах." }
         };
 
         const QUESTIONS = [
@@ -227,167 +388,299 @@
             {q: "Что важнее: структура или динамика?", o: [{t: "Структура", a: "АРХИТЕКТОР"}, {t: "Динамика", a: "ИМПУЛЬС"}]},
             {q: "Чужой сигнал в твоем канале. Действия?", o: [{t: "Отслеживание", a: "АНАЛИТИК"}, {t: "Агрессивный ответ", a: "СКАНЕР"}]},
             {q: "Код — это язык или оружие?", o: [{t: "Язык", a: "АРХИТЕКТОР"}, {t: "Оружие", a: "ИМПУЛЬС"}]},
-            {q: "Неизвестный файл в карантине?", o: [{t: "Изоляция", a: "СКАНЕР"}, {t: "Дешифровка", a: "АНАЛИТИК"}]},
-            {q: "Где корень ошибок?", o: [{t: "В человеке", a: "АРХИТЕКТОР"}, {t: "В коде", a: "ИМПУЛЬС"}]},
-            {q: "Источник силы?", o: [{t: "Данные", a: "АНАЛИТИК"}, {t: "Чутье", a: "СКАНЕР"}]},
-            {q: "Тишина вызывает тревогу?", o: [{t: "Да", a: "СКАНЕР"}, {t: "Нет", a: "АРХИТЕКТОР"}]},
-            {q: "Твоя цель?", o: [{t: "Контроль", a: "АРХИТЕКТОР"}, {t: "Мощь", a: "ИМПУЛЬС"}]}
+            {q: "Неизвестный файл в карантине. Что делать?", o: [{t: "Изоляция", a: "СКАНЕР"}, {t: "Дешифровка", a: "АНАЛИТИК"}]},
+            {q: "Где корень ошибок: в человеке или в коде?", o: [{t: "В человеке", a: "АРХИТЕКТОР"}, {t: "В коде", a: "ИМПУЛЬС"}]},
+            {q: "Источник силы: данные или чутье?", o: [{t: "Данные", a: "АНАЛИТИК"}, {t: "Чутье", a: "СКАНЕР"}]},
+            {q: "Тишина вызывает покой или тревогу?", o: [{t: "Тревогу", a: "СКАНЕР"}, {t: "Покой", a: "АРХИТЕКТОР"}]},
+            {q: "Твоя цель: абсолютный контроль или мощь?", o: [{t: "Контроль", a: "АРХИТЕКТОР"}, {t: "Мощь", a: "ИМПУЛЬС"}]}
         ];
 
-        const SYNC_WORDS = [{t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"}, {t: "Δ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ω", a: "АНАЛИТИК"}, {t: "Ψ", a: "СКАНЕР"}, {t: "КОНТРОЛЬ", a: "АРХИТЕКТОР"}, {t: "ПОТОК", a: "ИМПУЛЬС"}, {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "Ξ", a: "СКАНЕР"}];
+        const SYNC_WORDS = [{t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"}, {t: "Δ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ω", a: "АНАЛИТИК"}, {t: "Ψ", a: "СКАНЕР"}, {t: "КОНТРОЛЬ", a: "АРХИТЕКТОР"}, {t: "ПОТОК", a: "ИМПУЛЬС"}, {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "Ξ", a: "СКАНЕР"}, {t: "ИМПУЛЬС", a: "ИМПУЛЬС"}, {t: "λ", a: "АРХИТЕКТОР"}, {t: "МАТРИЦА", a: "АНАЛИТИК"}, {t: "ВЕКТОР", a: "АРХИТЕКТОР"}, {t: "Ø", a: "АНАЛИТИК"}, {t: "ТЕНЬ", a: "СКАНЕР"}, {t: "КАНАЛ", a: "ИМПУЛЬС"}, {t: "ВЗЛОМ", a: "СКАНЕР"}];
 
         function startAudioEngine() {
-            if (aCtx) return; aCtx = new AudioContext();
+            if (aCtx) return;
+            aCtx = new (window.AudioContext || window.webkitAudioContext)();
             masterGain = aCtx.createGain(); masterGain.gain.value = 0.15; masterGain.connect(aCtx.destination);
-            const o1 = aCtx.createOscillator(); const o2 = aCtx.createOscillator();
+            const osc1 = aCtx.createOscillator(); const osc2 = aCtx.createOscillator();
             thrillerFilter = aCtx.createBiquadFilter(); lfo = aCtx.createOscillator();
-            const lg = aCtx.createGain(); o1.type = 'sawtooth'; o1.frequency.value = 42; o2.type = 'square'; o2.frequency.value = 42.2;
+            const lfoGain = aCtx.createGain();
+            osc1.type = 'sawtooth'; osc1.frequency.value = 42; osc2.type = 'square'; osc2.frequency.value = 42.2;
             thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180; thrillerFilter.Q.value = 10;
-            lfo.type = 'sine'; lfo.frequency.value = 0.08; lg.gain.value = 100; lfo.connect(lg); lg.connect(thrillerFilter.frequency);
-            o1.connect(thrillerFilter); o2.connect(thrillerFilter); thrillerFilter.connect(masterGain); o1.start(); o2.start(); lfo.start();
+            lfo.type = 'sine'; lfo.frequency.value = 0.08; lfoGain.gain.value = 100;
+            lfo.connect(lfoGain); lfoGain.connect(thrillerFilter.frequency);
+            osc1.connect(thrillerFilter); osc2.connect(thrillerFilter);
+            thrillerFilter.connect(masterGain); osc1.start(); osc2.start(); lfo.start();
         }
 
         function playSound(f, d, type='sine', v=0.1) {
-            if(!aCtx) return; const o = aCtx.createOscillator(); const g = aCtx.createGain();
-            o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime); g.gain.setValueAtTime(v, aCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + d); o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
+            if(!aCtx) return;
+            const o = aCtx.createOscillator(); const g = aCtx.createGain();
+            o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime);
+            g.gain.setValueAtTime(v, aCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + d);
+            o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
         }
 
         function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
-        // ПРОТОКОЛЫ ЛОГИКА
-        function openProtocol(key) {
-            currentProtocolKey = key;
-            document.getElementById('protocolTitle').innerText = PROTO_DATA[key].name + '_SET_CYCLE';
+        /* Логика выбора протоколов */
+        function openProtocol(type) {
+            currentActiveProtocol = type;
+            const data = PROTOCOL_DATA[type];
+            document.getElementById('protocolTitle').innerText = data.t;
+            document.getElementById('protocolTitle').style.color = data.color;
+            document.getElementById('protocolDesc').innerText = data.d;
+            document.getElementById('info-text-dynamic').innerText = data.d;
             document.getElementById('timeSelector').classList.add('open');
             playSound(600, 0.1);
         }
-        function closeTimeSelector() { document.getElementById('timeSelector').classList.remove('open'); }
 
-        function initProtocol(mins) {
-            closeTimeSelector(); startAudioEngine();
-            const end = Date.now() + mins * 60000;
-            localStorage.setItem('focus_end_time', end);
-            localStorage.setItem('active_proto_key', currentProtocolKey);
-            runFocusUI(end);
+        function closeTimeSelector() {
+            document.getElementById('timeSelector').classList.remove('open');
         }
 
-        function runFocusUI(end) {
-            const key = localStorage.getItem('active_proto_key') || 'focus';
-            const display = document.getElementById('active-focus-label');
-            display.style.display = 'block'; sw('s-focus-timer');
-            document.getElementById('cur-proto-name').innerText = key.toUpperCase() + '_PROTOCOL_ACTIVE';
+        function initProtocol(mins) {
+            closeTimeSelector();
+            startAudioEngine();
+            const endTime = Date.now() + mins * 60 * 1000;
+            localStorage.setItem('focus_end_time', endTime);
+            localStorage.setItem('active_protocol_type', currentActiveProtocol);
+            
+            document.getElementById('active-focus-label').style.display = 'block';
+            document.getElementById('active-focus-label').style.color = PROTOCOL_DATA[currentActiveProtocol].color;
+            
+            runFocusUI(endTime);
+        }
 
+        function runFocusUI(endTime) {
+            const protoType = localStorage.getItem('active_protocol_type') || 'focus';
+            sw('s-focus-timer'); 
             clearInterval(focusTimerInterval);
+            
+            document.getElementById('active-timer-type').innerText = PROTOCOL_DATA[protoType].t;
+            document.getElementById('active-timer-type').style.color = PROTOCOL_DATA[protoType].color;
+            document.getElementById('focus-countdown').style.color = PROTOCOL_DATA[protoType].color;
+
             focusTimerInterval = setInterval(() => {
-                const diff = end - Date.now();
-                if(diff <= 0) {
-                    clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time');
-                    display.style.display = 'none'; sw('s-focus-res');
+                const diff = endTime - Date.now();
+                if (diff <= 0) { 
+                    clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); 
+                    document.getElementById('active-focus-label').style.display = 'none'; 
+                    document.getElementById('active-protocol-indicator').innerText = "SYSTEM_IDLE";
+                    sw('s-focus-res'); 
                 } else {
-                    const m = Math.floor(diff/60000).toString().padStart(2,'0');
-                    const s = Math.floor((diff%60000)/1000).toString().padStart(2,'0');
-                    const txt = `00:${m}:${s}`;
-                    display.innerText = txt;
-                    document.getElementById('focus-countdown').innerText = txt;
+                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    const timeStr = `00:${m}:${s}`;
+                    document.getElementById('focus-countdown').innerText = timeStr;
+                    document.getElementById('active-focus-label').innerText = timeStr;
+                    document.getElementById('active-protocol-indicator').innerText = PROTOCOL_DATA[protoType].t;
                 }
             }, 1000);
         }
 
-        function abortFocus() { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); document.getElementById('active-focus-label').style.display='none'; sw('s-main'); }
-
-        function logFocus(status, detail = "COMPLETE") {
-            const key = localStorage.getItem('active_proto_key') || 'focus';
-            let logs = JSON.parse(localStorage.getItem('logs_'+key) || "[]");
-            logs.unshift({t: new Date().toLocaleTimeString(), s: status, d: detail});
-            localStorage.setItem('logs_'+key, JSON.stringify(logs.slice(0,20)));
-            sw('s-main');
+        function setTestLock() {
+            const unlockTime = Date.now() + (6 * 60 * 60 * 1000);
+            localStorage.setItem('test_unlock_time', unlockTime);
+            updateLockUI();
+        }
+        function updateLockUI() {
+            const btn = document.getElementById('start-btn');
+            const unlockAt = localStorage.getItem('test_unlock_time');
+            if(!unlockAt) return;
+            clearInterval(lockInterval);
+            lockInterval = setInterval(() => {
+                const diff = unlockAt - Date.now();
+                if(diff <= 0) {
+                    clearInterval(lockInterval);
+                    localStorage.removeItem('test_unlock_time');
+                    btn.disabled = false; btn.innerText = "ЗАПУСТИТЬ ТЕСТ";
+                } else {
+                    // btn.disabled = true; // Блокировка отключена по запросу
+                    const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    btn.innerText = `БЛОКИРОВКА: ${h}:${m}:${s}`;
+                }
+            }, 1000);
         }
 
-        function showInfo(key) {
-            document.getElementById('info-title').innerText = PROTO_DATA[key].name + '_INFO';
-            document.getElementById('info-body').innerText = PROTO_DATA[key].info;
-            toggleModal('m-info', true);
+        function logFocusEvent(status, detail = "") {
+            let logs = JSON.parse(localStorage.getItem('focus_logs') || "[]");
+            const proto = localStorage.getItem('active_protocol_type') || 'focus';
+            const entry = {
+                time: new Date().toLocaleString('ru-RU', {hour: '2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}),
+                status: status, type: proto.toUpperCase() + ": " + detail
+            };
+            logs.unshift(entry);
+            if(logs.length > 50) logs.pop();
+            localStorage.setItem('focus_logs', JSON.stringify(logs));
         }
 
-        function showHistory(key) {
-            const logs = JSON.parse(localStorage.getItem('logs_'+key) || "[]");
-            document.getElementById('history-content').innerHTML = logs.length ? 
-                logs.map(l => `<div>[${l.t}] ${l.s} - ${l.d}</div>`).join('') : "EMPTY_LOG";
-            currentProtocolKey = key; toggleModal('m-history', true);
+        function showHistory() {
+            const logs = JSON.parse(localStorage.getItem('focus_logs') || "[]");
+            const container = document.getElementById('history-content');
+            container.innerHTML = logs.length === 0 ? "<div style='opacity:0.5'>NO_DATA_FOUND</div>" : 
+                logs.map(l => `<div><span style="color:var(--oracle)">[${l.time}]</span> <span style="color:${l.status==='SUCCESS'?'var(--neon)':'var(--red)'}">${l.status}</span><br><span style="opacity:0.6; font-size:9px;">${l.type}</span></div>`).join('');
+            toggleModal('m-history', true);
         }
 
-        function clearHistory(e) { e.stopPropagation(); localStorage.removeItem('logs_'+currentProtocolKey); showHistory(currentProtocolKey); }
+        function clearHistory(e) { e.stopPropagation(); if(confirm('ERASE LOGS?')) { localStorage.removeItem('focus_logs'); showHistory(); } }
 
-        // ТЕСТЫ ЛОГИКА
+        function abortFocus() { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); document.getElementById('active-focus-label').style.display = 'none'; document.getElementById('active-protocol-indicator').innerText = "SYSTEM_IDLE"; sw('s-main'); }
+        
+        function logFocus(status) {
+            if(status === 'success') { logFocusEvent('SUCCESS', 'SYNCHRONIZED'); playSound(800, 0.5); sw('s-main'); }
+        }
+
+        function selectFail(key) {
+            document.querySelectorAll('.f-circle').forEach(el => el.classList.remove('selected-fail'));
+            document.getElementById('fail-' + key).classList.add('selected-fail');
+            logFocusEvent('CRITICAL_FAIL', key);
+            showFailDetail(key);
+        }
+
+        function showFailDetail(key) {
+            document.getElementById('fail-title').innerText = key;
+            document.getElementById('fail-desc').innerHTML = `<b>${FAIL_DATA[key].t}</b><br><br>${FAIL_DATA[key].d}`;
+            toggleModal('m-fail-detail', true);
+        }
+
         function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('b-intro'); }
         function renderQ() {
             const q = QUESTIONS[curQ]; document.getElementById('q-text').innerText = q.q;
             const box = document.getElementById('q-options'); box.innerHTML = "";
             q.o.forEach(o => {
                 const b = document.createElement('button'); b.className = "btn"; b.innerText = o.t;
-                b.onclick = () => { score[o.a] = (score[o.a] || 0) + 1; curQ++; if(curQ < QUESTIONS.length) renderQ(); else sw('b-react'); };
+                b.onclick = () => { playSound(400 + curQ*50, 0.1); score[o.a] = (score[o.a] || 0) + 1; curQ++; if(curQ < QUESTIONS.length) renderQ(); else sw('b-react'); };
                 box.appendChild(b);
             });
         }
 
-        function startReactTest() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); renderReactGrid(); startTimer(); }
-        function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now()-reactStartTime)/1000).toFixed(3); }, 41); }
+        function startReactTest() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); updateAttLabel(); renderReactGrid(); startTimer(); }
+        function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - reactStartTime) / 1000).toFixed(3); }, 41); }
+        function updateAttLabel() { document.getElementById('att-label').innerText = "[ " + "■ ".repeat(attempts) + "□ ".repeat(3-attempts) + "]"; }
         function renderReactGrid() {
             const g = document.getElementById('react-grid'); g.innerHTML = "";
-            let ns = Array.from({length:16},(_,i)=>i+1).sort(()=>Math.random()-0.5);
+            let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
             ns.forEach(n => {
                 const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
-                c.onclick = () => { if(n === target){ target++; if(target>16){ clearInterval(timerInterval); sw('b-mem'); } else renderReactGrid(); } else { attempts--; if(attempts<=0) sw('b-mem'); } };
+                c.onclick = () => { if(n === target) { playSound(800 + n*30, 0.05); target++; if(target > 16) { clearInterval(timerInterval); sw('b-mem'); } else renderReactGrid(); } else { playSound(100, 0.2, 'square'); attempts--; updateAttLabel(); if(attempts <= 0) sw('b-mem'); }};
                 g.appendChild(c);
             });
         }
 
-        function startMemTest() { sw('s-mem'); memSeq = Array.from({length:5},()=>Math.floor(Math.random()*9)); playMem(); }
-        async function playMem() {
+        function startMemTest() { memStep = 0; sw('s-mem'); nextMemRound(); }
+        function nextMemRound() {
+            memSeq = Array.from({length: 4 + memStep}, () => Math.floor(Math.random()*9));
+            const mg = document.getElementById('mem-grid'); mg.innerHTML = "";
+            for(let i=0; i<9; i++) { const c = document.createElement('div'); c.className = "cell"; c.onclick = () => handleMemClick(i, c); mg.appendChild(c); }
+            playMemSequence();
+        }
+        async function playMemSequence() {
             const cells = document.getElementById('mem-grid').children;
-            for(let id of memSeq) { await new Promise(r=>setTimeout(r,600)); cells[id].style.background = "var(--oracle)"; await new Promise(r=>setTimeout(r,400)); cells[id].style.background = "#000"; }
-            memIdx = 0; 
-            for(let i=0; i<9; i++) {
-                const c = document.createElement('div'); c.className = "cell"; 
-                c.onclick = () => { if(memSeq[memIdx] === i){ memIdx++; if(memIdx===5) sw('b-sync'); } else sw('b-sync'); };
-                document.getElementById('mem-grid').appendChild(c);
-            }
+            for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); playSound(1000, 0.05); cells[id].style.background = "var(--oracle)"; await new Promise(r => setTimeout(r, 400)); cells[id].style.background = "rgba(0,0,0,0.85)"; }
+            memIdx = 0;
+        }
+        function handleMemClick(id, el) { 
+            playSound(1100, 0.03);
+            if(id === memSeq[memIdx]) { 
+                el.classList.add('ok'); setTimeout(() => el.classList.remove('ok'), 200);
+                memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); } 
+            } else { playSound(60, 0.4, 'sawtooth'); el.classList.add('err'); setTimeout(() => sw('b-sync'), 300); } 
         }
 
-        function startSyncTest() { sw('s-sync'); let count = 0; function spawn(){ if(count>=2) return; const w = document.createElement('div'); const word = SYNC_WORDS[Math.floor(Math.random()*SYNC_WORDS.length)]; w.className="sync-word"; w.innerText=word.t; w.style.left=Math.random()*80+"%"; w.style.top=Math.random()*80+"%"; document.getElementById('words-container').appendChild(w); setTimeout(()=>w.style.opacity=1,50); w.onclick=()=>{ score[word.a]=(score[word.a]||0)+2; count++; if(count===2) finalize(); }; setTimeout(()=>{w.remove(); spawn();},2000); } spawn(); }
+        function startSyncTest() {
+            sw('s-sync'); selectedWordsCount = 0; activeWordsOnScreen = 0; const container = document.getElementById('words-container'); container.innerHTML = "";
+            function spawn() {
+                if (selectedWordsCount >= 2 || !document.getElementById('s-sync').classList.contains('active')) return;
+                if (activeWordsOnScreen < 4) {
+                    const word = SYNC_WORDS[Math.floor(Math.random()*SYNC_WORDS.length)];
+                    const w = document.createElement('div'); w.className = "sync-word"; w.innerText = word.t;
+                    w.style.left = Math.random()*70 + 15 + "%"; w.style.top = Math.random()*70 + 15 + "%";
+                    container.appendChild(w); activeWordsOnScreen++;
+                    setTimeout(() => w.style.opacity = 1, 50);
+                    w.onclick = () => { score[word.a] = (score[word.a] || 0) + 2; selectedWordsCount++; if(selectedWordsCount === 2) finalize(); };
+                    setTimeout(() => { w.remove(); activeWordsOnScreen--; }, 3000);
+                }
+                setTimeout(spawn, 800);
+            }
+            spawn();
+        }
 
         function finalize() {
-            let type = Object.keys(score).reduce((a,b)=>score[a]>score[b]?a:b) || "АНАЛИТИК";
-            isDone = true; currentProfile = type; localStorage.setItem('psy_profile', type); localStorage.setItem('psy_done', 'true');
-            updateUIProfile(type); document.getElementById('v-card').style.display='flex'; renderDiag(type);
+            let type = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "АНАЛИТИК";
+            currentProfile = type; isDone = true;
+            localStorage.setItem('psy_profile', type); localStorage.setItem('psy_done', 'true');
+            setTestLock(); updateUIProfile(type);
+            document.getElementById('v-card').classList.add('open'); renderDiagnostic(type);
         }
 
         function updateUIProfile(type) {
-            document.getElementById('id-tag').innerText = type; document.getElementById('id-tag').style.display='block';
-            document.getElementById('protocols-ui').style.display='flex'; document.getElementById('hub-oracle-btn').style.display='block';
             document.getElementById('v-type').innerText = type;
-            setTimeout(()=>{ document.getElementById('v-bar-log').style.width="90%"; document.getElementById('v-bar-react').style.width="70%"; document.getElementById('v-bar-mem').style.width="80%"; },500);
+            document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
+            document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
+            document.getElementById('protocols-container').style.display = 'grid';
+            document.getElementById('id-tag').innerText = type; document.getElementById('id-tag').style.display = 'block';
+            document.getElementById('hub-oracle-btn').style.display = 'block';
+            setTimeout(() => {
+                document.getElementById('v-bar-log').style.width = PROFILES[type].log + "%";
+                document.getElementById('v-bar-react').style.width = "75%";
+                document.getElementById('v-bar-mem').style.width = "66%";
+            }, 500);
         }
 
-        function showStoredProfile() { if(isDone) { document.getElementById('v-card').style.display='flex'; renderDiag(currentProfile); } }
+        function backToHub() { document.getElementById('v-card').classList.remove('open'); sw('s-main'); }
+        function showStoredProfile() { if(isDone) { document.getElementById('v-card').classList.add('open'); renderDiagnostic(currentProfile); } }
+        function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
 
-        function renderDiag(type) {
-            const c = document.getElementById('diag-canvas'); const ctx = c.getContext('2d'); c.width=260; c.height=260;
-            function draw(){ ctx.clearRect(0,0,260,260); ctx.strokeStyle= '#00ff41'; ctx.strokeRect(100,100,60,60); requestAnimationFrame(draw); } draw();
+        function drawShape(ctx, type, x, y, size, frame, active) {
+            ctx.save(); ctx.translate(x, y); ctx.strokeStyle = active ? '#00ff41' : 'rgba(0, 255, 65, 0.15)'; ctx.lineWidth = active ? 2 : 1; ctx.beginPath();
+            if(type === "АРХИТЕКТОР") { for(let i=0; i<6; i++) { let a = (active ? frame : 0) + i*Math.PI/3; ctx.lineTo(Math.cos(a)*size, Math.sin(a)*size); } ctx.closePath(); }
+            else if(type === "ИМПУЛЬС") { ctx.moveTo(0,0); for(let i=0; i<25; i++){ let r=i*(size/20); let a=(active ? frame*2.5 : 0)+i*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); } }
+            else if(type === "АНАЛИТИК") { if(active) ctx.rotate(frame); ctx.strokeRect(-size/1.2, -size/1.2, size*1.5, size*1.5); ctx.strokeRect(-size/4, -size/4, size/2, size/2); }
+            else if(type === "СКАНЕР") { if(active) ctx.rotate(frame); ctx.arc(0,0, size, 0, Math.PI*2); ctx.moveTo(-size,0); ctx.lineTo(size,0); ctx.moveTo(0,-size); ctx.lineTo(0,size); }
+            ctx.stroke(); ctx.restore();
         }
 
-        // MATRIX BACKGROUND
+        const hC = document.getElementById('hub-canvas'); const hX = hC.getContext('2d');
+        hC.width = 190; hC.height = 190; let hFrame = 0;
+        function animateHub() { hX.clearRect(0,0,190,190); if(isDone && currentProfile) drawShape(hX, currentProfile, 95, 95, 60, hFrame, true); hFrame += 0.02; requestAnimationFrame(animateHub); }
+        animateHub();
+
+        let diagAnimId;
+        function renderDiagnostic(activeType) {
+            const c = document.getElementById('diag-canvas'); const ctx = c.getContext('2d');
+            c.width = 260; c.height = 260; let dFrame = 0;
+            const pts = { "АРХИТЕКТОР": [130, 50], "ИМПУЛЬС": [130, 210], "АНАЛИТИК": [50, 130], "СКАНЕР": [210, 130] };
+            if(diagAnimId) cancelAnimationFrame(diagAnimId);
+            function anim() {
+                if(!document.getElementById('v-card').classList.contains('open')) return;
+                ctx.clearRect(0,0,260,260); for(let t in pts) drawShape(ctx, t, pts[t][0], pts[t][1], 25, dFrame, (t === activeType));
+                dFrame += 0.03; diagAnimId = requestAnimationFrame(anim);
+            }
+            anim();
+        }
+
         const mc = document.getElementById('m-bg'); const mx = mc.getContext('2d');
         let mw = mc.width = window.innerWidth, mh = mc.height = window.innerHeight;
-        const drops = Array(Math.floor(mw/20)).fill(1);
-        function drawM() { mx.fillStyle = 'rgba(0,0,0,0.05)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41'; mx.font = '15px monospace'; drops.forEach((y,i)=>{ mx.fillText(String.fromCharCode(0x30A0+Math.random()*96), i*20, y*20); if(y*20>mh && Math.random()>0.975) drops[i]=0; drops[i]++; }); }
-        setInterval(drawM, 50);
+        const drops = Array(Math.floor(mw/25)).fill(1);
+        function drawM() {
+            mx.fillStyle = 'rgba(0,0,0,0.1)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41'; mx.font = '14px monospace';
+            drops.forEach((y, i) => { mx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*25, y*25); if(y*25 > mh && Math.random() > 0.99) drops[i] = 0; drops[i]++; });
+            for(let i=1; i<=5; i++) { const el = document.getElementById('g'+i); if(el) el.innerText = String.fromCharCode(0x30A0 + Math.random()*96); }
+        }
+        setInterval(drawM, 70);
 
         window.onload = () => {
-            if(localStorage.getItem('psy_done')==='true'){ isDone=true; currentProfile=localStorage.getItem('psy_profile'); updateUIProfile(currentProfile); }
-            const savedEnd = localStorage.getItem('focus_end_time'); if(savedEnd && parseInt(savedEnd)>Date.now()) runFocusUI(parseInt(savedEnd));
+            const savedProfile = localStorage.getItem('psy_profile');
+            if (savedProfile && localStorage.getItem('psy_done') === 'true') {
+                currentProfile = savedProfile; isDone = true;
+                updateUIProfile(currentProfile); updateLockUI();
+            }
+            const savedEnd = localStorage.getItem('focus_end_time');
+            if (savedEnd && parseInt(savedEnd) > Date.now()) { startAudioEngine(); runFocusUI(parseInt(savedEnd)); }
         };
     </script>
 </body>
