@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>PSY-OPS CORE v.24.5</title>
+    <title>PSY-OPS CORE v.24.6</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; }
+        :root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; --orange: #ffaa00; --magenta: #ff0055; }
         
         body, html { 
             margin: 0; padding: 0; height: 100%; 
@@ -38,11 +39,7 @@
             transition: 0.2s; 
         }
         .btn:active { background: rgba(0, 255, 65, 0.2); }
-        .btn:disabled { 
-            border-color: rgba(0, 255, 65, 0.1); 
-            color: rgba(0, 255, 65, 0.2); 
-            cursor: default; 
-        }
+        .btn:disabled { border-color: rgba(0, 255, 65, 0.1); color: rgba(0, 255, 65, 0.2); cursor: default; }
         .btn-blue { border-color: rgba(0, 204, 255, 0.4); color: var(--oracle); }
         .btn-red { border-color: var(--red); color: var(--red); }
 
@@ -66,6 +63,62 @@
             pointer-events: auto;
             position: relative;
             z-index: 1001;
+        }
+
+        #protocols-container {
+            display: none; 
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            margin-top: 15px;
+        }
+        .proto-wrap {
+            width: 100%;
+            max-width: 260px;
+            margin-bottom: 5px;
+        }
+        
+        /* Кнопки протоколов теперь со стилем как на активном экране */
+        .proto-btn {
+            margin: 5px 0;
+            padding: 16px;
+            font-size: 12px;
+            letter-spacing: 8px;
+            text-shadow: 0 0 8px var(--neon);
+            width: 100%;
+        }
+
+        .proto-sub {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--oracle);
+            letter-spacing: 1px;
+            padding: 0 5px;
+            margin-bottom: 2px;
+        }
+        .proto-sub span {
+            cursor: pointer;
+            border-bottom: 1px solid rgba(0, 204, 255, 0.3);
+            padding-bottom: 2px;
+            transition: 0.2s;
+        }
+        .proto-sub span:hover { color: var(--neon); border-color: var(--neon); }
+
+        /* Встроенные опции времени */
+        .time-opts {
+            display: none; /* скрыто по умолчанию */
+            justify-content: space-between;
+            gap: 5px;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+        .time-opt-btn {
+            margin: 0;
+            padding: 12px 5px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            flex: 1;
         }
 
         .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; max-width: 90vw; }
@@ -134,21 +187,51 @@
             <div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
         </div>
 
-        <div id="focus-module" style="display:none; margin-top: 25px; width: 100%; max-width: 320px; border: 1px solid rgba(0, 255, 65, 0.1); padding: 15px; box-sizing: border-box;">
-            <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 15px; width: 100%;">
-                <span onclick="showHistory()" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid; letter-spacing: 1px;">HISTORY</span>
-                <span style="font-size: 10px; letter-spacing: 3px; opacity: 0.9; color: var(--neon);">FOCUS_PROTOCOL</span>
-                <span onclick="toggleModal('m-info-1', true)" style="cursor:pointer; color:var(--oracle); font-size:10px; border-bottom:1px solid">[ i ] INFO</span>
+        <div id="protocols-container">
+            <div class="proto-wrap">
+                <div class="proto-sub">
+                    <span onclick="showInfo('focus')">[ i ] INFO</span>
+                    <span onclick="showHistory('focus')">HISTORY</span>
+                </div>
+                <button class="btn proto-btn" onclick="toggleTimeOpts('focus')">FOCUS PROTOCOL</button>
+                <div id="time-opts-focus" class="time-opts">
+                    <button class="btn time-opt-btn" onclick="initProtocol('focus', 10)">10 M</button>
+                    <button class="btn time-opt-btn" onclick="initProtocol('focus', 30)">30 M</button>
+                    <button class="btn time-opt-btn" onclick="initProtocol('focus', 60)">60 M</button>
+                </div>
             </div>
-            <div style="display:flex; gap:5px; width:100%;">
-                <button class="btn" style="font-size:10px; padding:12px; letter-spacing:1px;" onclick="initFocus(10)">10 MIN</button>
-                <button class="btn" style="font-size:10px; padding:12px; letter-spacing:1px;" onclick="initFocus(30)">30 MIN</button>
-                <button class="btn" style="font-size:10px; padding:12px; letter-spacing:1px;" onclick="initFocus(60)">60 MIN</button>
+            
+            <div class="proto-wrap">
+                <div class="proto-sub">
+                    <span onclick="showInfo('execution')">[ i ] INFO</span>
+                    <span onclick="showHistory('execution')">HISTORY</span>
+                </div>
+                <button class="btn proto-btn" onclick="toggleTimeOpts('execution')">EXECUTION PROTOCOL</button>
+                <div id="time-opts-execution" class="time-opts">
+                    <button class="btn time-opt-btn" onclick="initProtocol('execution', 10)">10 M</button>
+                    <button class="btn time-opt-btn" onclick="initProtocol('execution', 30)">30 M</button>
+                    <button class="btn time-opt-btn" onclick="initProtocol('execution', 60)">60 M</button>
+                </div>
+            </div>
+            
+            <div class="proto-wrap">
+                <div class="proto-sub">
+                    <span onclick="showInfo('liquidation')">[ i ] INFO</span>
+                    <span onclick="showHistory('liquidation')">HISTORY</span>
+                </div>
+                <button class="btn proto-btn" onclick="toggleTimeOpts('liquidation')">LIQUIDATION PROTOCOL</button>
+                <div id="time-opts-liquidation" class="time-opts">
+                    <button class="btn time-opt-btn" onclick="initProtocol('liquidation', 10)">10 M</button>
+                    <button class="btn time-opt-btn" onclick="initProtocol('liquidation', 30)">30 M</button>
+                    <button class="btn time-opt-btn" onclick="initProtocol('liquidation', 60)">60 M</button>
+                </div>
             </div>
         </div>
 
-        <button id="start-btn" class="btn" style="margin-top: 40px;" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
-        <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;">ОРАКУЛ</button>
+        <div style="margin-top: 30px; width: 100%; display: flex; flex-direction: column; align-items: center;">
+            <button id="start-btn" class="btn" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
+            <button id="hub-oracle-btn" class="btn btn-blue" style="display:none;">ОРАКУЛ</button>
+        </div>
     </div>
 
     <div id="b-intro" class="screen">
@@ -157,7 +240,9 @@
             <p>Запуск протокола определения психо-когнитивного профиля. Будьте сосредоточены. Система анализирует паттерны нейронного отклика в реальном времени.</p>
         </div>
         <button class="btn" onclick="sw('s-psych'); renderQ();">ПРОДОЛЖИТЬ</button>
-    </div><div id="s-psych" class="screen">
+    </div>
+
+    <div id="s-psych" class="screen">
         <p id="q-text" style="letter-spacing:1px;"></p>
         <div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div>
     </div>
@@ -201,8 +286,8 @@
     </div>
 
     <div id="s-focus-timer" class="screen">
-        <div style="letter-spacing:10px; opacity:0.5; font-size:12px;">PROTOCOL_ACTIVE</div>
-        <div id="focus-countdown" class="timer-val">00:00:00</div>
+        <div id="active-timer-type" style="letter-spacing:8px; opacity:0.8; font-size:12px; color: var(--neon); text-shadow: 0 0 8px var(--neon);">PROTOCOL_ACTIVE</div>
+        <div id="focus-countdown" class="timer-val" style="color: var(--neon);">00:00:00</div>
         <button class="btn" style="border-color:var(--neon)" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
         <button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
         <div onclick="localStorage.setItem('focus_end_time', Date.now() + 1000); runFocusUI(Date.now() + 1000);" style="width:100%; height:40px; opacity:0; cursor:pointer; margin-top:10px;">DEBUG_SKIP</div>
@@ -226,42 +311,34 @@
         <button class="btn" style="margin-top:40px; border-color:rgba(0,255,65,0.2)" onclick="sw('s-main')">ВЕРНУТЬСЯ</button>
     </div>
 
-    <div id="m-info-1" class="modal">
-        <div class="modal-content">
-            <h3 style="color:var(--oracle); letter-spacing:2px;">FOCUS_PROTOCOL: INFO [1/2]</h3>
-            <p style="text-align:left; line-height:1.6; font-size:12px;">
-                FOCUS_PROTOCOL — это режим принудительной синхронизации когнитивного процесса. Внимание — это единственный конечный ресурс вашей нейронной сети. Любое внешнее отвлечение вызывает фрагментацию сознания.
-            </p>
-            <button class="btn" onclick="toggleModal('m-info-1', false); toggleModal('m-info-2', true);">ДАЛЕЕ</button>
-        </div>
-    </div>
-
-    <div id="m-info-2" class="modal">
-        <div class="modal-content">
-            <h3 style="color:var(--oracle); letter-spacing:2px;">FOCUS_PROTOCOL: INFO [2/2]</h3>
-            <p style="text-align:left; line-height:1.6; font-size:12px;">
+    <div id="m-info-1" class="modal" onclick="toggleModal('m-info-1', false)">
+        <div class="modal-content" style="border-color:var(--oracle)" onclick="event.stopPropagation()">
+            <h3 style="color:var(--oracle); letter-spacing:2px;">PROTOCOL_INFO</h3>
+            <p id="info-text-dynamic" style="text-align:left; line-height:1.6; font-size:12px;"></p>
+            <p style="text-align:left; line-height:1.6; font-size:12px; margin-top: 15px;">
                 ДИРЕКТИВА:<br>
                 1. Устраните цифровые шумы.<br>
-                2. После активации таймера аппарат сознания должен быть замкнут на одной целевой задаче.<br>
-                3. По завершении цикла подтвержите статус сессии.
+                2. Аппарат сознания должен быть замкнут на задаче.<br>
+                3. По завершении цикла подтвердите статус.
             </p>
-            <button class="btn" onclick="toggleModal('m-info-2', false)">ПРИНЯТЬ</button>
+            <button class="btn" onclick="toggleModal('m-info-1', false)">ПРИНЯТЬ</button>
         </div>
     </div>
 
     <div id="m-history" class="modal" onclick="toggleModal('m-history', false)">
-        <div class="modal-content" style="border-color:var(--oracle); max-width: 340px;">
-            <h3 style="color:var(--oracle); letter-spacing:2px;">LOG_DATA_STREAM</h3>
+        <div class="modal-content" style="border-color:var(--oracle); max-width: 340px;" onclick="event.stopPropagation()">
+            <h3 id="history-title" style="color:var(--oracle); letter-spacing:2px;">LOG_DATA_STREAM</h3>
             <div id="history-content" style="text-align:left; max-height: 300px; overflow-y: auto; font-size: 11px; font-family: monospace;"></div>
-            <button class="btn btn-blue" style="margin-top:20px;" onclick="clearHistory(event)">CLEAR_LOGS</button>
+            <button id="clear-history-btn" class="btn btn-blue" style="margin-top:20px;">CLEAR_LOGS</button>
+            <button class="btn" style="margin-top:10px; border-color:rgba(0,255,65,0.2)" onclick="toggleModal('m-history', false)">ЗАКРЫТЬ</button>
         </div>
     </div>
 
     <div id="m-fail-detail" class="modal" onclick="toggleModal('m-fail-detail', false)">
-        <div class="modal-content" style="border-color:var(--red)">
+        <div class="modal-content" style="border-color:var(--red)" onclick="event.stopPropagation()">
             <h3 id="fail-title" style="color:var(--red); letter-spacing:2px;"></h3>
             <p id="fail-desc" style="text-align:left; line-height:1.6;"></p>
-            <p style="font-size:10px; opacity:0.5; margin-top:20px;">[ НАЖМИТЕ ДЛЯ ЗАКРЫТИЯ ]</p>
+            <button class="btn btn-red" style="margin-top:20px;" onclick="toggleModal('m-fail-detail', false)">ЗАКРЫТЬ</button>
         </div>
     </div>
 
@@ -281,10 +358,17 @@
         let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
         let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
         let selectedWordsCount = 0, activeWordsOnScreen = 0, focusTimerInterval, lockInterval;
+        let currentActiveProtocol = 'focus';
+
+        const PROTOCOL_DATA = {
+            'focus': { t: 'FOCUS PROTOCOL', d: 'Принудительная синхронизация внимания на одной задаче. Устранение фрагментации сознания.' },
+            'execution': { t: 'EXECUTION PROTOCOL', d: 'Режим высокой производительности. Реализация накопленного потенциала в действие.' },
+            'liquidation': { t: 'LIQUIDATION PROTOCOL', d: 'Полная зачистка незавершенных циклов и когнитивного долга. Максимальный приоритет.' }
+        };
 
         const FAIL_DATA = {
-            'COGNITIVE_ESCAPE': { t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу.', d: 'Стремление мозга избежать когнитивного давления путем переключения на знакомые, легкие действия.' },
-            'INTERNAL_LOOP': { t: '[ INTERNAL_LOOP ] — Зацикленность на мыслях.', d: 'Потеря фокуса из-за внутренней рефлексии или бесконечного обдумывания побочных идей.' },
+            'COGNITIVE_ESCAPE': { t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу.', d: 'Стремление мозга избежать давления путем переключения на знакомые, легкие действия.' },
+            'INTERNAL_LOOP': { t: '[ INTERNAL_LOOP ] — Зацикленность на мыслях.', d: 'Потеря фокуса из-за внутренней рефлексии или обдумывания побочных идей.' },
             'ENV_DISCOMFORT': { t: '[ ENV_DISCOMFORT ] — Дискомфорт среды.', d: 'Внешние физические факторы (шум, свет), подрывающие концентрацию.' },
             'FALSE_URGENCY': { t: '[ FALSE_URGENCY ] — Внезапные важные дела.', d: 'Иллюзия необходимости немедленного решения второстепенных задач.' },
             'RES_EXHAUSTION': { t: '[ RES_EXHAUSTION ] — Истощение ресурса.', d: 'Критическое снижение уровня нейропластичности. Внимание исчерпано.' }
@@ -339,6 +423,58 @@
         function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
         function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 
+        /* Логика выбора времени через раскрытие встроенного меню */
+        function toggleTimeOpts(type) {
+            ['focus', 'execution', 'liquidation'].forEach(t => {
+                if(t !== type) document.getElementById('time-opts-' + t).style.display = 'none';
+            });
+            const opts = document.getElementById('time-opts-' + type);
+            opts.style.display = opts.style.display === 'flex' ? 'none' : 'flex';
+            playSound(600, 0.1);
+        }
+
+        function showInfo(type) {
+            const data = PROTOCOL_DATA[type];
+            document.getElementById('info-text-dynamic').innerText = data.d;
+            toggleModal('m-info-1', true);
+            playSound(500, 0.1);
+        }
+
+        function initProtocol(type, mins) {
+            currentActiveProtocol = type;
+            document.getElementById('time-opts-' + type).style.display = 'none'; // закрываем меню времени
+            startAudioEngine();
+            const endTime = Date.now() + mins * 60 * 1000;
+            localStorage.setItem('focus_end_time', endTime);
+            localStorage.setItem('active_protocol_type', currentActiveProtocol);
+            
+            runFocusUI(endTime);
+        }
+
+        function runFocusUI(endTime) {
+            const protoType = localStorage.getItem('active_protocol_type') || 'focus';
+            sw('s-focus-timer'); 
+            clearInterval(focusTimerInterval);
+            
+            document.getElementById('active-timer-type').innerText = PROTOCOL_DATA[protoType].t;
+            document.getElementById('active-focus-label').style.display = 'block'; 
+            
+            focusTimerInterval = setInterval(() => {
+                const diff = endTime - Date.now();
+                if (diff <= 0) { 
+                    clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); 
+                    document.getElementById('active-focus-label').style.display = 'none'; 
+                    sw('s-focus-res'); 
+                } else {
+                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+                    const timeStr = `00:${m}:${s}`;
+                    document.getElementById('focus-countdown').innerText = timeStr;
+                    document.getElementById('active-focus-label').innerText = timeStr;
+                }
+            }, 1000);
+        }
+
         function setTestLock() {
             const unlockTime = Date.now() + (6 * 60 * 60 * 1000);
             localStorage.setItem('test_unlock_time', unlockTime);
@@ -356,7 +492,6 @@
                     localStorage.removeItem('test_unlock_time');
                     btn.disabled = false; btn.innerText = "ЗАПУСТИТЬ ТЕСТ";
                 } else {
-                    // btn.disabled = true; // ВРЕМЕННО ОТКЛЮЧЕНО ПО ЗАПРОСУ
                     const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
                     const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
                     const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
@@ -366,50 +501,42 @@
         }
 
         function logFocusEvent(status, detail = "") {
-            let logs = JSON.parse(localStorage.getItem('focus_logs') || "[]");
+            const proto = localStorage.getItem('active_protocol_type') || 'focus';
+            let logs = JSON.parse(localStorage.getItem(`logs_${proto}`) || "[]");
             const entry = {
                 time: new Date().toLocaleString('ru-RU', {hour: '2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}),
                 status: status, type: detail
             };
             logs.unshift(entry);
             if(logs.length > 50) logs.pop();
-            localStorage.setItem('focus_logs', JSON.stringify(logs));
+            localStorage.setItem(`logs_${proto}`, JSON.stringify(logs));
         }
 
-        function showHistory() {
-            const logs = JSON.parse(localStorage.getItem('focus_logs') || "[]");
+        function showHistory(type) {
+            const logs = JSON.parse(localStorage.getItem(`logs_${type}`) || "[]");
             const container = document.getElementById('history-content');
+            document.getElementById('history-title').innerText = type.toUpperCase() + "_LOGS";
             container.innerHTML = logs.length === 0 ? "<div style='opacity:0.5'>NO_DATA_FOUND</div>" : 
                 logs.map(l => `<div><span style="color:var(--oracle)">[${l.time}]</span> <span style="color:${l.status==='SUCCESS'?'var(--neon)':'var(--red)'}">${l.status}</span><br><span style="opacity:0.6; font-size:9px;">${l.type}</span></div>`).join('');
+            
+            document.getElementById('clear-history-btn').onclick = () => clearHistory(type);
             toggleModal('m-history', true);
+            playSound(400, 0.1);
         }
 
-        function clearHistory(e) { e.stopPropagation(); if(confirm('ERASE LOGS?')) { localStorage.removeItem('focus_logs'); showHistory(); } }
-
-        function initFocus(mins) {
-            const endTime = Date.now() + mins * 60 * 1000;
-            localStorage.setItem('focus_end_time', endTime);
-            document.getElementById('active-focus-label').style.display = 'block';
-            runFocusUI(endTime);
+        function clearHistory(type) { 
+            if(confirm('ERASE LOGS FOR ' + type.toUpperCase() + '?')) { 
+                localStorage.removeItem(`logs_${type}`); 
+                showHistory(type); 
+            } 
         }
 
-        function runFocusUI(endTime) {
-            sw('s-focus-timer'); clearInterval(focusTimerInterval);
-            focusTimerInterval = setInterval(() => {
-                const diff = endTime - Date.now();
-                if (diff <= 0) { 
-                    clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); 
-                    document.getElementById('active-focus-label').style.display = 'none'; sw('s-focus-res'); 
-                } else {
-                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-                    document.getElementById('focus-countdown').innerText = `00:${m}:${s}`;
-                    document.getElementById('active-focus-label').innerText = `00:${m}:${s}`;
-                }
-            }, 1000);
+        function abortFocus() { 
+            clearInterval(focusTimerInterval); 
+            localStorage.removeItem('focus_end_time'); 
+            document.getElementById('active-focus-label').style.display = 'none'; 
+            sw('s-main'); 
         }
-
-        function abortFocus() { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); document.getElementById('active-focus-label').style.display = 'none'; sw('s-main'); }
         
         function logFocus(status) {
             if(status === 'success') { logFocusEvent('SUCCESS', 'SYNCHRONIZED'); playSound(800, 0.5); sw('s-main'); }
@@ -502,7 +629,7 @@
             document.getElementById('v-type').innerText = type;
             document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
             document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
-            document.getElementById('focus-module').style.display = 'block';
+            document.getElementById('protocols-container').style.display = 'flex'; 
             document.getElementById('id-tag').innerText = type; document.getElementById('id-tag').style.display = 'block';
             document.getElementById('hub-oracle-btn').style.display = 'block';
             setTimeout(() => {
