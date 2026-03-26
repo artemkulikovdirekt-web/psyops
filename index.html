@@ -37,6 +37,7 @@ width: 100%;
 max-width: 280px;
 margin: 10px 0;
 transition: 0.2s;
+box-sizing: border-box; /* Фикс вылезания за края */
 }
 .btn:active { background: rgba(0, 255, 65, 0.2); }
 .btn:disabled { border-color: rgba(0, 255, 65, 0.1); color: rgba(0, 255, 65, 0.2); cursor: default; }
@@ -48,36 +49,59 @@ transition: 0.2s;
 
 #active-focus-label { font-size: 32px; color: var(--neon); margin-bottom: 15px; letter-spacing: 5px; display: none; text-shadow: 0 0 15px var(--neon); font-weight: 100; cursor: pointer; pointer-events: auto; position: relative; z-index: 1001; }
 
-#protocols-container { display: none; flex-direction: column; align-items: center; width: 100%; margin-top: 15px; }
-.proto-wrap { width: 100%; max-width: 260px; margin-bottom: 5px; }
+/* Стили для монолитного блока протоколов */
+#protocols-container { 
+    display: none; 
+    flex-direction: column; 
+    align-items: center; 
+    width: 100%; 
+    max-width: 280px; 
+    margin-top: 15px; 
+    border: 1px solid rgba(0, 255, 65, 0.15); /* Общая рамка монолита */
+    background: rgba(0, 0, 0, 0.4);
+    box-sizing: border-box;
+}
+.proto-wrap { 
+    width: 100%; 
+    margin-bottom: 0; 
+    border-bottom: 1px solid rgba(0, 255, 65, 0.15); /* Разделители внутри монолита */
+}
+.proto-wrap:last-child {
+    border-bottom: none;
+}
 
 .proto-btn {
-margin: 5px 0;
-padding: 16px;
-font-size: 12px;
-letter-spacing: 8px;
-text-shadow: 0 0 8px var(--neon);
-width: 100%;
-border-color: rgba(0, 255, 65, 0.15);
-display: flex;
-flex-direction: column;
-align-items: center;
-opacity: 0.85;
+    margin: 0;
+    padding: 16px;
+    width: 100%;
+    border: none; /* Убираем рамку самой кнопки, так как есть общая у блока */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
-.proto-btn-title { margin-bottom: 12px; pointer-events: none; }
+/* HD-Шрифт, как на активном таймере */
+.proto-btn-title { 
+    letter-spacing: 8px; 
+    opacity: 0.8; 
+    font-size: 12px; 
+    color: var(--neon); 
+    text-shadow: 0 0 8px var(--neon); 
+    margin-bottom: 12px; 
+    pointer-events: none; 
+}
 .proto-btn-actions { display: flex; justify-content: space-between; width: 100%; font-size: 10px; color: var(--oracle); letter-spacing: 1px; text-shadow: none; padding: 0 5px; box-sizing: border-box; }
 .proto-btn-actions span { cursor: pointer; border-bottom: 1px solid rgba(0, 204, 255, 0.3); padding-bottom: 2px; transition: 0.2s; pointer-events: auto; }
 .proto-btn-actions span:hover { color: var(--neon); border-color: var(--neon); }
 
-.time-opts { display: none; justify-content: space-between; gap: 5px; width: 100%; margin-bottom: 15px; }
-.time-opt-btn { margin: 0; padding: 12px 5px; font-size: 12px; letter-spacing: 2px; flex: 1; }
+.time-opts { display: none; justify-content: space-between; gap: 5px; width: 100%; padding: 10px; box-sizing: border-box; background: rgba(0, 255, 65, 0.05); }
+.time-opt-btn { margin: 0; padding: 12px 5px; font-size: 12px; letter-spacing: 2px; flex: 1; border-color: rgba(0, 255, 65, 0.2); }
 
 .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; max-width: 90vw; }
 .cell { aspect-ratio: 1; background: rgba(0, 0, 0, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; font-size: 20px; color: var(--neon); transition: 0.1s; font-weight: 100; }
 .cell.err { background: var(--red) !important; color: #fff; }
 .cell.ok { background: var(--neon) !important; color: #000; }
 
-.briefing { max-width: 340px; width: 90vw; text-align: left; border-left: 1px solid rgba(0, 255, 65, 0.4); padding-left: 20px; margin-bottom: 40px; }
+.briefing { max-width: 340px; width: 90vw; text-align: left; border-left: 1px solid rgba(0, 255, 65, 0.4); padding-left: 20px; margin-bottom: 40px; box-sizing: border-box; }
 .briefing h2 { color: var(--oracle); letter-spacing: 6px; font-weight: 100; font-size: 16px; margin-bottom: 12px; }
 .briefing p { font-size: 13px; line-height: 1.6; opacity: 0.8; letter-spacing: 1px; }
 
@@ -89,9 +113,9 @@ opacity: 0.85;
 .f-circle span { font-size: 18px; color: var(--oracle); margin-top: 5px; }
 
 .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px; box-sizing: border-box; }
-.modal-content { border: 1px solid var(--neon); padding: 25px; width: 100%; max-width: 320px; font-size: 13px; background:#000; color: var(--neon); position: relative; letter-spacing: 1px; }
+.modal-content { border: 1px solid var(--neon); padding: 25px; width: 100%; max-width: 320px; font-size: 13px; background:#000; color: var(--neon); position: relative; letter-spacing: 1px; box-sizing: border-box; }
 
-#v-card { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 370px; background: #000; border: 1px solid rgba(0, 255, 65, 0.6); padding: 30px 20px; z-index: 1000; display: none; flex-direction: column; align-items: center; }
+#v-card { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 370px; background: #000; border: 1px solid rgba(0, 255, 65, 0.6); padding: 30px 20px; z-index: 1000; display: none; flex-direction: column; align-items: center; box-sizing: border-box; }
 #v-card.open { display: flex; }
 .diag-box { position: relative; width: 260px; height: 260px; margin: 10px 0; }
 #diag-canvas { width: 260px; height: 260px; }
@@ -100,7 +124,7 @@ opacity: 0.85;
 .fill { height: 100%; width: 0%; background: var(--neon); transition: 2s cubic-bezier(0.1, 0, 0, 1); }
 
 .ability-badge { border: 1px solid rgba(0, 204, 255, 0.3); padding: 14px; font-size: 11px; margin-top: 15px; cursor: pointer; text-align: center; width: 100%; box-sizing: border-box; color: var(--oracle); letter-spacing: 3px; }
-.ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05); padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); letter-spacing: 1px; }
+.ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05); padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); letter-spacing: 1px; box-sizing: border-box; }
 .sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; font-weight: 100; }
 
 #history-content div { border-bottom: 1px solid rgba(0, 255, 65, 0.1); padding: 5px 0; }
@@ -121,7 +145,7 @@ opacity: 0.85;
 <div class="btn proto-btn" onclick="toggleTimeOpts('focus')">
     <div class="proto-btn-title">FOCUS</div>
     <div class="proto-btn-actions">
-        <span onclick="event.stopPropagation(); showInfo('focus')">[ i ] INFO</span>
+        <span onclick="event.stopPropagation(); showInfo('focus')">(INFO)</span>
         <span onclick="event.stopPropagation(); showHistory('focus')">HISTORY</span>
     </div>
 </div>
@@ -136,7 +160,7 @@ opacity: 0.85;
 <div class="btn proto-btn" onclick="toggleTimeOpts('execution')">
     <div class="proto-btn-title">EXECUTION</div>
     <div class="proto-btn-actions">
-        <span onclick="event.stopPropagation(); showInfo('execution')">[ i ] INFO</span>
+        <span onclick="event.stopPropagation(); showInfo('execution')">(INFO)</span>
         <span onclick="event.stopPropagation(); showHistory('execution')">HISTORY</span>
     </div>
 </div>
@@ -151,7 +175,7 @@ opacity: 0.85;
 <div class="btn proto-btn" onclick="toggleTimeOpts('liquidation')">
     <div class="proto-btn-title">LIQUIDATION</div>
     <div class="proto-btn-actions">
-        <span onclick="event.stopPropagation(); showInfo('liquidation')">[ i ] INFO</span>
+        <span onclick="event.stopPropagation(); showInfo('liquidation')">(INFO)</span>
         <span onclick="event.stopPropagation(); showHistory('liquidation')">HISTORY</span>
     </div>
 </div>
@@ -479,6 +503,7 @@ function selectFail(key) {
 document.querySelectorAll('.f-circle').forEach(el => el.classList.remove('selected-fail'));
 document.getElementById('fail-' + key).classList.add('selected-fail');
 pendingFailReason = key;
+showFailDetail(key); // Показываем описание сбоя
 }
 
 function submitFailAndReturn() {
