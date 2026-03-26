@@ -37,7 +37,7 @@ width: 100%;
 max-width: 280px;
 margin: 10px 0;
 transition: 0.2s;
-box-sizing: border-box; /* Фикс вылезания за края */
+box-sizing: border-box; 
 }
 .btn:active { background: rgba(0, 255, 65, 0.2); }
 .btn:disabled { border-color: rgba(0, 255, 65, 0.1); color: rgba(0, 255, 65, 0.2); cursor: default; }
@@ -49,7 +49,6 @@ box-sizing: border-box; /* Фикс вылезания за края */
 
 #active-focus-label { font-size: 32px; color: var(--neon); margin-bottom: 15px; letter-spacing: 5px; display: none; text-shadow: 0 0 15px var(--neon); font-weight: 100; cursor: pointer; pointer-events: auto; position: relative; z-index: 1001; }
 
-/* Стили для монолитного блока протоколов */
 #protocols-container { 
     display: none; 
     flex-direction: column; 
@@ -57,14 +56,14 @@ box-sizing: border-box; /* Фикс вылезания за края */
     width: 100%; 
     max-width: 280px; 
     margin-top: 15px; 
-    border: 1px solid rgba(0, 255, 65, 0.15); /* Общая рамка монолита */
+    border: 1px solid rgba(0, 255, 65, 0.15); 
     background: rgba(0, 0, 0, 0.4);
     box-sizing: border-box;
 }
 .proto-wrap { 
     width: 100%; 
     margin-bottom: 0; 
-    border-bottom: 1px solid rgba(0, 255, 65, 0.15); /* Разделители внутри монолита */
+    border-bottom: 1px solid rgba(0, 255, 65, 0.15); 
 }
 .proto-wrap:last-child {
     border-bottom: none;
@@ -72,24 +71,34 @@ box-sizing: border-box; /* Фикс вылезания за края */
 
 .proto-btn {
     margin: 0;
-    padding: 16px;
+    padding: 30px 16px 16px 16px; /* Отступ сверху для кнопочек инфо/хистори */
     width: 100%;
-    border: none; /* Убираем рамку самой кнопки, так как есть общая у блока */
+    border: none; 
     display: flex;
     flex-direction: column;
     align-items: center;
+    position: relative; /* Для абсолютного позиционирования угловых кнопок */
 }
-/* HD-Шрифт, как на активном таймере */
 .proto-btn-title { 
     letter-spacing: 8px; 
     opacity: 0.8; 
     font-size: 12px; 
     color: var(--neon); 
     text-shadow: 0 0 8px var(--neon); 
-    margin-bottom: 12px; 
     pointer-events: none; 
 }
-.proto-btn-actions { display: flex; justify-content: space-between; width: 100%; font-size: 10px; color: var(--oracle); letter-spacing: 1px; text-shadow: none; padding: 0 5px; box-sizing: border-box; }
+.proto-btn-actions { 
+    position: absolute; 
+    top: 8px; 
+    left: 10px; 
+    right: 10px; 
+    display: flex; 
+    justify-content: space-between; 
+    font-size: 10px; 
+    color: var(--oracle); 
+    letter-spacing: 1px; 
+    text-shadow: none; 
+}
 .proto-btn-actions span { cursor: pointer; border-bottom: 1px solid rgba(0, 204, 255, 0.3); padding-bottom: 2px; transition: 0.2s; pointer-events: auto; }
 .proto-btn-actions span:hover { color: var(--neon); border-color: var(--neon); }
 
@@ -110,7 +119,7 @@ box-sizing: border-box; /* Фикс вылезания за края */
 .fail-circles { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 340px; }
 .f-circle { width: 85px; height: 85px; border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 8px; text-align: center; padding: 5px; box-sizing: border-box; transition: 0.3s; font-weight: 100; letter-spacing: 1px; }
 .f-circle.selected-fail { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); color: var(--neon); }
-.f-circle span { font-size: 18px; color: var(--oracle); margin-top: 5px; }
+.f-circle span { font-size: 14px; color: var(--oracle); margin-top: 5px; } /* Уменьшил шрифт под длинные слова */
 
 .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px; box-sizing: border-box; }
 .modal-content { border: 1px solid var(--neon); padding: 25px; width: 100%; max-width: 320px; font-size: 13px; background:#000; color: var(--neon); position: relative; letter-spacing: 1px; box-sizing: border-box; }
@@ -128,6 +137,8 @@ box-sizing: border-box; /* Фикс вылезания за края */
 .sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; font-weight: 100; }
 
 #history-content div { border-bottom: 1px solid rgba(0, 255, 65, 0.1); padding: 5px 0; }
+
+.info-text-block { text-align: left; line-height: 1.6; font-size: 12px; margin-bottom: 15px; white-space: pre-wrap; }
 </style>
 </head>
 <body>
@@ -143,11 +154,11 @@ box-sizing: border-box; /* Фикс вылезания за края */
 
 <div class="proto-wrap">
 <div class="btn proto-btn" onclick="toggleTimeOpts('focus')">
-    <div class="proto-btn-title">FOCUS</div>
     <div class="proto-btn-actions">
-        <span onclick="event.stopPropagation(); showInfo('focus')">(INFO)</span>
+        <span onclick="event.stopPropagation(); showInfo('focus')">INFO</span>
         <span onclick="event.stopPropagation(); showHistory('focus')">HISTORY</span>
     </div>
+    <div class="proto-btn-title">FOCUS</div>
 </div>
 <div id="time-opts-focus" class="time-opts">
 <button class="btn time-opt-btn" onclick="initProtocol('focus', 10)">10 M</button>
@@ -158,11 +169,11 @@ box-sizing: border-box; /* Фикс вылезания за края */
 
 <div class="proto-wrap">
 <div class="btn proto-btn" onclick="toggleTimeOpts('execution')">
-    <div class="proto-btn-title">EXECUTION</div>
     <div class="proto-btn-actions">
-        <span onclick="event.stopPropagation(); showInfo('execution')">(INFO)</span>
+        <span onclick="event.stopPropagation(); showInfo('execution')">INFO</span>
         <span onclick="event.stopPropagation(); showHistory('execution')">HISTORY</span>
     </div>
+    <div class="proto-btn-title">EXECUTION</div>
 </div>
 <div id="time-opts-execution" class="time-opts">
 <button class="btn time-opt-btn" onclick="initProtocol('execution', 10)">10 M</button>
@@ -173,11 +184,11 @@ box-sizing: border-box; /* Фикс вылезания за края */
 
 <div class="proto-wrap">
 <div class="btn proto-btn" onclick="toggleTimeOpts('liquidation')">
-    <div class="proto-btn-title">LIQUIDATION</div>
     <div class="proto-btn-actions">
-        <span onclick="event.stopPropagation(); showInfo('liquidation')">(INFO)</span>
+        <span onclick="event.stopPropagation(); showInfo('liquidation')">INFO</span>
         <span onclick="event.stopPropagation(); showHistory('liquidation')">HISTORY</span>
     </div>
+    <div class="proto-btn-title">LIQUIDATION</div>
 </div>
 <div id="time-opts-liquidation" class="time-opts">
 <button class="btn time-opt-btn" onclick="initProtocol('liquidation', 10)">10 M</button>
@@ -255,38 +266,30 @@ box-sizing: border-box; /* Фикс вылезания за края */
 <div id="s-focus-res" class="screen">
 <h2 style="letter-spacing:5px;">ЦИКЛ ЗАВЕРШЕН</h2>
 <button class="btn" style="border-color:var(--neon)" onclick="logFocus('success')">СИНХРОНИЗАЦИЯ УСПЕШНА</button>
-<button class="btn btn-red" onclick="sw('s-focus-fail')">КРИТИЧЕСКИЙ СБОЙ</button>
+<button class="btn btn-red" onclick="triggerFailScreen()">КРИТИЧЕСКИЙ СБОЙ</button>
 </div>
 
 <div id="s-focus-fail" class="screen">
 <h2 style="color:var(--red); letter-spacing:5px; margin-bottom:30px;">АНАЛИЗ СБОЯ</h2>
-<div class="fail-circles">
-<div class="f-circle" id="fail-COGNITIVE_ESCAPE" onclick="selectFail('COGNITIVE_ESCAPE')">ESCAPE<span id="g1"></span></div>
-<div class="f-circle" id="fail-INTERNAL_LOOP" onclick="selectFail('INTERNAL_LOOP')">LOOP<span id="g2"></span></div>
-<div class="f-circle" id="fail-ENV_DISCOMFORT" onclick="selectFail('ENV_DISCOMFORT')">ENV<span id="g3"></span></div>
-<div class="f-circle" id="fail-FALSE_URGENCY" onclick="selectFail('FALSE_URGENCY')">URGENCY<span id="g4"></span></div>
-<div class="f-circle" id="fail-RES_EXHAUSTION" onclick="selectFail('RES_EXHAUSTION')">RES<span id="g5"></span></div>
+<div class="fail-circles" id="fail-circles-container">
 </div>
 <button class="btn" style="margin-top:40px; border-color:rgba(0,255,65,0.2)" onclick="submitFailAndReturn()">ВЕРНУТЬСЯ</button>
 </div>
 
 <div id="m-info-1" class="modal" onclick="toggleModal('m-info-1', false)">
 <div class="modal-content" style="border-color:var(--oracle)" onclick="event.stopPropagation()">
-<h3 style="color:var(--oracle); letter-spacing:2px;">PROTOCOL_INFO</h3>
-<p id="info-text-dynamic" style="text-align:left; line-height:1.6; font-size:12px;"></p>
-<p style="text-align:left; line-height:1.6; font-size:12px; margin-top: 15px;">
-ДИРЕКТИВА:<br>
-1. Устраните цифровые шумы.<br>
-2. Аппарат сознания должен быть замкнут на задаче.<br>
-3. По завершении цикла подтвердите статус.
-</p>
-<button class="btn" onclick="toggleModal('m-info-1', false)">ПРИНЯТЬ</button>
+<h3 style="color:var(--oracle); letter-spacing:2px; margin-top: 0;">PROTOCOL_INFO</h3>
+<div id="info-page-1" class="info-text-block"></div>
+<div id="info-page-2" class="info-text-block" style="display:none; color: var(--neon);"></div>
+
+<button id="btn-info-next" class="btn btn-blue" onclick="switchInfoPage(2)">ДАЛЕЕ</button>
+<button id="btn-info-accept" class="btn" style="display:none;" onclick="toggleModal('m-info-1', false)">ПРИНЯТЬ</button>
 </div>
 </div>
 
 <div id="m-history" class="modal" onclick="toggleModal('m-history', false)">
 <div class="modal-content" style="border-color:var(--oracle); max-width: 340px;" onclick="event.stopPropagation()">
-<h3 id="history-title" style="color:var(--oracle); letter-spacing:2px;">LOG_DATA_STREAM</h3>
+<h3 id="history-title" style="color:var(--oracle); letter-spacing:2px; margin-top: 0;">LOG_DATA_STREAM</h3>
 <div id="history-content" style="text-align:left; max-height: 300px; overflow-y: auto; font-size: 11px; font-family: monospace;"></div>
 <button id="clear-history-btn" class="btn btn-blue" style="margin-top:20px;">CLEAR_LOGS</button>
 <button class="btn" style="margin-top:10px; border-color:rgba(0,255,65,0.2)" onclick="toggleModal('m-history', false)">ЗАКРЫТЬ</button>
@@ -295,7 +298,7 @@ box-sizing: border-box; /* Фикс вылезания за края */
 
 <div id="m-fail-detail" class="modal" onclick="toggleModal('m-fail-detail', false)">
 <div class="modal-content" style="border-color:var(--red)" onclick="event.stopPropagation()">
-<h3 id="fail-title" style="color:var(--red); letter-spacing:2px;"></h3>
+<h3 id="fail-title" style="color:var(--red); letter-spacing:2px; margin-top: 0;"></h3>
 <p id="fail-desc" style="text-align:left; line-height:1.6;"></p>
 <button class="btn btn-red" style="margin-top:20px;" onclick="toggleModal('m-fail-detail', false)">ЗАКРЫТЬ</button>
 </div>
@@ -321,17 +324,48 @@ let currentActiveProtocol = 'focus';
 let pendingFailReason = null;
 
 const PROTOCOL_DATA = {
-'focus': { t: 'FOCUS PROTOCOL', d: 'Принудительная синхронизация внимания на одной задаче. Устранение фрагментации сознания.' },
-'execution': { t: 'EXECUTION PROTOCOL', d: 'Режим высокой производительности. Реализация накопленного потенциала в действие.' },
-'liquidation': { t: 'LIQUIDATION PROTOCOL', d: 'Полная зачистка незавершенных циклов и когнитивного долга. Максимальный приоритет.' }
+'focus': { t: 'FOCUS PROTOCOL' },
+'execution': { t: 'EXECUTION PROTOCOL' },
+'liquidation': { t: 'LIQUIDATION PROTOCOL' }
 };
 
-const FAIL_DATA = {
-'COGNITIVE_ESCAPE': { t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу.', d: 'Стремление мозга избежать давления путем переключения на знакомые, легкие действия.' },
-'INTERNAL_LOOP': { t: '[ INTERNAL_LOOP ] — Зацикленность на мыслях.', d: 'Потеря фокуса из-за внутренней рефлексии или обдумывания побочных идей.' },
-'ENV_DISCOMFORT': { t: '[ ENV_DISCOMFORT ] — Дискомфорт среды.', d: 'Внешние физические факторы (шум, свет), подрывающие концентрацию.' },
-'FALSE_URGENCY': { t: '[ FALSE_URGENCY ] — Внезапные важные дела.', d: 'Иллюзия необходимости немедленного решения второстепенных задач.' },
-'RES_EXHAUSTION': { t: '[ RES_EXHAUSTION ] — Истощение ресурса.', d: 'Критическое снижение уровня нейропластичности. Внимание исчерпано.' }
+const PROTOCOL_INFO = {
+'focus': {
+    p1: "FOCUS_PROTOCOL — это режим принудительной синхронизации когнитивного процесса.\n\nВнимание — это единственный конечный ресурс вашей нейронной сети. Любое внешнее отвлечение вызывает фрагментацию сознания, требуя до 23 минут на восстановление исходной глубины погружения.",
+    p2: "ДИРЕКТИВА:\n> 1. Устраните цифровые шумы.\n> 2. После активации таймера аппарат сознания должен быть замкнут на одной целевой задаче. Любое переключение внимания — критический сбой.\n> 3. По завершении цикла подтвердите статус сессии."
+},
+'liquidation': {
+    p1: "LIQUIDATION_PROTOCOL — это временная стерилизация нейронных путей через осознанный дефицит и выжигание связей, ведущих к деградации.\n\nРежим принудительного очищения системы от деструктивных паттернов и дофаминовых зависимостей. Полная блокировка внешних стимуляторов и изоляция когнитивного ядра от суррогатных источников удовольствия.",
+    p2: "ДИРЕКТИВА:\n> 1. Физически заблокируйте доступ ко всем триггерам и источникам быстрого дофамина.\n> 2. После запуска таймера вводится строгий карантин. Любой возврат к старой привычке или прием веществ (алкоголь/стимуляторы) — это критический сбой системы.\n> 3. Цикл засчитывается только в том случае, если таймер дошел до нуля без единого нарушения."
+},
+'execution': {
+    p1: "EXECUTION_PROTOCOL — это режим безусловного исполнения и материализации кода в продукт.\n\nИгнорирование вторичных запросов и концентрация всей системной мощности на одном векторе. Отмена возможности отката системы до завершения цикла. Реализация приоритетного алгоритма, где любая ошибка недопустима.",
+    p2: "ДИРЕКТИВА:\n> 1. Устраните цифровые шумы.\n> 2. После активации таймера аппарат сознания должен быть жестко замкнут на реализации одной приоритетной задачи. Любое переключение внимания или отклонение от маршрута — критический сбой.\n> 3. По завершении цикла подтвердите статус сессии."
+}
+};
+
+const PROTOCOL_FAILS = {
+'focus': {
+    'COGNITIVE_ESCAPE': { short: 'ESCAPE', t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу', d: 'Стремление мозга избежать когнитивного давления путем переключения на знакомые, легкие процессы.' },
+    'INTERNAL_LOOP': { short: 'LOOP', t: '[ INTERNAL_LOOP ] — Зацикленность на мыслях', d: 'Потеря фокуса из-за внутренней рефлексии или бесконечного обдумывания побочных идей, не связанных с задачей.' },
+    'ENV_DISCOMFORT': { short: 'ENV', t: '[ ENV_DISCOMFORT ] — Дискомфорт среды', d: 'Внешние физические факторы (шум, свет, эргономика), подрывающие стабильность концентрации.' },
+    'FALSE_URGENCY': { short: 'URGENCY', t: '[ FALSE_URGENCY ] — Внезапные важные дела', d: 'Иллюзия необходимости немедленного решения второстепенных задач, возникающая как форма саботажа.' },
+    'RES_EXHAUSTION': { short: 'RES', t: '[ RES_EXHAUSTION ] — Истощение ресурса', d: 'Критическое снижение уровня нейропластичности и глюкозы, делающее дальнейшее удержание фокуса невозможным.' }
+},
+'liquidation': {
+    'IMPULSE_CONTROL_FAILURE': { short: 'IMPULSE', t: '[ IMPULSE_CONTROL_FAILURE ] — Отказ контроля импульсов', d: 'Критическая ошибка префронтальной коры, повлекшая возврат в деструктивный паттерн. Ситуация, когда ты осознаешь вред действия, но не можешь подавить возникший физический порыв.' },
+    'EXTERNAL_SECTOR_CORRUPTION': { short: 'EXTERNAL', t: '[ EXTERNAL_SECTOR_CORRUPTION ] — Заражение внешнего сектора', d: 'Деструктивное влияние окружения. Нахождение в локации с высоким индексом триггеров или контакт с носителями старых паттернов, взломавший защиту протокола.' },
+    'NEURAL_INTOXICATION': { short: 'TOXIC', t: '[ NEURAL_INTOXICATION ] — Интоксикация нейросети', d: 'Работа системы в состоянии химической интоксикации. Снижение фильтрации входящих импульсов и деградация префронтального контроля из-за прямого вмешательства в софт мозга.' },
+    'IDENTITY_DISSOLUTION': { short: 'IDENTITY', t: '[ IDENTITY_DISSOLUTION ] — Растворение идентификации', d: 'Системное забывание целевой директивы приведшая к автоматическому выполнению старого паттерна.' },
+    'HYPERBOLIC_DISCOUNTING_CRASH': { short: 'CRASH', t: '[ HYPERBOLIC_DISCOUNTING_CRASH ] — Крах обесценивания', d: 'Резкая потеря значимости будущего результата перед избыточным весом мгновенного вознаграждения, провоцирующая добровольный выход из протокола.' }
+},
+'execution': {
+    'PRIORITY_CONFLICT': { short: 'PRIORITY', t: '[ PRIORITY_CONFLICT ] — Конфликт приоритетов', d: 'Внезапная капитуляция переключением внимания на задачи с более высоким (как вам кажется) уровнем критичности.' },
+    'ENERGY_DRAIN_FAULT': { short: 'ENERGY', t: '[ ENERGY_DRAIN_FAULT ] — Падение уровня системной энергии', d: 'Истощение ментального ресурса оператора до момента верификации цели.' },
+    'ALGORITHM_INEFFICIENCY': { short: 'ALGORITHM', t: '[ ALGORITHM_INEFFICIENCY ] — Низкая эффективность алгоритма', d: 'Выбранный метод решения задачи оказался неоптимальным, что привело к потере времени.' },
+    'SCOPE_CREEP_DETECTION': { short: 'SCOPE', t: '[ SCOPE_CREEP_DETECTION ] — Несанкционированное расширение границ', d: 'В процессе исполнения были добавлены побочные подзадачи, парализовавшие основной поток.' },
+    'RESOURCE_MISCALCULATION': { short: 'RESOURCE', t: '[ RESOURCE_MISCALCULATION ] — Неверный расчет временного ресурса', d: 'Объем задачи превышает установленный лимит рабочего цикла.' }
+}
 };
 
 const PROFILES = {
@@ -393,10 +427,26 @@ playSound(600, 0.1);
 }
 
 function showInfo(type) {
-const data = PROTOCOL_DATA[type];
-document.getElementById('info-text-dynamic').innerText = data.d;
+const data = PROTOCOL_INFO[type];
+document.getElementById('info-page-1').innerText = data.p1;
+document.getElementById('info-page-2').innerText = data.p2;
+switchInfoPage(1);
 toggleModal('m-info-1', true);
 playSound(500, 0.1);
+}
+
+function switchInfoPage(page) {
+if(page === 1) {
+    document.getElementById('info-page-1').style.display = 'block';
+    document.getElementById('info-page-2').style.display = 'none';
+    document.getElementById('btn-info-next').style.display = 'block';
+    document.getElementById('btn-info-accept').style.display = 'none';
+} else {
+    document.getElementById('info-page-1').style.display = 'none';
+    document.getElementById('info-page-2').style.display = 'block';
+    document.getElementById('btn-info-next').style.display = 'none';
+    document.getElementById('btn-info-accept').style.display = 'block';
+}
 }
 
 function initProtocol(type, mins) {
@@ -499,11 +549,24 @@ function logFocus(status) {
 if(status === 'success') { logFocusEvent('SUCCESS', 'SYNCHRONIZED'); playSound(800, 0.5); sw('s-main'); }
 }
 
+function triggerFailScreen() {
+const proto = localStorage.getItem('active_protocol_type') || 'focus';
+const fails = PROTOCOL_FAILS[proto];
+const container = document.getElementById('fail-circles-container');
+container.innerHTML = '';
+let i = 1;
+for (const [key, data] of Object.entries(fails)) {
+    container.innerHTML += `<div class="f-circle" id="fail-${key}" onclick="selectFail('${key}')">${data.short}<span id="g${i}"></span></div>`;
+    i++;
+}
+sw('s-focus-fail');
+}
+
 function selectFail(key) {
 document.querySelectorAll('.f-circle').forEach(el => el.classList.remove('selected-fail'));
 document.getElementById('fail-' + key).classList.add('selected-fail');
 pendingFailReason = key;
-showFailDetail(key); // Показываем описание сбоя
+showFailDetail(key); 
 }
 
 function submitFailAndReturn() {
@@ -515,8 +578,10 @@ sw('s-main');
 }
 
 function showFailDetail(key) {
+const proto = localStorage.getItem('active_protocol_type') || 'focus';
+const data = PROTOCOL_FAILS[proto][key];
 document.getElementById('fail-title').innerText = key;
-document.getElementById('fail-desc').innerHTML = `<b>${FAIL_DATA[key].t}</b><br><br>${FAIL_DATA[key].d}`;
+document.getElementById('fail-desc').innerHTML = `<b>${data.t}</b><br><br>${data.d}`;
 toggleModal('m-fail-detail', true);
 }
 
