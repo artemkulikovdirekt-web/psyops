@@ -18,7 +18,7 @@ overflow-x: hidden; touch-action: none;
 canvas#m-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.55; z-index: 0; pointer-events: none; }
 .screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; text-align: center;
 padding: 20px; box-sizing: border-box; }
-.active { display: flex; }
+.active { display: flex !important; }
 .btn {
 background: transparent;
 border: 1px solid rgba(0, 255, 65, 0.4);
@@ -117,10 +117,12 @@ align-items: center; justify-content: center; cursor: pointer; font-size: 8px; t
 .modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px; box-sizing: border-box; }
 .modal-content { border: 1px solid var(--neon); padding: 25px; width: 100%; max-width: 320px; font-size: 13px; background:#000; color: var(--neon); position: relative;
 letter-spacing: 1px; box-sizing: border-box; }
-#v-card { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 370px; background: #000;
-border: 1px solid rgba(0, 255, 65, 0.6); padding: 30px 20px; z-index: 1000; display: none; flex-direction: column; align-items: center; box-sizing: border-box;
+
+.v-card-content { width: 92%; max-width: 370px; background: rgba(0, 0, 0, 0.95);
+border: 1px solid rgba(0, 255, 65, 0.6); padding: 30px 20px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box;
+box-shadow: 0 0 20px rgba(0, 255, 65, 0.15);
 }
-#v-card.open { display: flex; }
+
 .diag-box { position: relative; width: 260px; height: 260px; margin: 10px 0; }
 #diag-canvas { width: 260px; height: 260px; }
 .stat-row { width: 100%; margin: 8px 0; font-size: 9px; letter-spacing: 2px; opacity: 0.8; text-align: left; }
@@ -341,15 +343,19 @@ background: rgba(0,0,0,0.7); width: 100%; max-width: 300px; box-sizing: border-b
 <button class="btn btn-red" style="margin-top:20px;" onclick="toggleModal('m-fail-detail', false)">ЗАКРЫТЬ</button>
 </div>
 </div>
+
 <div id="v-card" class="screen">
-<h1 id="v-type" style="letter-spacing: 10px; font-weight: 100; margin: 0; color: var(--neon); text-shadow: 0 0 10px var(--neon);"></h1>
-<div class="diag-box"><canvas id="diag-canvas"></canvas></div>
-<div class="stat-row">ОТКЛИК <div class="bar"><div id="v-bar-react" class="fill" style="background:var(--oracle)"></div></div></div>
-<div class="stat-row">ПАМЯТЬ <div class="bar"><div id="v-bar-mem" class="fill" style="background:var(--oracle)"></div></div></div>
-<div class="ability-badge" onclick="toggleAbility()">МОДУЛЬ: <span id="v-ability-name"></span></div>
-<div id="v-ability-desc" class="ability-info"></div>
-<button class="btn" style="margin-top: 20px;" onclick="backToHub()">ВЕРНУТЬСЯ</button>
+    <div class="v-card-content">
+        <h1 id="v-type" style="letter-spacing: 10px; font-weight: 100; margin: 0; color: var(--neon); text-shadow: 0 0 10px var(--neon);"></h1>
+        <div class="diag-box"><canvas id="diag-canvas"></canvas></div>
+        <div class="stat-row">ОТКЛИК <div class="bar"><div id="v-bar-react" class="fill" style="background:var(--oracle)"></div></div></div>
+        <div class="stat-row">ПАМЯТЬ <div class="bar"><div id="v-bar-mem" class="fill" style="background:var(--oracle)"></div></div></div>
+        <div class="ability-badge" onclick="toggleAbility()">МОДУЛЬ: <span id="v-ability-name"></span></div>
+        <div id="v-ability-desc" class="ability-info"></div>
+        <button class="btn" style="margin-top: 20px;" onclick="sw('s-main')">ВЕРНУТЬСЯ</button>
+    </div>
 </div>
+
 <div id="s-train-hub" class="screen">
 <h1 style="letter-spacing:10px; color:var(--neon); text-shadow:0 0 10px var(--neon);">TRAINING MODULE</h1>
 <button class="btn" onclick="tr_openDiff('react')">SPEED</button>
@@ -405,7 +411,6 @@ background: rgba(0,0,0,0.7); width: 100%; max-width: 300px; box-sizing: border-b
 </div>
 </div>
 <script>
-// ОСНОВНОЙ КОД PSY-OPS
 let aCtx, masterGain, thrillerFilter, lfo;
 let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
 let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
@@ -413,6 +418,7 @@ let selectedWordsCount = 0, activeWordsOnScreen = 0, focusTimerInterval, lockInt
 let currentActiveProtocol = 'focus';
 let pendingFailReason = null;
 let typeInterval;
+let activeQuestions = [];
 
 const PROTOCOL_DATA = {
 'focus': { t: 'FOCUS PROTOCOL' },
@@ -707,15 +713,24 @@ document.getElementById('fail-title').innerText = key;
 document.getElementById('fail-desc').innerHTML = `<b>${data.t}</b><br><br>${data.d}`;
 toggleModal('m-fail-detail', true);
 }
-function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('b-intro'); }
+
+// Измененная логика на 10 рандомных вопросов
+function startSequence() { 
+    startAudioEngine(); 
+    curQ = 0; 
+    score = {}; 
+    activeQuestions = [...QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10);
+    sw('b-intro'); 
+}
+
 function renderQ() {
-const q = QUESTIONS[curQ];
+const q = activeQuestions[curQ];
 document.getElementById('q-text').innerText = q.q;
 const box = document.getElementById('q-options'); box.innerHTML = "";
 q.o.forEach(o => {
 const b = document.createElement('button'); b.className = "btn"; b.innerText = o.t;
 b.onclick = () => { playSound(400 + curQ*50, 0.1); score[o.a] = (score[o.a] || 0) + 1; curQ++;
-if(curQ < QUESTIONS.length) renderQ(); else sw('b-react'); };
+if(curQ < activeQuestions.length) renderQ(); else sw('b-react'); };
 box.appendChild(b);
 });
 }
@@ -777,7 +792,7 @@ let type = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "
 currentProfile = type; isDone = true;
 localStorage.setItem('psy_profile', type); localStorage.setItem('psy_done', 'true');
 setTestLock(); updateUIProfile(type);
-document.getElementById('v-card').classList.add('open'); renderDiagnostic(type);
+sw('v-card'); renderDiagnostic(type);
 }
 function updateUIProfile(type) {
 document.getElementById('v-type').innerText = type;
@@ -806,7 +821,7 @@ document.getElementById('protocols-container').style.display = 'flex';
 document.getElementById('id-tag').innerText = type; document.getElementById('id-tag').style.display = 'block';
 document.getElementById('hub-oracle-btn').style.display = 'block';
 }
-function backToHub() { sw('s-main'); }
+
 function showStoredProfile() { if(isDone) { sw('v-card'); renderDiagnostic(currentProfile); } }
 function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
 function drawShape(ctx, type, x, y, size, frame, active) {
@@ -833,6 +848,7 @@ const hC = document.getElementById('hub-canvas'); const hX = hC.getContext('2d')
 hC.width = 190; hC.height = 190; let hFrame = 0;
 function animateHub() { hX.clearRect(0,0,190,190); if(isDone && currentProfile) drawShape(hX, currentProfile, 95, 95, 60, hFrame, true); hFrame += 0.02; requestAnimationFrame(animateHub); }
 animateHub();
+
 let diagAnimId;
 function renderDiagnostic(activeType) {
 const c = document.getElementById('diag-canvas'); const ctx = c.getContext('2d'); c.width = 260; c.height = 260;
@@ -961,7 +977,6 @@ if(tr_curGame === 'anomaly') title = "ANOMALIES PURGED";
 document.getElementById('tr-res-title').innerText = title;
 tr_saveResult(elapsedTime, tr_currentErrors);
 sw('s-train-result');
-// Обновляем статистику главного экрана
 updateUIProfile(currentProfile);
 }
 function tr_saveResult(elapsedTime, errors) {
