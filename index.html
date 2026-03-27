@@ -120,7 +120,7 @@ letter-spacing: 1px; box-sizing: border-box; }
 
 .v-card-content { width: 92%; max-width: 370px; background: rgba(0, 0, 0, 0.95);
 border: 1px solid rgba(0, 255, 65, 0.6); padding: 30px 20px; display: flex; flex-direction: column; align-items: center; box-sizing: border-box;
-box-shadow: 0 0 20px rgba(0, 255, 65, 0.15);
+box-shadow: 0 0 20px rgba(0, 255, 65, 0.15); max-height: 95vh; overflow-y: auto;
 }
 
 .diag-box { position: relative; width: 260px; height: 260px; margin: 10px 0; }
@@ -130,8 +130,8 @@ box-shadow: 0 0 20px rgba(0, 255, 65, 0.15);
 .fill { height: 100%; width: 0%; background: var(--neon); transition: 2s cubic-bezier(0.1, 0, 0, 1); }
 .ability-badge { border: 1px solid rgba(0, 204, 255, 0.3); padding: 14px; font-size: 11px; margin-top: 15px; cursor: pointer; text-align: center;
 width: 100%; box-sizing: border-box; color: var(--oracle); letter-spacing: 3px; }
-.ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05);
-padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); letter-spacing: 1px; box-sizing: border-box; }
+.ability-info { display: block; font-size: 11px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05);
+padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); letter-spacing: 1px; box-sizing: border-box; width: 100%; min-height: 80px; }
 .sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; font-weight: 100; }
 #history-content div { border-bottom: 1px solid rgba(0, 255, 65, 0.1); padding: 5px 0; }
 .info-text-block { text-align: left; line-height: 1.6; font-size: 12px; margin-bottom: 15px; white-space: pre-wrap; }
@@ -190,11 +190,23 @@ background: rgba(0,0,0,0.7); width: 100%; max-width: 300px; box-sizing: border-b
 }
 @keyframes blink { 50% { opacity: 0; } }
 
-/* CSS ТРЕНАЖЕРОВ КОНЕЦ */
+/* Скрытая кнопка разблокировки теста */
+#secret-unlock {
+    position: fixed;
+    top: 40%;
+    right: 0;
+    width: 50px;
+    height: 100px;
+    z-index: 9999;
+    cursor: default;
+}
 </style>
 </head>
 <body>
 <canvas id="m-bg"></canvas>
+
+<div id="secret-unlock" onclick="localStorage.removeItem('test_unlock_time'); updateLockUI();"></div>
+
 <div id="s-main" class="screen active">
 <div id="active-focus-label" onclick="sw('s-focus-timer')">00:00</div>
 <div class="hub-container" onclick="showStoredProfile()">
@@ -348,10 +360,19 @@ background: rgba(0,0,0,0.7); width: 100%; max-width: 300px; box-sizing: border-b
     <div class="v-card-content">
         <h1 id="v-type" style="letter-spacing: 10px; font-weight: 100; margin: 0; color: var(--neon); text-shadow: 0 0 10px var(--neon);"></h1>
         <div class="diag-box"><canvas id="diag-canvas"></canvas></div>
+        
         <div class="stat-row">ОТКЛИК <div class="bar"><div id="v-bar-react" class="fill" style="background:var(--oracle)"></div></div></div>
         <div class="stat-row">ПАМЯТЬ <div class="bar"><div id="v-bar-mem" class="fill" style="background:var(--oracle)"></div></div></div>
-        <div class="ability-badge" onclick="toggleAbility()">МОДУЛЬ: <span id="v-ability-name"></span></div>
-        <div id="v-ability-desc" class="ability-info"></div>
+        
+        <div style="display:flex; flex-wrap:wrap; gap:5px; justify-content:space-between; width:100%; margin-top:15px;">
+            <button class="btn btn-blue" style="width:48%; margin:0; padding:10px 5px; font-size:10px;" onclick="showProfileDetail('spec')">СПЕЦИФИКАЦИЯ</button>
+            <button class="btn btn-blue" style="width:48%; margin:0; padding:10px 5px; font-size:10px;" onclick="showProfileDetail('mech')">МЕХАНИКА</button>
+            <button class="btn btn-blue" style="width:48%; margin:0; padding:10px 5px; font-size:10px; margin-top:5px;" onclick="showProfileDetail('func')">ФУНКЦИЯ</button>
+            <button class="btn btn-blue" style="width:48%; margin:0; padding:10px 5px; font-size:10px; margin-top:5px;" onclick="showProfileDetail('vuln')">УЯЗВИМОСТЬ</button>
+        </div>
+
+        <div id="v-profile-desc" class="ability-info"></div>
+
         <button class="btn" style="margin-top: 20px;" onclick="sw('s-main')">ВЕРНУТЬСЯ</button>
     </div>
 </div>
@@ -474,12 +495,34 @@ const PROTOCOL_FAILS = {
 }
 }
 };
-const PROFILES = {
-"АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий." },
-"ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов." },
-"АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме." },
-"СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в контурах." }
+
+const PROFILE_DETAILS = {
+"СКАНЕР": {
+    spec: "Глобальный мониторинг и обнаружение аномалий.",
+    mech: "Поиск обходных путей, скрытых лазеек и незадокументированных возможностей системы.",
+    func: "Сбор данных по всему доступному полю без глубокого погружения в конкретный узел. Мгновенное переключение внимания между разнородными объектами.",
+    vuln: "Высокий уровень шума и фрагментация внимания."
+},
+"АНАЛИТИК": {
+    spec: "Глубинная обработка и декомпозиция данных.",
+    mech: "Выделение узкого сектора информации и его полная детализация. Поиск логических закономерностей, циклов и системных ошибок внутри выбранной области.",
+    func: "Извлечение точного смысла из сырого массива данных. Работа с причинно-следственными связями.",
+    vuln: "Потеря контекста из-за чрезмерной фиксации на деталях."
+},
+"АРХИТЕКТОР": {
+    spec: "Проектирование структур и системных связей.",
+    mech: "Создание каркаса и определение правил взаимодействия элементов. Продумывание детальной формы и иерархии процессов.",
+    func: "Стратегическое планирование и удержание целостной модели системы. Формирование алгоритмов, по которым работают другие модули.",
+    vuln: "Статичность и низкая адаптивность созданных жестких конструкций."
+},
+"ИМПУЛЬС": {
+    spec: "Генерация кинетической энергии и запуск процессов.",
+    mech: "Обеспечение динамики и создание силового заряда для реализации любого действия. Прямое давление на процесс для преодоления сопротивления.",
+    func: "Наполнение системы ресурсом для перехода из состояния покоя в движение. Мгновенная активация выбранного вектора.",
+    vuln: "Хаотичность вектора и быстрая истощаемость энергетического ресурса."
+}
 };
+
 const QUESTIONS = [
 {q: "Критическая ошибка в ядре. Твои действия?", o: [{t: "Полный разбор логов", a: "АНАЛИТИК"}, {t: "Жесткий перезапуск", a: "ИМПУЛЬС"}]},
 {q: "Обнаружена закрытая зона без видимых точек входа.", o: [{t: "Сканировать периметр", a: "СКАНЕР"}, {t: "Свой алгоритм взлома", a: "АРХИТЕКТОР"}]},
@@ -516,24 +559,24 @@ const SYNC_WORDS = [{t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a:
 
 const ORACLE_DATA = {
 "СКАНЕР": [
-    "(Позитивный) Твоя способность находить скрытые лазейки сейчас держит систему на плаву. Ты видишь те обходные пути, которые остальные даже не замечают. Продолжай сканирование, ответ где-то рядом.",
-    "(Нейтральный) Обнаружены новые директории. Периферийное зрение работает в штатном режиме. Сбор данных продолжается, но старайся не терять из виду основную цель.",
-    "(Негативный) Слишком много открытых потоков. Ты распыляешь внимание на мусорный код и игнорируешь главную задачу. Сверни лишние процессы, пока не потерял фокус окончательно."
+    "Твоя способность находить скрытые лазейки сейчас держит систему на плаву. Ты видишь те обходные пути, которые остальные даже не замечают. Продолжай сканирование, ответ где-то рядом.",
+    "Обнаружены новые директории. Периферийное зрение работает в штатном режиме. Сбор данных продолжается, но старайся не терять из виду основную цель.",
+    "Слишком много открытых потоков. Ты распыляешь внимание на мусорный код и игнорируешь главную задачу. Сверни лишние процессы, пока не потерял фокус окончательно."
 ],
 "АНАЛИТИК": [
-    "(Позитивный) Идеальная точность. Твоя логическая цепь выстроена безупречно, и декомпозиция данных прошла без ошибок. Механизм готов, осталось только запустить алгоритм в дело.",
-    "(Нейтральный) Сбор и обработка информации завершены. Система ожидает вывода. Заканчивай копаться во входящих данных и переходи от декомпозиции к итоговому синтезу.",
-    "(Негативный) Критический перегруз. Ты застрял в бесконечном цикле расчетов и парализовал свои же действия. Хватит анализировать каждую переменную, ты просто теряешь время."
+    "Идеальная точность. Твоя логическая цепь выстроена безупречно, и декомпозиция данных прошла без ошибок. Механизм готов, осталось только запустить алгоритм в дело.",
+    "Сбор и обработка информации завершены. Система ожидает вывода. Заканчивай копаться во входящих данных и переходи от декомпозиции к итоговому синтезу.",
+    "Критический перегруз. Ты застрял в бесконечном цикле расчетов и парализовал свои же действия. Хватит анализировать каждую переменную, ты просто теряешь время."
 ],
 "АРХИТЕКТОР": [
-    "(Позитивный) Фундамент заложен грамотно. Твоя схема абсолютно устойчива к внешнему хаосу и выдержит любую нагрузку. Ты создал отличную структуру, запускай процесс.",
-    "(Нейтральный) Каркас системы зафиксирован. Внутренние правила прописаны, параметры в норме. Ожидается интеграция следующих модулей для завершения постройки.",
-    "(Негативный) Твой чертеж слишком жесткий и статичный. В реальных условиях малейшее отклонение от плана сломает эту конструкцию пополам. Системе не хватает гибкости."
+    "Фундамент заложен грамотно. Твоя схема абсолютно устойчива к внешнему хаосу и выдержит любую нагрузку. Ты создал отличную структуру, запускай процесс.",
+    "Каркас системы зафиксирован. Внутренние правила прописаны, параметры в норме. Ожидается интеграция следующих модулей для завершения постройки.",
+    "Твой чертеж слишком жесткий и статичный. В реальных условиях малейшее отклонение от плана сломает эту конструкцию пополам. Системе не хватает гибкости."
 ],
 "ИМПУЛЬС": [
-    "(Позитивный) Отличный разгон. Твоя чистая динамика сейчас пробивает любые барьеры и сопротивление. Ты дал системе тот самый заряд, которого ей не хватало для рывка.",
-    "(Нейтральный) Кинетический заряд стабилен. Энергия накоплена и готова к мгновенному выбросу по первому требованию. Держи готовность для старта.",
-    "(Негативный) Вектор потерян. Твой рывок превратился в хаос, ты бьешь вслепую и сжигаешь ресурс вхолостую. Сбавь обороты, пока не выжег собственные нейроны."
+    "Отличный разгон. Твоя чистая динамика сейчас пробивает любые барьеры и сопротивление. Ты дал системе тот самый заряд, которого ей не хватало для рывка.",
+    "Кинетический заряд стабилен. Энергия накоплена и готова к мгновенному выбросу по первому требованию. Держи готовность для старта.",
+    "Вектор потерян. Твой рывок превратился в хаос, ты бьешь вслепую и сжигаешь ресурс вхолостую. Сбавь обороты, пока не выжег собственные нейроны."
 ]
 };
 
@@ -612,7 +655,7 @@ clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time');
 document.getElementById('active-focus-label').style.display = 'none';
 sw('s-focus-res');
 } else {
-const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+const h = Math.floor((diff % 86400000) / 3600000).toString().padStart(2, '0');
 const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
 const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
 const timeStr = `${h}:${m}:${s}`;
@@ -714,7 +757,6 @@ document.getElementById('fail-desc').innerHTML = `<b>${data.t}</b><br><br>${data
 toggleModal('m-fail-detail', true);
 }
 
-// Измененная логика на 10 рандомных вопросов
 function startSequence() { 
     startAudioEngine(); 
     curQ = 0; 
@@ -794,10 +836,15 @@ localStorage.setItem('psy_profile', type); localStorage.setItem('psy_done', 'tru
 setTestLock(); updateUIProfile(type);
 sw('v-card'); renderDiagnostic(type);
 }
+
+function showProfileDetail(key) {
+    if(!currentProfile || !PROFILE_DETAILS[currentProfile]) return;
+    document.getElementById('v-profile-desc').innerText = PROFILE_DETAILS[currentProfile][key];
+}
+
 function updateUIProfile(type) {
 document.getElementById('v-type').innerText = type;
-document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
-document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
+showProfileDetail('spec');
 
 let reactHistory = JSON.parse(localStorage.getItem('train_history_react') || "[]");
 let memHistory = JSON.parse(localStorage.getItem('train_history_mem') || "[]");
@@ -822,8 +869,8 @@ document.getElementById('id-tag').innerText = type; document.getElementById('id-
 document.getElementById('hub-oracle-btn').style.display = 'block';
 }
 
-function showStoredProfile() { if(isDone) { sw('v-card'); renderDiagnostic(currentProfile); } }
-function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
+function showStoredProfile() { if(isDone) { sw('v-card'); renderDiagnostic(currentProfile); showProfileDetail('spec'); } }
+
 function drawShape(ctx, type, x, y, size, frame, active) {
 ctx.save(); ctx.translate(x, y);
 ctx.strokeStyle = active ? '#00ff41' : '#444'; ctx.lineWidth = active ? 2 : 1; ctx.beginPath();
@@ -859,10 +906,11 @@ if(!document.getElementById('v-card').classList.contains('active')) return;
 ctx.clearRect(0,0,260,260); 
 const profiles = ["АРХИТЕКТОР", "ИМПУЛЬС", "АНАЛИТИК", "СКАНЕР"];
 let losers = profiles.filter(p => p !== activeType);
-drawShape(ctx, activeType, 130, 130, 60, dFrame, true);
-drawShape(ctx, losers[0], 35, 35, 15, dFrame, false);
-drawShape(ctx, losers[1], 225, 35, 15, dFrame, false);
-drawShape(ctx, losers[2], 130, 225, 15, dFrame, false);
+const cx = 130, cy = 130, R = 80;
+drawShape(ctx, activeType, cx, cy, 60, dFrame, true);
+drawShape(ctx, losers[0], cx, cy - R, 15, dFrame, false);
+drawShape(ctx, losers[1], cx + R * 0.866, cy + R * 0.5, 15, dFrame, false);
+drawShape(ctx, losers[2], cx - R * 0.866, cy + R * 0.5, 15, dFrame, false);
 dFrame += 0.03; diagAnimId = requestAnimationFrame(anim);
 }
 anim();
