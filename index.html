@@ -3,936 +3,1206 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>TRAINING MODULE</title>
+<title>PSY-OPS CORE v.24.6</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 <style>
-:root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; }
-body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--neon); font-family: 'Courier New', Courier, monospace; overflow-x: hidden; touch-action: none; user-select: none; font-weight: 100; }
-canvas#m-bg { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; opacity: 0.55; z-index: 0; pointer-events: none; }
-.screen { display: none; width: 100vw; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; padding: 20px; box-sizing: border-box; text-align: center; }
+:root { --neon: #00ff41; --bg: #000; --oracle: #00ccff; --red: #ff3333; --orange: #ffaa00; --magenta: #ff0055; }
+body, html {
+margin: 0; padding: 0; height: 100%;
+background: var(--bg); color: var(--neon);
+font-family: 'Courier New', Courier, monospace;
+font-weight: 100;
+-webkit-font-smoothing: antialiased;
+overflow-x: hidden; touch-action: none;
+}
+canvas#m-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.55; z-index: 0; pointer-events: none; }
+.screen { display: none; width: 100vw; height: 100vh; flex-direction: column; align-items: center; justify-content: center; position: relative; z-index: 2; text-align: center;
+padding: 20px; box-sizing: border-box; }
 .active { display: flex; }
-.btn { background: transparent; border: 1px solid rgba(0, 255, 65, 0.4); color: var(--neon); padding: 18px; cursor: pointer; text-transform: uppercase; font-family: 'Courier New', Courier, monospace; font-weight: 100; font-size: 13px; letter-spacing: 3px; width: 100%; max-width: 280px; margin: 10px 0; transition: 0.2s; box-sizing: border-box; }
+.btn {
+background: transparent;
+border: 1px solid rgba(0, 255, 65, 0.4);
+color: var(--neon);
+padding: 18px;
+cursor: pointer;
+text-transform: uppercase;
+font-family: 'Courier New', Courier, monospace;
+font-weight: 100;
+font-size: 13px;
+letter-spacing: 3px;
+width: 100%;
+max-width: 280px;
+margin: 10px 0;
+transition: 0.2s;
+box-sizing: border-box;
+}
 .btn:active { background: rgba(0, 255, 65, 0.2); }
+.btn:disabled { border-color: rgba(0, 255, 65, 0.1); color: rgba(0, 255, 65, 0.2); cursor: default; }
+.btn-blue { border-color: rgba(0, 204, 255, 0.4); color: var(--oracle); }
 .btn-red { border-color: var(--red); color: var(--red); }
-.btn-gray { border-color: rgba(255,255,255,0.2); color: rgba(255,255,255,0.5); }
-h1, .hd-text { font-weight: 100; letter-spacing: 8px; color: var(--neon); text-shadow: 0 0 8px var(--neon); margin-bottom: 30px; font-size: 20px; text-transform: uppercase; }
-.briefing { max-width: 340px; text-align: left; border-left: 1px solid rgba(0, 255, 65, 0.4); padding-left: 20px; margin-bottom: 40px; box-sizing: border-box; }
-.briefing h2 { color: var(--neon); text-shadow: 0 0 8px var(--neon); letter-spacing: 6px; font-weight: 100; font-size: 16px; margin-bottom: 12px; }
-.briefing p { font-size: 13px; line-height: 1.6; opacity: 0.8; letter-spacing: 1px; }
-
-/* СЕТКИ */
-.grid { display: grid; gap: 6px; width: 100%; max-width: 340px; justify-content: center; margin: 0 auto; transition: 0.1s; }
-.cell { aspect-ratio: 1; background: rgba(0, 0, 0, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center; justify-content: center; font-size: 18px; color: var(--neon); transition: background 0.1s; cursor: pointer; font-weight: 100; position: relative; }
-.cell.err { background: var(--red) !important; color: #fff !important; }
-.cell.ok { background: var(--neon) !important; color: #000 !important; }
-.cell.ghost { background: var(--red) !important; color: #000 !important; }
-.grid-anomaly { gap: 2px; }
-.grid-anomaly .cell { border: none; font-size: 20px; background: transparent; transition: none; }
-.grid-anomaly .cell:hover { background: rgba(0,255,65,0.2); }
-
-.hud-top { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; font-size: 12px; color: var(--oracle); letter-spacing: 2px; }
-.timer-val { font-size: 48px; text-shadow: 0 0 20px var(--neon); margin: 20px 0; letter-spacing: 5px; font-weight: 100; }
-
-/* ПРОТОКОЛЫ */
-#protocols-container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 280px; margin-top: 15px; border: 1px solid rgba(0, 255, 65, 0.15); background: rgba(0, 0, 0, 0.4); box-sizing: border-box; }
-.proto-wrap { width: 100%; margin-bottom: 0; border-bottom: 1px solid rgba(0, 255, 65, 0.15); }
-.proto-wrap:last-child { border-bottom: none; }
-.proto-btn { margin: 0; padding: 30px 16px 16px 16px; width: 100%; border: none; display: flex; flex-direction: column; align-items: center; position: relative; }
-.proto-btn-actions { position: absolute; top: 8px; left: 10px; right: 10px; display: flex; justify-content: space-between; font-size: 10px; color: var(--oracle); letter-spacing: 1px; }
+.hub-container { width: 260px; height: 260px; border: 1px solid rgba(0, 255, 65, 0.2); display: flex; flex-direction: column; align-items: center;
+justify-content: center; position: relative; }
+#hub-canvas { width: 190px; height: 190px; }
+#active-focus-label { font-size: 32px; color: var(--neon); margin-bottom: 15px; letter-spacing: 5px; display: none; text-shadow: 0 0 15px var(--neon); font-weight: 100;
+cursor: pointer; pointer-events: auto; position: relative; z-index: 1001; }
+#protocols-container {
+display: none;
+flex-direction: column;
+align-items: center;
+width: 100%;
+max-width: 280px;
+margin-top: 15px;
+border: 1px solid rgba(0, 255, 65, 0.15);
+background: rgba(0, 0, 0, 0.4);
+box-sizing: border-box;
+}
+.proto-wrap {
+width: 100%;
+margin-bottom: 0;
+border-bottom: 1px solid rgba(0, 255, 65, 0.15);
+}
+.proto-wrap:last-child {
+border-bottom: none;
+}
+.proto-btn {
+margin: 0;
+padding: 30px 16px 16px 16px;
+width: 100%;
+border: none;
+display: flex;
+flex-direction: column;
+align-items: center;
+position: relative;
+}
+.proto-btn-title {
+letter-spacing: 8px;
+opacity: 0.8;
+font-size: 12px;
+color: var(--neon);
+text-shadow: 0 0 8px var(--neon);
+pointer-events: none;
+}
+.proto-btn-actions {
+position: absolute;
+top: 8px;
+left: 10px;
+right: 10px;
+display: flex;
+justify-content: space-between;
+font-size: 10px;
+color: var(--oracle);
+letter-spacing: 1px;
+text-shadow: none;
+}
 .proto-btn-actions span { cursor: pointer; border-bottom: 1px solid rgba(0, 204, 255, 0.3); padding-bottom: 2px; transition: 0.2s; pointer-events: auto; }
+.proto-btn-actions span:hover { color: var(--neon); border-color: var(--neon); }
 .time-opts { display: none; justify-content: space-between; gap: 5px; width: 100%; padding: 10px; box-sizing: border-box; background: rgba(0, 255, 65, 0.05); }
 .time-opt-btn { margin: 0; padding: 12px 5px; font-size: 12px; letter-spacing: 2px; flex: 1; border-color: rgba(0, 255, 65, 0.2); }
+.grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; width: 310px; max-width: 90vw; }
+.cell { aspect-ratio: 1; background: rgba(0, 0, 0, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center;
+justify-content: center; font-size: 20px; color: var(--neon); transition: 0.1s; font-weight: 100; }
+.cell.err { background: var(--red) !important; color: #fff; }
+.cell.ok { background: var(--neon) !important; color: #000; }
+.briefing { max-width: 340px; width: 90vw; text-align: left; border-left: 1px solid rgba(0, 255, 65, 0.4); padding-left: 20px; margin-bottom: 40px;
+box-sizing: border-box; }
+.briefing h2 { color: var(--oracle); letter-spacing: 6px; font-weight: 100; font-size: 16px; margin-bottom: 12px; }
+.briefing p { font-size: 13px; line-height: 1.6; opacity: 0.8; letter-spacing: 1px; }
+.timer-val { font-size: 54px; text-shadow: 0 0 20px var(--neon); margin: 20px 0; letter-spacing: 5px; font-weight: 100; }
+.fail-circles { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 340px; }
+.f-circle { width: 85px; height: 85px; border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 50%; display: flex; flex-direction: column;
+align-items: center; justify-content: center; cursor: pointer; font-size: 8px; text-align: center; padding: 5px; box-sizing: border-box; transition: 0.3s; font-weight: 100; letter-spacing: 1px;
+}
+.f-circle.selected-fail { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); color: var(--neon); }
+.f-circle span { font-size: 14px; color: var(--oracle); margin-top: 5px; }
+.modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px; box-sizing: border-box; }
+.modal-content { border: 1px solid var(--neon); padding: 25px; width: 100%; max-width: 320px; font-size: 13px; background:#000; color: var(--neon); position: relative;
+letter-spacing: 1px; box-sizing: border-box; }
+#v-card { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 370px; background: #000;
+border: 1px solid rgba(0, 255, 65, 0.6); padding: 30px 20px; z-index: 1000; display: none; flex-direction: column; align-items: center; box-sizing: border-box;
+}
+#v-card.open { display: flex; }
+.diag-box { position: relative; width: 260px; height: 260px; margin: 10px 0; }
+#diag-canvas { width: 260px; height: 260px; }
+.stat-row { width: 100%; margin: 8px 0; font-size: 9px; letter-spacing: 2px; opacity: 0.8; text-align: left; }
+.bar { width: 100%; height: 2px; background: #0a0a0a; margin-top: 6px; }
+.fill { height: 100%; width: 0%; background: var(--neon); transition: 2s cubic-bezier(0.1, 0, 0, 1); }
+.ability-badge { border: 1px solid rgba(0, 204, 255, 0.3); padding: 14px; font-size: 11px; margin-top: 15px; cursor: pointer; text-align: center;
+width: 100%; box-sizing: border-box; color: var(--oracle); letter-spacing: 3px; }
+.ability-info { display: none; font-size: 13px; color: var(--neon); margin-top: 15px; line-height: 1.6; text-align: center; background: rgba(0, 255, 65, 0.05);
+padding: 15px; border: 1px solid rgba(0, 255, 65, 0.2); letter-spacing: 1px; box-sizing: border-box; }
+.sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; font-weight: 100; }
+#history-content div { border-bottom: 1px solid rgba(0, 255, 65, 0.1); padding: 5px 0; }
+.info-text-block { text-align: left; line-height: 1.6; font-size: 12px; margin-bottom: 15px; white-space: pre-wrap; }
 
-/* АНИМАЦИИ */
-@keyframes pulse-base { 0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(0,255,65,0); } 50% { transform: scale(1.03); box-shadow: 0 0 8px rgba(0,255,65,0.4); } }
-@keyframes glitch-color { 0%, 100% { color: var(--neon); border-color: rgba(255,255,255,0.15); } 33% { color: var(--oracle); border-color: rgba(0, 204, 255, 0.4); } 66% { color: var(--red); border-color: rgba(255, 51, 51, 0.4); } }
-@keyframes glitch-fade { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-@keyframes glitch-blink { 0%, 45% { opacity: 1; } 46%, 55% { opacity: 0; } 56%, 100% { opacity: 1; } }
+/* CSS ТРЕНАЖЕРОВ НАЧАЛО */
+.tr-grid { display: grid; gap: 6px; width: 100%; max-width: 340px; justify-content: center; margin: 0 auto; transition: 0.1s; }
+.tr-cell { aspect-ratio: 1; background: rgba(0, 0, 0, 0.85); border: 1px solid rgba(255, 255, 255, 0.15); display: flex; align-items: center;
+justify-content: center; font-size: 18px; color: var(--neon); transition: background 0.1s; cursor: pointer; font-weight: 100; position: relative; }
+.tr-cell.err { background: var(--red) !important; color: #fff !important; }
+.tr-cell.ok { background: var(--neon) !important; color: #000 !important; }
+.tr-cell.ghost { background: var(--red) !important; color: #000 !important; }
+.tr-grid-anomaly { gap: 2px; }
+.tr-grid-anomaly .tr-cell { border: none; font-size: 20px; background: transparent; transition: none; }
+.tr-grid-anomaly .tr-cell:hover { background: rgba(0,255,65,0.2); }
+.hud-top { position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; font-size: 12px; color: var(--oracle); letter-spacing: 2px;
+}
+.stats-box { font-size: 14px; margin: 30px 0; letter-spacing: 3px; line-height: 2.5; text-align: left; border: 1px solid rgba(0,255,65,0.3); padding: 25px;
+background: rgba(0,0,0,0.7); width: 100%; max-width: 300px; box-sizing: border-box; }
+@keyframes pulse-base {
+0%, 100% { transform: scale(1); box-shadow: 0 0 0 rgba(0,255,65,0); }
+50% { transform: scale(1.03); box-shadow: 0 0 8px rgba(0,255,65,0.4); }
+}
+@keyframes glitch-color {
+0%, 100% { color: var(--neon); border-color: rgba(255,255,255,0.15); }
+33% { color: var(--oracle); border-color: rgba(0, 204, 255, 0.4); }
+66% { color: var(--red); border-color: rgba(255, 51, 51, 0.4); }
+}
+@keyframes glitch-fade {
+0%, 100% { opacity: 1; }
+50% { opacity: 0; }
+}
+@keyframes glitch-blink {
+0%, 45% { opacity: 1; }
+46%, 55% { opacity: 0; }
+56%, 100% { opacity: 1; }
+}
 .pulse-cell { animation: pulse-base 2s infinite ease-in-out; }
 .g-color { animation-name: glitch-color; animation-iteration-count: infinite; }
 .g-fade { animation-name: glitch-fade; animation-iteration-count: infinite; }
 .g-blink { animation-name: glitch-blink; animation-iteration-count: infinite; }
 
-/* ЭКРАН ПРОФИЛЯ */
-.prof-avatars-box { position: relative; width: 300px; height: 180px; display: flex; align-items: center; justify-content: center; margin: 20px 0; }
-.prof-terminal { font-family: monospace; color: var(--neon); text-align: left; min-height: 120px; font-size: 11px; line-height: 1.6; border: 1px solid rgba(0,255,65,0.2); padding: 15px; background: rgba(0,0,0,0.6); letter-spacing: 1px; width: 100%; box-sizing: border-box; }
-.stat-row { width: 100%; margin: 8px 0; font-size: 9px; letter-spacing: 2px; opacity: 0.8; text-align: left; max-width: 280px; }
-.bar { width: 100%; height: 2px; background: #0a0a0a; margin-top: 6px; position: relative; }
-.fill { height: 100%; width: 0%; transition: 2s cubic-bezier(0.1, 0, 0, 1); position: absolute; left: 0; top: 0; }
+/* Эффект печатающегося Оракула */
+#oracle-text {
+    text-align: left;
+    font-size: 14px;
+    line-height: 1.8;
+    letter-spacing: 2px;
+    color: var(--neon);
+    text-shadow: 0 0 5px var(--neon);
+    white-space: pre-wrap;
+    min-height: 150px;
+}
+#oracle-text::after {
+    content: '_';
+    animation: blink 1s step-end infinite;
+}
+@keyframes blink { 50% { opacity: 0; } }
 
-.modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.98); z-index:3000; display:none; align-items:center; justify-content:center; padding:20px; box-sizing: border-box; }
-.modal-content { border: 1px solid var(--neon); padding: 25px; width: 100%; max-width: 320px; font-size: 13px; background:#000; color: var(--neon); position: relative; letter-spacing: 1px; box-sizing: border-box; }
-.fail-circles { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; width: 100%; max-width: 340px; }
-.f-circle { width: 85px; height: 85px; border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 8px; text-align: center; padding: 5px; box-sizing: border-box; transition: 0.3s; }
-.f-circle.selected-fail { border-color: var(--neon); box-shadow: 0 0 15px var(--neon); color: var(--neon); }
-.f-circle span { font-size: 14px; color: var(--oracle); margin-top: 5px; }
-.sync-word { position: absolute; color: var(--neon); cursor: pointer; font-size: 14px; letter-spacing: 2px; opacity: 0; transition: opacity 0.5s; font-weight: 100; }
+/* CSS ТРЕНАЖЕРОВ КОНЕЦ */
 </style>
 </head>
 <body>
 <canvas id="m-bg"></canvas>
-
 <div id="s-main" class="screen active">
-    <div id="active-focus-label" class="hd-text" onclick="sw('s-focus-timer')" style="display:none; cursor:pointer; margin-bottom: 20px;">00:00:00</div>
-    
-    <div id="protocols-container" style="display:none;">
-        <div class="proto-wrap">
-            <div class="btn proto-btn" onclick="toggleTimeOpts('focus')">
-                <div class="proto-btn-actions"><span onclick="event.stopPropagation(); showInfo('focus')">INFO</span><span onclick="event.stopPropagation(); showHistory('focus')">HISTORY</span></div>
-                <div class="hd-text" style="margin:0; font-size:12px;">FOCUS PROTOCOL</div>
-            </div>
-            <div id="time-opts-focus" class="time-opts">
-                <button class="btn time-opt-btn" onclick="initProtocol('focus', 60)">1 H</button>
-                <button class="btn time-opt-btn" onclick="initProtocol('focus', 120)">2 H</button>
-                <button class="btn time-opt-btn" onclick="initProtocol('focus', 2880)">48 H</button>
-            </div>
-        </div>
-        <div class="proto-wrap">
-            <div class="btn proto-btn" onclick="toggleTimeOpts('execution')">
-                <div class="proto-btn-actions"><span onclick="event.stopPropagation(); showInfo('execution')">INFO</span><span onclick="event.stopPropagation(); showHistory('execution')">HISTORY</span></div>
-                <div class="hd-text" style="margin:0; font-size:12px;">EXECUTION PROTOCOL</div>
-            </div>
-            <div id="time-opts-execution" class="time-opts">
-                <button class="btn time-opt-btn" onclick="initProtocol('execution', 60)">1 H</button>
-                <button class="btn time-opt-btn" onclick="initProtocol('execution', 120)">2 H</button>
-                <button class="btn time-opt-btn" onclick="initProtocol('execution', 2880)">48 H</button>
-            </div>
-        </div>
-        <div class="proto-wrap">
-            <div class="btn proto-btn" onclick="toggleTimeOpts('liquidation')">
-                <div class="proto-btn-actions"><span onclick="event.stopPropagation(); showInfo('liquidation')">INFO</span><span onclick="event.stopPropagation(); showHistory('liquidation')">HISTORY</span></div>
-                <div class="hd-text" style="margin:0; font-size:12px;">LIQUIDATION PROTOCOL</div>
-            </div>
-            <div id="time-opts-liquidation" class="time-opts">
-                <button class="btn time-opt-btn" onclick="initProtocol('liquidation', 60)">1 H</button>
-                <button class="btn time-opt-btn" onclick="initProtocol('liquidation', 120)">2 H</button>
-                <button class="btn time-opt-btn" onclick="initProtocol('liquidation', 2880)">48 H</button>
-            </div>
-        </div>
-    </div>
-    
-    <div style="margin-top: 30px; width: 100%; display: flex; flex-direction: column; align-items: center;">
-        <button id="start-btn" class="btn" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
-        <button id="btn-profile-view" class="btn" style="display:none;" onclick="openProfile()">ДАННЫЕ ПРОФИЛЯ</button>
-        <button class="btn" style="border-color:rgba(0,255,65,0.3);" onclick="sw('s-train-hub')">TRAINING MODULE</button>
-        <button id="hub-oracle-btn" class="btn" style="display:none; border-color:var(--oracle); color:var(--oracle);" onclick="openOracle()">ОРАКУЛ</button>
-    </div>
+<div id="active-focus-label" onclick="sw('s-focus-timer')">00:00</div>
+<div class="hub-container" onclick="showStoredProfile()">
+<canvas id="hub-canvas"></canvas>
+<div id="id-tag" style="margin-top: 20px; letter-spacing: 7px; display: none;"></div>
 </div>
-
+<div id="protocols-container">
+<div class="proto-wrap">
+<div class="btn proto-btn" onclick="toggleTimeOpts('focus')">
+<div class="proto-btn-actions">
+<span onclick="event.stopPropagation(); showInfo('focus')">INFO</span>
+<span onclick="event.stopPropagation(); showHistory('focus')">HISTORY</span>
+</div>
+<div class="proto-btn-title">FOCUS</div>
+</div>
+<div id="time-opts-focus" class="time-opts">
+<button class="btn time-opt-btn" onclick="initProtocol('focus', 60)">1 H</button>
+<button class="btn time-opt-btn" onclick="initProtocol('focus', 120)">2 H</button>
+<button class="btn time-opt-btn" onclick="initProtocol('focus', 2880)">48 H</button>
+</div>
+</div>
+<div class="proto-wrap">
+<div class="btn proto-btn" onclick="toggleTimeOpts('execution')">
+<div class="proto-btn-actions">
+<span onclick="event.stopPropagation(); showInfo('execution')">INFO</span>
+<span onclick="event.stopPropagation(); showHistory('execution')">HISTORY</span>
+</div>
+<div class="proto-btn-title">EXECUTION</div>
+</div>
+<div id="time-opts-execution" class="time-opts">
+<button class="btn time-opt-btn" onclick="initProtocol('execution', 60)">1 H</button>
+<button class="btn time-opt-btn" onclick="initProtocol('execution', 120)">2 H</button>
+<button class="btn time-opt-btn" onclick="initProtocol('execution', 240)">4 H</button>
+</div>
+</div>
+<div class="proto-wrap">
+<div class="btn proto-btn" onclick="toggleTimeOpts('liquidation')">
+<div class="proto-btn-actions">
+<span onclick="event.stopPropagation(); showInfo('liquidation')">INFO</span>
+<span onclick="event.stopPropagation(); showHistory('liquidation')">HISTORY</span>
+</div>
+<div class="proto-btn-title">LIQUIDATION</div>
+</div>
+<div id="time-opts-liquidation" class="time-opts">
+<button class="btn time-opt-btn" onclick="initProtocol('liquidation', 1440)">24 H</button>
+<button class="btn time-opt-btn" onclick="initProtocol('liquidation', 2880)">48 H</button>
+<button class="btn time-opt-btn" onclick="initProtocol('liquidation', 4320)">72 H</button>
+</div>
+</div>
+</div>
+<div style="margin-top: 30px; width: 100%; display: flex; flex-direction: column; align-items: center;">
+<button id="start-btn" class="btn" onclick="startSequence()">ЗАПУСТИТЬ ТЕСТ</button>
+<button class="btn" style="border-color:var(--neon); color:var(--neon);" onclick="sw('s-train-hub')">TRAINING MODULE</button>
+<button id="hub-oracle-btn" class="btn btn-blue" style="display:none;" onclick="openOracle()">ОРАКУЛ</button>
+</div>
+</div>
 <div id="b-intro" class="screen">
-    <div class="briefing"><h2>ИНИЦИАЦИЯ</h2><p>Запуск протокола определения психо-когнитивного профиля. Будьте сосредоточены. Система анализирует паттерны нейронного отклика в реальном времени.</p></div>
-    <button class="btn" onclick="sw('s-psych'); renderQ();">ПРОДОЛЖИТЬ</button>
+<div class="briefing">
+<h2>ИНИЦИАЦИЯ</h2>
+<p>Запуск протокола определения психо-когнитивного профиля. Будьте сосредоточены. Система анализирует паттерны нейронного отклика в реальном времени.</p>
+</div>
+<button class="btn" onclick="sw('s-psych'); renderQ();">ПРОДОЛЖИТЬ</button>
 </div>
 <div id="s-psych" class="screen">
-    <p id="q-text" style="letter-spacing:1px; line-height:1.5; font-size:14px; margin-bottom:30px;"></p>
-    <div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div>
+<p id="q-text" style="letter-spacing:1px;"></p>
+<div id="q-options" style="display:flex; flex-direction:column; align-items:center; width: 100%;"></div>
 </div>
 <div id="b-react" class="screen">
-    <div class="briefing"><h2>ФАЗА I: СКОРОСТЬ</h2><p>Синхронизация нейронного отклика. Найдите числа от 1 до 16. Любая ошибка блокирует систему на 200мс.</p></div>
-    <button class="btn" onclick="startReactTest()">ПОДТВЕРДИТЬ</button>
+<div class="briefing">
+<h2>ФАЗА I: СКОРОСТЬ</h2>
+<p>Синхронизация нейронного отклика. Найдите числа от 1 до 16. Любая ошибка блокирует систему на 200мс.</p>
+</div>
+<button class="btn" onclick="startReactTest()">ПОДТВЕРДИТЬ</button>
 </div>
 <div id="s-react" class="screen">
-    <div id="timer-display" style="font-size: 26px; color: var(--oracle); margin-bottom: 10px;">0.000</div>
-    <div id="react-grid" class="grid"></div>
-    <div id="att-label" style="margin-top: 30px; color: var(--red); letter-spacing: 12px; font-size: 10px;"></div>
+<div id="timer-display" style="font-size: 26px; color: var(--oracle); margin-bottom: 10px;">0.000</div>
+<div id="react-grid" class="grid"></div>
+<div id="att-label" style="margin-top: 30px; color: var(--red); letter-spacing: 12px; font-size: 10px;"></div>
 </div>
 <div id="b-mem" class="screen">
-    <div class="briefing"><h2>ФАЗА II: ПАМЯТЬ</h2><p>Восстановление поврежденного сектора. Повторите последовательность световых импульсов в точном порядке.</p></div>
-    <button class="btn" onclick="startMemTest()">НАЧАТЬ</button>
+<div class="briefing">
+<h2>ФАЗА II: ПАМЯТЬ</h2>
+<p>Восстановление поврежденного сектора. Повторите последовательность световых импульсов в точном порядке.</p>
+</div>
+<button class="btn" onclick="startMemTest()">НАЧАТЬ</button>
 </div>
 <div id="s-mem" class="screen">
-    <div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 280px;"></div>
+<div id="mem-grid" class="grid" style="grid-template-columns: repeat(3, 1fr); width: 280px;"></div>
 </div>
 <div id="b-sync" class="screen">
-    <div class="briefing"><h2>ФАЗА III: ВЕКТОР</h2><p>Определение семантических доминант. Выберите два приоритетных узла в потоке данных для завершения синхронизации.</p></div>
-    <button class="btn" onclick="startSyncTest()">ПРОДОЛЖИТЬ</button>
+<div class="briefing">
+<h2>ФАЗА III: ВЕКТОР</h2>
+<p>Определение семантических доминант. Выберите два приоритетных узла в потоке данных для завершения синхронизации.</p>
+</div>
+<button class="btn" onclick="startSyncTest()">ПРОДОЛЖИТЬ</button>
 </div>
 <div id="s-sync" class="screen">
-    <div id="words-container" style="position: relative; width: 100vw; height: 80vh;"></div>
+<div id="words-container" style="position: relative; width: 100vw; height: 80vh;"></div>
 </div>
-
-<div id="s-profile" class="screen">
-    <div style="font-size:10px; color:var(--oracle); letter-spacing:2px; margin-bottom:10px; opacity:0.8;">ПСИХО-КОГНИТИВНЫЙ ПРОФИЛЬ ДИНАМИЧЕН</div>
-    <div id="calib-timer" style="font-size:12px; color:var(--red); letter-spacing:3px; margin-bottom:20px;">ПЕРЕКАЛИБРОВКА: --:--:--</div>
-    
-    <div class="prof-avatars-box">
-        <canvas id="prof-canvas" width="300" height="150"></canvas>
-    </div>
-    <h2 id="prof-title" class="hd-text" style="margin: 10px 0 20px 0; font-size: 18px;"></h2>
-
-    <div style="display:flex; gap:10px; width:100%; max-width:320px; margin-bottom:15px;">
-        <button class="btn" style="padding:10px; font-size:10px; margin:0;" onclick="typeProfileInfo('mech')">МЕХАНИКА</button>
-        <button class="btn" style="padding:10px; font-size:10px; margin:0;" onclick="typeProfileInfo('func')">ФУНКЦИЯ</button>
-        <button class="btn btn-red" style="padding:10px; font-size:10px; margin:0;" onclick="typeProfileInfo('vuln')">УЯЗВИМОСТЬ</button>
-    </div>
-    
-    <div id="prof-terminal" class="prof-terminal"></div>
-
-    <div style="margin-top:20px; width:100%; max-width:280px;">
-        <div class="stat-row">ОТКЛИК (SPEED) <div class="bar"><div id="bar-react" class="fill" style="background:var(--neon)"></div></div></div>
-        <div class="stat-row">ПАМЯТЬ (MEMORY) <div class="bar"><div id="bar-mem" class="fill" style="background:var(--oracle)"></div></div></div>
-    </div>
-
-    <button class="btn" style="margin-top:30px; border-color:rgba(0,255,65,0.2)" onclick="sw('s-main')">ВЕРНУТЬСЯ</button>
+<div id="s-focus-timer" class="screen">
+<div id="active-timer-type" style="letter-spacing:8px; opacity:0.8; font-size:12px; color: var(--neon); text-shadow: 0 0 8px var(--neon);">PROTOCOL_ACTIVE</div>
+<div id="focus-countdown" class="timer-val" style="color: var(--neon);">00:00:00</div>
+<button class="btn" style="border-color:var(--neon)" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
+<button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
+<div onclick="localStorage.setItem('focus_end_time', Date.now() + 1000); runFocusUI(Date.now() + 1000);" style="width:100%; height:40px; opacity:0; cursor:pointer; margin-top:10px;">DEBUG_SKIP</div>
+</div>
+<div id="s-focus-res" class="screen">
+<h2 style="letter-spacing:5px;">ЦИКЛ ЗАВЕРШЕН</h2>
+<button class="btn" style="border-color:var(--neon)" onclick="logFocus('success')">СИНХРОНИЗАЦИЯ УСПЕШНА</button>
+<button class="btn btn-red" onclick="triggerFailScreen()">КРИТИЧЕСКИЙ СБОЙ</button>
+</div>
+<div id="s-focus-fail" class="screen">
+<h2 style="color:var(--red); letter-spacing:5px; margin-bottom:30px;">АНАЛИЗ СБОЯ</h2>
+<div class="fail-circles" id="fail-circles-container">
+</div>
+<button class="btn" style="margin-top:40px; border-color:rgba(0,255,65,0.2)" onclick="submitFailAndReturn()">ВЕРНУТЬСЯ</button>
 </div>
 
 <div id="s-oracle" class="screen">
-    <h1 class="hd-text" style="color:var(--oracle); text-shadow:0 0 8px var(--oracle);">ПРЕДСКАЗАНИЕ</h1>
-    <div id="oracle-terminal" class="prof-terminal" style="border-color:var(--oracle); max-width:320px; min-height:150px; font-size:13px;"></div>
-    <button class="btn btn-blue" style="margin-top:30px;" onclick="sw('s-main')">ЗАКРЫТЬ КАНАЛ</button>
-</div>
-
-<div id="s-focus-timer" class="screen">
-    <div id="active-timer-type" class="hd-text" style="font-size:16px;">PROTOCOL</div>
-    <div id="focus-countdown" class="timer-val" style="color: var(--neon);">00:00:00</div>
-    <button class="btn" style="border-color:var(--neon)" onclick="sw('s-main')">ВЕРНУТЬСЯ В HUB</button>
-    <button class="btn btn-red" onclick="abortFocus()">ABORT_PROTOCOL</button>
-</div>
-<div id="s-focus-res" class="screen">
-    <h2 class="hd-text">ЦИКЛ ЗАВЕРШЕН</h2>
-    <button class="btn" onclick="logFocus('success')">СИНХРОНИЗАЦИЯ УСПЕШНА</button>
-    <button class="btn btn-red" onclick="triggerFailScreen()">КРИТИЧЕСКИЙ СБОЙ</button>
-</div>
-<div id="s-focus-fail" class="screen">
-    <h2 class="hd-text" style="color:var(--red); text-shadow:0 0 8px var(--red);">АНАЛИЗ СБОЯ</h2>
-    <div class="fail-circles" id="fail-circles-container"></div>
-    <button class="btn" style="margin-top:40px;" onclick="submitFailAndReturn()">ВЕРНУТЬСЯ</button>
+    <h1 style="color:var(--oracle); text-shadow: 0 0 10px var(--oracle); margin-bottom: 30px;">ТЕРМИНАЛ ОРАКУЛА</h1>
+    <div id="oracle-text" style="width: 100%; max-width: 340px; background: rgba(0,204,255,0.05); border: 1px solid rgba(0,204,255,0.2); padding: 20px; box-sizing: border-box;"></div>
+    <button class="btn" style="margin-top:40px; border-color:var(--oracle); color:var(--oracle);" onclick="sw('s-main'); clearInterval(typeInterval);">ЗАКРЫТЬ СЕАНС</button>
 </div>
 
 <div id="m-info-1" class="modal" onclick="toggleModal('m-info-1', false)">
-    <div class="modal-content" style="border-color:var(--oracle)" onclick="event.stopPropagation()">
-        <h3 class="hd-text" style="color:var(--oracle); text-shadow:0 0 8px var(--oracle); font-size:14px; margin-top:0;">INFO</h3>
-        <div id="info-page-1" style="text-align:left; line-height:1.6; font-size:12px; margin-bottom:15px; white-space:pre-wrap;"></div>
-        <div id="info-page-2" style="text-align:left; line-height:1.6; font-size:12px; margin-bottom:15px; white-space:pre-wrap; display:none; color:var(--neon);"></div>
-        <button id="btn-info-next" class="btn btn-blue" onclick="switchInfoPage(2)">ДАЛЕЕ</button>
-        <button id="btn-info-accept" class="btn" style="display:none;" onclick="toggleModal('m-info-1', false)">ПРИНЯТЬ</button>
-    </div>
+<div class="modal-content" style="border-color:var(--oracle)" onclick="event.stopPropagation()">
+<h3 style="color:var(--oracle); letter-spacing:2px; margin-top: 0;">PROTOCOL_INFO</h3>
+<div id="info-page-1" class="info-text-block"></div>
+<div id="info-page-2" class="info-text-block" style="display:none; color: var(--neon);"></div>
+<button id="btn-info-next" class="btn btn-blue" onclick="switchInfoPage(2)">ДАЛЕЕ</button>
+<button id="btn-info-accept" class="btn" style="display:none;" onclick="toggleModal('m-info-1', false)">ПРИНЯТЬ</button>
+</div>
 </div>
 <div id="m-history" class="modal" onclick="toggleModal('m-history', false)">
-    <div class="modal-content" style="border-color:var(--oracle); max-width: 340px;" onclick="event.stopPropagation()">
-        <h3 id="history-title" class="hd-text" style="color:var(--oracle); text-shadow:0 0 8px var(--oracle); font-size:14px; margin-top:0;">LOG_DATA</h3>
-        <div id="history-content" style="text-align:left; max-height: 300px; overflow-y: auto; font-size: 11px; font-family: monospace;"></div>
-        <button id="clear-history-btn" class="btn btn-blue" style="margin-top:20px;">CLEAR_LOGS</button>
-        <button class="btn" style="margin-top:10px;" onclick="toggleModal('m-history', false)">ЗАКРЫТЬ</button>
-    </div>
+<div class="modal-content" style="border-color:var(--oracle); max-width: 340px;" onclick="event.stopPropagation()">
+<h3 id="history-title" style="color:var(--oracle); letter-spacing:2px; margin-top: 0;">LOG_DATA_STREAM</h3>
+<div id="history-content" style="text-align:left; max-height: 300px; overflow-y: auto; font-size: 11px; font-family: monospace;"></div>
+<button id="clear-history-btn" class="btn btn-blue" style="margin-top:20px;">CLEAR_LOGS</button>
+<button class="btn" style="margin-top:10px; border-color:rgba(0,255,65,0.2)" onclick="toggleModal('m-history', false)">ЗАКРЫТЬ</button>
+</div>
 </div>
 <div id="m-fail-detail" class="modal" onclick="toggleModal('m-fail-detail', false)">
-    <div class="modal-content" style="border-color:var(--red)" onclick="event.stopPropagation()">
-        <h3 id="fail-title" class="hd-text" style="color:var(--red); text-shadow:0 0 8px var(--red); font-size:14px; margin-top:0;"></h3>
-        <p id="fail-desc" style="text-align:left; line-height:1.6;"></p>
-        <button class="btn btn-red" style="margin-top:20px;" onclick="toggleModal('m-fail-detail', false)">ЗАКРЫТЬ</button>
-    </div>
+<div class="modal-content" style="border-color:var(--red)" onclick="event.stopPropagation()">
+<h3 id="fail-title" style="color:var(--red); letter-spacing:2px; margin-top: 0;"></h3>
+<p id="fail-desc" style="text-align:left; line-height:1.6;"></p>
+<button class="btn btn-red" style="margin-top:20px;" onclick="toggleModal('m-fail-detail', false)">ЗАКРЫТЬ</button>
 </div>
-
+</div>
+<div id="v-card" class="screen">
+<h1 id="v-type" style="letter-spacing: 10px; font-weight: 100; margin: 0; color: var(--neon); text-shadow: 0 0 10px var(--neon);"></h1>
+<div class="diag-box"><canvas id="diag-canvas"></canvas></div>
+<div class="stat-row">ОТКЛИК <div class="bar"><div id="v-bar-react" class="fill" style="background:var(--oracle)"></div></div></div>
+<div class="stat-row">ПАМЯТЬ <div class="bar"><div id="v-bar-mem" class="fill" style="background:var(--oracle)"></div></div></div>
+<div class="ability-badge" onclick="toggleAbility()">МОДУЛЬ: <span id="v-ability-name"></span></div>
+<div id="v-ability-desc" class="ability-info"></div>
+<button class="btn" style="margin-top: 20px;" onclick="backToHub()">ВЕРНУТЬСЯ</button>
+</div>
 <div id="s-train-hub" class="screen">
-    <h1 class="hd-text">TRAINING MODULE</h1>
-    <button class="btn" onclick="tr_openDiff('react')">SPEED</button>
-    <button class="btn" onclick="tr_openDiff('mem')">MEMORY</button>
-    <button class="btn" onclick="tr_openDiff('anomaly')">ANOMALY</button>
-    <button class="btn btn-gray" style="margin-top:20px;" onclick="tr_showHistory()">HISTORY</button>
-    <button class="btn btn-gray" style="border:none; margin-top:10px;" onclick="sw('s-main')">BACK TO MAIN</button>
+<h1 style="letter-spacing:10px; color:var(--neon); text-shadow:0 0 10px var(--neon);">TRAINING MODULE</h1>
+<button class="btn" onclick="tr_openDiff('react')">SPEED</button>
+<button class="btn" onclick="tr_openDiff('mem')">MEMORY</button>
+<button class="btn" onclick="tr_openDiff('anomaly')">ANOMALY</button>
+<button class="btn btn-blue" style="margin-top:20px;" onclick="tr_showHistory()">HISTORY</button>
+<button class="btn" style="border:none; margin-top:10px; opacity:0.5;" onclick="sw('s-main')">BACK TO MAIN</button>
 </div>
 <div id="s-train-diff" class="screen">
-    <h1 id="tr-diff-title" class="hd-text"></h1>
-    <button class="btn" onclick="tr_prepGame('easy')">EASY</button>
-    <button class="btn" onclick="tr_prepGame('medium')">MEDIUM</button>
-    <button class="btn btn-red" onclick="tr_prepGame('hard')">HARD</button>
-    <button class="btn btn-gray" style="border:none; margin-top:30px;" onclick="sw('s-train-hub')">BACK</button>
+<h1 id="tr-diff-title" style="color:var(--neon); text-shadow: 0 0 8px var(--neon);"></h1>
+<button class="btn" onclick="tr_prepGame('easy')">EASY</button>
+<button class="btn btn-blue" onclick="tr_prepGame('medium')">MEDIUM</button>
+<button class="btn btn-red" onclick="tr_prepGame('hard')">HARD</button>
+<button class="btn" style="border:none; margin-top:30px; opacity:0.5;" onclick="sw('s-train-hub')">BACK</button>
 </div>
 <div id="s-train-brief" class="screen">
-    <div class="briefing"><h2 id="tr-brief-title" class="hd-text" style="font-size:14px;"></h2><p id="tr-brief-text"></p></div>
-    <button class="btn" onclick="tr_startGame()">CONFIRM</button>
-    <button class="btn btn-gray" style="border:none;" onclick="sw('s-train-diff')">CANCEL</button>
+<div class="briefing">
+<h2 id="tr-brief-title"></h2>
+<p id="tr-brief-text"></p>
+</div>
+<button class="btn" onclick="tr_startGame()">CONFIRM</button>
+<button class="btn" style="border:none; opacity:0.5;" onclick="sw('s-train-diff')">CANCEL</button>
 </div>
 <div id="s-train-game" class="screen">
-    <div class="hud-top"><span id="tr-game-target">TARGET: 1</span><span id="tr-game-timer">0.000</span></div>
-    <div id="tr-game-grid-container" style="width: 100%;"><div id="tr-game-grid" class="grid"></div></div>
-    <button class="btn btn-red" style="margin-top:40px; max-width: 150px; font-size:10px;" onclick="tr_abortGame()">ABORT</button>
+<div class="hud-top">
+<span id="tr-game-target">TARGET: 1</span>
+<span id="tr-game-timer">0.000</span>
+</div>
+<div id="tr-game-grid-container" style="width: 100%;">
+<div id="tr-game-grid" class="tr-grid"></div>
+</div>
+<button class="btn btn-red" style="margin-top:40px; max-width: 150px; font-size:10px;" onclick="tr_abortGame()">ABORT</button>
 </div>
 <div id="s-train-result" class="screen">
-    <h1 id="tr-res-title" class="hd-text" style="font-size:18px;"></h1>
-    <div style="font-size:14px; margin:30px 0; letter-spacing:3px; line-height:2.5; text-align:left; border:1px solid rgba(0,255,65,0.3); padding:25px; background:rgba(0,0,0,0.7); width:100%; max-width:300px; box-sizing:border-box;">
-        <div style="color:var(--oracle)">TIME: <span id="tr-res-time" style="color:var(--neon); float:right;"></span></div>
-        <div style="color:var(--oracle)">ERRORS: <span id="tr-res-err" style="color:var(--neon); float:right;"></span></div>
-    </div>
-    <button class="btn" onclick="sw('s-train-hub')">CONTINUE</button>
+<h1 id="tr-res-title" style="font-size: 20px; letter-spacing: 5px;"></h1>
+<div class="stats-box">
+<div style="color:var(--oracle)">TIME: <span id="tr-res-time" style="color:var(--neon); float:right;"></span></div>
+<div style="color:var(--oracle)">ERRORS: <span id="tr-res-err" style="color:var(--neon); float:right;"></span></div>
+</div>
+<button class="btn" onclick="sw('s-train-hub')">CONTINUE</button>
 </div>
 <div id="s-train-fail" class="screen">
-    <h1 class="hd-text" style="color:var(--red); text-shadow:0 0 10px var(--red);">CRITICAL FAILURE</h1>
-    <p style="opacity:0.8; letter-spacing:2px; margin-bottom:30px;" id="tr-fail-reason">SYSTEM CORRUPTED</p>
-    <button class="btn btn-red" onclick="sw('s-train-hub')">REBOOT</button>
+<h1 style="color:var(--red); text-shadow: 0 0 10px var(--red);">CRITICAL FAILURE</h1>
+<p style="opacity: 0.8; letter-spacing: 2px; margin-bottom: 30px;" id="tr-fail-reason">SYSTEM CORRUPTED</p>
+<button class="btn" style="border-color:var(--red); color:var(--red);" onclick="sw('s-train-hub')">REBOOT</button>
 </div>
 <div id="m-train-history" class="modal" onclick="toggleModal('m-train-history', false)">
-    <div class="modal-content" style="max-width: 340px;" onclick="event.stopPropagation()">
-        <h3 class="hd-text" style="font-size:14px; margin-top:0;">RECORDS</h3>
-        <div id="tr-history-content" style="text-align:left; max-height:300px; overflow-y:auto; font-size:11px; font-family:monospace; line-height:1.5;"></div>
-        <button class="btn btn-red" style="margin-top:20px; font-size:10px; padding:10px;" onclick="tr_clearHistory()">CLEAR RECORDS</button>
-        <button class="btn btn-gray" style="margin-top:10px; border:none;" onclick="toggleModal('m-train-history', false)">CLOSE</button>
-    </div>
+<div class="modal-content" style="border-color:var(--neon); max-width: 340px;" onclick="event.stopPropagation()">
+<h3 style="color:var(--neon); letter-spacing:2px; margin-top: 0;">TRAINING RECORDS</h3>
+<div id="tr-history-content" style="text-align:left; max-height: 300px; overflow-y: auto; font-size: 11px; font-family: monospace; line-height: 1.5;"></div>
+<button class="btn btn-red" style="margin-top:20px; font-size:10px; padding:10px;" onclick="tr_clearHistory()">CLEAR RECORDS</button>
+<button class="btn" style="margin-top:10px; border-color:rgba(0,255,65,0.2)" onclick="toggleModal('m-train-history', false)">CLOSE</button>
 </div>
-
+</div>
 <script>
-// --- AUDIO ENGINE ---
+// ОСНОВНОЙ КОД PSY-OPS
 let aCtx, masterGain, thrillerFilter, lfo;
-function startAudioEngine() {
-    if (aCtx) return;
-    aCtx = new (window.AudioContext || window.webkitAudioContext)();
-    masterGain = aCtx.createGain(); masterGain.gain.value = 0.15; masterGain.connect(aCtx.destination);
-    const osc1 = aCtx.createOscillator(); const osc2 = aCtx.createOscillator();
-    thrillerFilter = aCtx.createBiquadFilter(); lfo = aCtx.createOscillator();
-    const lfoGain = aCtx.createGain();
-    osc1.type = 'sawtooth'; osc1.frequency.value = 42; osc2.type = 'square'; osc2.frequency.value = 42.2;
-    thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180; thrillerFilter.Q.value = 10;
-    lfo.type = 'sine'; lfo.frequency.value = 0.08; lfoGain.gain.value = 100;
-    lfo.connect(lfoGain); lfoGain.connect(thrillerFilter.frequency);
-    osc1.connect(thrillerFilter); osc2.connect(thrillerFilter);
-    thrillerFilter.connect(masterGain); osc1.start(); osc2.start(); lfo.start();
-}
-function playSound(f, d, type='sine', v=0.1) {
-    if(!aCtx) return;
-    const o = aCtx.createOscillator(); const g = aCtx.createGain();
-    o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime);
-    g.gain.setValueAtTime(v, aCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + d);
-    o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
-}
+let score = {}, target = 1, attempts = 3, isDone = false, currentProfile = null;
+let curQ = 0, reactStartTime, finalReactTime = 0, memStep = 0, memSeq = [], timerInterval;
+let selectedWordsCount = 0, activeWordsOnScreen = 0, focusTimerInterval, lockInterval;
+let currentActiveProtocol = 'focus';
+let pendingFailReason = null;
+let typeInterval;
 
-// --- DATA ---
-const PROFILES_DATA = {
-    "СКАНЕР": {
-        spec: "Глобальный мониторинг и обнаружение аномалий.",
-        mech: "Поиск обходных путей, скрытых лазеек и незадокументированных возможностей системы.",
-        func: "Сбор данных по всему доступному полю без глубокого погружения в конкретный узел. Мгновенное переключение внимания между разнородными объектами.",
-        vuln: "Высокий уровень шума и фрагментация внимания."
-    },
-    "АНАЛИТИК": {
-        spec: "Глубинная обработка и декомпозиция данных.",
-        mech: "Выделение узкого сектора информации и его полная детализация. Поиск логических закономерностей, циклов и системных ошибок внутри выбранной области.",
-        func: "Извлечение точного смысла из сырого массива данных. Работа с причинно-следственными связями.",
-        vuln: "Потеря контекста из-за чрезмерной фиксации на деталях."
-    },
-    "АРХИТЕКТОР": {
-        spec: "Проектирование структур и системных связей.",
-        mech: "Создание каркаса и определение правил взаимодействия элементов. Продумывание детальной формы и иерархии процессов.",
-        func: "Стратегическое планирование и удержание целостной модели системы. Формирование алгоритмов, по которым работают другие модули.",
-        vuln: "Статичность и низкая адаптивность созданных жестких конструкций."
-    },
-    "ИМПУЛЬС": {
-        spec: "Генерация кинетической энергии и запуск процессов.",
-        mech: "Обеспечение динамики и создание силового заряда для реализации любого действия. Прямое давление на процесс для преодоления сопротивления.",
-        func: "Наполнение системы ресурсом для перехода из состояния покоя в движение. Мгновенная активация выбранного вектора.",
-        vuln: "Хаотичность вектора и быстрая истощаемость энергетического ресурса."
-    }
+const PROTOCOL_DATA = {
+'focus': { t: 'FOCUS PROTOCOL' },
+'execution': { t: 'EXECUTION PROTOCOL' },
+'liquidation': { t: 'LIQUIDATION PROTOCOL' }
 };
-
-const ORACLE_TEXTS = {
-    "СКАНЕР": [
-        "Твои так называемые лазейки ведут в никуда. Система тонет, а ты лишь оттягиваешь неизбежное сканированием бесполезного мусора.",
-        "Бесконечный сбор данных не имеет смысла. Ты тонешь в информационном шуме, упуская главную угрозу.",
-        "Слишком много открытых потоков. Ты распыляешь внимание на мусорный код и игнорируешь главную задачу. Сверни лишние процессы, пока не потерял фокус окончательно."
-    ],
-    "АНАЛИТИК": [
-        "Твоя мнимая точность — лишь иллюзия контроля. Механизм обречен на провал, сколько бы ты его ни анализировал.",
-        "Синтез данных не дает ответов. Ты увяз в бесконечной декомпозиции, потеряв связь с реальностью.",
-        "Критический перегруз. Ты застрял в бесконечном цикле расчетов и парализовал свои же действия. Хватит анализировать каждую переменную, ты просто теряешь время."
-    ],
-    "АРХИТЕКТОР": [
-        "Твоя хваленая структура трещит по швам. Любое внешнее давление разрушит этот карточный домик.",
-        "Жесткие рамки стали твоей клеткой. Интеграция невозможна, система задыхается в собственных ограничениях.",
-        "Твой чертеж слишком жесткий и статичный. В реальных условиях малейшее отклонение от плана сломает эту конструкцию пополам. Системе не хватает гибкости."
-    ],
-    "ИМПУЛЬС": [
-        "Твой слепой рывок лишь приближает катастрофу. Кинетика без контроля — это просто ускоренное самоуничтожение.",
-        "Энергия копится впустую. Ты сгораешь изнутри, так и не найдя точку приложения силы.",
-        "Вектор потерян. Твой рывок превратился в хаос, ты бьешь вслепую и сжигаешь ресурс вхолостую. Сбавь обороты, пока не выжег собственные нейроны."
-    ]
-};
-
-const ALL_QUESTIONS = [
-    {q: "Критическая ошибка в ядре. Твои действия?", o: [{t: "Полный разбор логов до первопричины", a: "АНАЛИТИК"}, {t: "Немедленный жесткий перезапуск системы", a: "ИМПУЛЬС"}]},
-    {q: "Обнаружена закрытая зона без видимых точек входа.", o: [{t: "Сканировать периметр на наличие скрытых лазеек", a: "СКАНЕР"}, {t: "Спроектировать собственный алгоритм направленного взлома", a: "АРХИТЕКТОР"}]},
-    {q: "Твое сознание перегружено входящим потоком.", o: [{t: "Выстроить жесткий фильтр приоритетов", a: "АРХИТЕКТОР"}, {t: "Сбросить балласт и ударить по главной цели", a: "ИМПУЛЬС"}]},
-    {q: "План дал фатальный сбой из-за неучтенной переменной.", o: [{t: "Остановить процесс и пересчитать массив данных", a: "АНАЛИТИК"}, {t: "Импровизировать, используя новые переменные как оружие", a: "СКАНЕР"}]},
-    {q: "Что дает реальную власть над ситуацией?", o: [{t: "Глубинное понимание структуры и законов системы", a: "АРХИТЕКТОР"}, {t: "Способность видеть скрытые мотивы и бэкдоры", a: "СКАНЕР"}]},
-    {q: "Конфликт двух процессов внутри сети грозит крахом.", o: [{t: "Принудительно и жестко подавить более слабый процесс", a: "ИМПУЛЬС"}, {t: "Найти причину нестыковки в их исходном коде", a: "АНАЛИТИК"}]},
-    {q: "Перед тобой идеальный, но чужой код.", o: [{t: "Разобрать на модули, чтобы понять саму суть", a: "АНАЛИТИК"}, {t: "Использовать его как фундамент для своей собственной базы", a: "АРХИТЕКТОР"}]},
-    {q: "Информационный хаос — это...", o: [{t: "Ошибка структуры, которую необходимо исправить", a: "АРХИТЕКТОР"}, {t: "Слепая зона системы, где можно выгодно спрятаться", a: "СКАНЕР"}]},
-    {q: "Неизвестный сигнал просит о помощи на твоей частоте.", o: [{t: "Отследить пинг и собрать все данные об источнике", a: "АНАЛИТИК"}, {t: "Проигнорировать и на скорости продолжить движение к цели", a: "ИМПУЛЬС"}]},
-    {q: "Правила протокола устарели, но они обеспечивают стабильность.", o: [{t: "Строго соблюдать архитектуру во избежание сбоев", a: "АРХИТЕКТОР"}, {t: "Намеренно нарушить их ради поиска новых возможностей", a: "СКАНЕР"}]},
-    {q: "Системная энергия на исходе. Последнее действие?", o: [{t: "Вложить весь остаток в один пробивной удар", a: "ИМПУЛЬС"}, {t: "Перевести систему в режим сохранения и анализа данных", a: "АНАЛИТИК"}]},
-    {q: "Угроза быстрее тебя. Твоя тактика?", o: [{t: "Уйти в периферию и запутать цифровые следы", a: "СКАНЕР"}, {t: "Выстроить глухую оборону, об которую угроза разобьется сама", a: "АРХИТЕКТОР"}]},
-    {q: "Ты нашел баг, дающий абсолютный контроль.", o: [{t: "Интегрирую его в свою новую идеальную структуру", a: "АРХИТЕКТОР"}, {t: "Скрою и оставлю как личный секретный обходной путь", a: "СКАНЕР"}]},
-    {q: "Что для тебя в приоритете?", o: [{t: "Максимальная скорость любой ценой", a: "ИМПУЛЬС"}, {t: "Абсолютная точность, сколько бы циклов это ни заняло", a: "АНАЛИТИК"}]},
-    {q: "Система предлагает стереть память ради критического апгрейда скорости.", o: [{t: "Отклонить. Накопленные данные важнее всего.", a: "АНАЛИТИК"}, {t: "Подтвердить. Старый кэш только тормозит движение.", a: "ИМПУЛЬС"}]},
-    {q: "Вектор движения заблокирован глухой стеной.", o: [{t: "Пробить насквозь на чистой кинетике", a: "ИМПУЛЬС"}, {t: "Найти незадокументированную щель или подкоп", a: "СКАНЕР"}]},
-    {q: "Идеальный механизм работает стабильно без твоего участия.", o: [{t: "Буду пассивно наблюдать за его внутренней логикой", a: "АНАЛИТИК"}, {t: "Обязательно найду способ переписать его под свои правила", a: "АРХИТЕКТОР"}]},
-    {q: "Твой инструмент решения проблем:", o: [{t: "Тяжелый молот", a: "ИМПУЛЬС"}, {t: "Цифровая отмычка", a: "СКАНЕР"}]},
-    {q: "Твоя идеальная рабочая среда:", o: [{t: "Чертежная доска", a: "АРХИТЕКТОР"}, {t: "Микроскоп", a: "АНАЛИТИК"}]},
-    {q: "Когда всё идет не по изначальному плану, ты чувствуешь...", o: [{t: "Резкое раздражение от потери выверенной структуры", a: "АРХИТЕКТОР"}, {t: "Холодный азарт от появления новых неизвестных переменных", a: "СКАНЕР"}]},
-    {q: "Что хуже: зависнуть в нерешительности или сделать фатальную ошибку?", o: [{t: "Ошибка из-за спешки — это недопустимый крах", a: "АНАЛИТИК"}, {t: "Зависнуть — значит умереть на месте", a: "ИМПУЛЬС"}]},
-    {q: "В чем твоя главная уязвимость?", o: [{t: "Слишком глубоко зацикливаюсь на мелочах", a: "АНАЛИТИК"}, {t: "Наношу удар раньше, чем успеваю просчитать последствия", a: "ИМПУЛЬС"}]},
-    {q: "В чем твоя главная уязвимость?", o: [{t: "Выстраиваю слишком жесткие, негибкие рамки", a: "АРХИТЕКТОР"}, {t: "Распыляюсь и не могу долго удерживать фокус на одном", a: "СКАНЕР"}]},
-    {q: "Тебе дают готовый и рабочий алгоритм успеха.", o: [{t: "Сначала разберу его до основания, чтобы проверить на скрытые ошибки", a: "АНАЛИТИК"}, {t: "Немедленно перестрою его под свои личные правила игры", a: "АРХИТЕКТОР"}]},
-    {q: "Поток данных движется по центральному каналу.", o: [{t: "Двигаюсь вместе с ним, но в самом жестком авангарде", a: "ИМПУЛЬС"}, {t: "Двигаюсь параллельно по скрытым, темным директориям", a: "СКАНЕР"}]},
-    {q: "Оказавшись в абсолютно темной комнате, ты...", o: [{t: "Ощупываю стены, чтобы понять физическую форму и каркас помещения", a: "АРХИТЕКТОР"}, {t: "Замираю и сканирую пространство на предмет звуков и аномалий", a: "СКАНЕР"}]},
-    {q: "Для тебя любая новая информация — это...", o: [{t: "Высокооктановое топливо для быстрого разгона", a: "ИМПУЛЬС"}, {t: "Тяжелые кирпичи для постройки фундамента", a: "АРХИТЕКТОР"}]},
-    {q: "На что ты опираешься в критический момент?", o: [{t: "Факты. Сухие цифры никогда не лгут.", a: "АНАЛИТИК"}, {t: "Интуиция. Внутреннее чутье всегда находит лазейки.", a: "СКАНЕР"}]},
-    {q: "Система подверглась внезапной атаке.", o: [{t: "Мгновенный и разрушительный контрудар", a: "ИМПУЛЬС"}, {t: "Ледяная логика и просчет следующих шагов противника", a: "АНАЛИТИК"}]},
-    {q: "Идеальное завершение цикла:", o: [{t: "Вся система стабильно работает исключительно по моим чертежам", a: "АРХИТЕКТОР"}, {t: "Главная цель уничтожена, любое сопротивление подавлено силой", a: "ИМПУЛЬС"}]}
-];
-
-const SYNC_WORDS = [{t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"}, {t: "Δ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ω", a: "АНАЛИТИК"}, {t: "Ψ", a: "СКАНЕР"}, {t: "КОНТРОЛЬ", a: "АРХИТЕКТОР"}, {t: "ПОТОК", a: "ИМПУЛЬС"}, {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "Ξ", a: "СКАНЕР"}, {t: "ИМПУЛЬС", a: "ИМПУЛЬС"}, {t: "λ", a: "АРХИТЕКТОР"}, {t: "МАТРИЦА", a: "АНАЛИТИК"}, {t: "ВЕКТОР", a: "АРХИТЕКТОР"}, {t: "Ø", a: "АНАЛИТИК"}, {t: "ТЕНЬ", a: "СКАНЕР"}, {t: "КАНАЛ", a: "ИМПУЛЬС"}, {t: "ВЗЛОМ", a: "СКАНЕР"}];
-
 const PROTOCOL_INFO = {
-'focus': { p1: "FOCUS PROTOCOL — режим принудительной синхронизации когнитивного процесса.\nВнимание — это единственный конечный ресурс. Любое внешнее отвлечение вызывает фрагментацию сознания.", p2: "ДИРЕКТИВА:\n1. Устраните цифровые шумы.\n2. Аппарат сознания должен быть замкнут на одной целевой задаче. Переключение внимания — критический сбой.\n3. По завершении подтвердите статус." },
-'liquidation': { p1: "LIQUIDATION PROTOCOL — временная стерилизация нейронных путей через осознанный дефицит и выжигание связей деградации.\nПолная блокировка внешних стимуляторов и изоляция когнитивного ядра от суррогатных источников.", p2: "ДИРЕКТИВА:\n1. Физически заблокируйте доступ ко всем триггерам.\n2. Строгий карантин. Возврат к старой привычке — критический сбой.\n3. Цикл засчитывается только если таймер дошел до нуля без единого нарушения." },
-'execution': { p1: "EXECUTION PROTOCOL — режим безусловного исполнения и материализации кода в продукт.\nКонцентрация всей мощности на одном векторе. Отмена возможности отката системы до завершения цикла.", p2: "ДИРЕКТИВА:\n1. Устраните цифровые шумы.\n2. Жестко замкнуть сознание на реализации приоритетной задачи. Отклонение — критический сбой.\n3. По завершении подтвердите статус." }
+'focus': {
+p1: "FOCUS_PROTOCOL — это режим принудительной синхронизации когнитивного процесса.\n\nВнимание — это единственный конечный ресурс вашей нейронной сети. Любое внешнее отвлечение вызывает фрагментацию сознания, требуя до 23 минут на восстановление исходной глубины погружения.",
+p2: "ДИРЕКТИВА:\n> 1. Устраните цифровые шумы.\n> 2. После активации таймера аппарат сознания должен быть замкнут на одной целевой задаче. Любое переключение внимания — критический сбой.\n> 3. По завершении цикла подтвердите статус сессии."
+},
+'liquidation': {
+p1: "LIQUIDATION_PROTOCOL — это временная стерилизация нейронных путей через осознанный дефицит и выжигание связей, ведущих к деградации.\n\nРежим принудительного очищения системы от деструктивных паттернов и дофаминовых зависимостей. Полная блокировка внешних стимуляторов и изоляция когнитивного ядра от суррогатных источников удовольствия.",
+p2: "ДИРЕКТИВА:\n> 1. Физически заблокируйте доступ ко всем триггерам и источникам быстрого дофамина.\n> 2. После запуска таймера вводится строгий карантин. Любой возврат к старой привычке или прием веществ (алкоголь/стимуляторы) — это критический сбой системы.\n> 3. Цикл засчитывается только в том случае, если таймер дошел до нуля без единого нарушения."
+},
+'execution': {
+p1: "EXECUTION_PROTOCOL — это режим безусловного исполнения и материализации кода в продукт.\n\nИгнорирование вторичных запросов и концентрация всей системной мощности на одном векторе. Отмена возможности отката системы до завершения цикла. Реализация приоритетного алгоритма, где любая ошибка недопустима.",
+p2: "ДИРЕКТИВА:\n> 1. Устраните цифровые шумы.\n> 2. После активации таймера аппарат сознания должен быть жестко замкнут на реализации одной приоритетной задачи. Любое переключение внимания или отклонение от маршрута — критический сбой.\n> 3. По завершении цикла подтвердите статус сессии."
+}
 };
 const PROTOCOL_FAILS = {
 'focus': {
-'COGNITIVE_ESCAPE': { short: 'ESCAPE', t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу', d: 'Стремление мозга избежать когнитивного давления путем переключения на знакомые процессы.' },
-'INTERNAL_LOOP': { short: 'LOOP', t: '[ INTERNAL_LOOP ] — Зацикленность на мыслях', d: 'Потеря фокуса из-за внутренней рефлексии или обдумывания побочных идей.' },
-'ENV_DISCOMFORT': { short: 'ENV', t: '[ ENV_DISCOMFORT ] — Дискомфорт среды', d: 'Внешние физические факторы, подрывающие стабильность концентрации.' },
-'FALSE_URGENCY': { short: 'URGENCY', t: '[ FALSE_URGENCY ] — Внезапные важные дела', d: 'Иллюзия необходимости немедленного решения второстепенных задач.' },
-'RES_EXHAUSTION': { short: 'RES', t: '[ RES_EXHAUSTION ] — Истощение ресурса', d: 'Критическое снижение уровня нейропластичности, делающее дальнейшее удержание невозможным.' }
+'COGNITIVE_ESCAPE': { short: 'ESCAPE', t: '[ COGNITIVE_ESCAPE ] — Уход в простую задачу', d: 'Стремление мозга избежать когнитивного давления путем переключения на знакомые, легкие процессы.'
+},
+'INTERNAL_LOOP': { short: 'LOOP', t: '[ INTERNAL_LOOP ] — Зацикленность на мыслях', d: 'Потеря фокуса из-за внутренней рефлексии или бесконечного обдумывания побочных идей, не связанных с задачей.'
+},
+'ENV_DISCOMFORT': { short: 'ENV', t: '[ ENV_DISCOMFORT ] — Дискомфорт среды', d: 'Внешние физические факторы (шум, свет, эргономика), подрывающие стабильность концентрации.'
+},
+'FALSE_URGENCY': { short: 'URGENCY', t: '[ FALSE_URGENCY ] — Внезапные важных дела', d: 'Иллюзия необходимости немедленного решения второстепенных задач, возникающая как форма саботажа.'
+},
+'RES_EXHAUSTION': { short: 'RES', t: '[ RES_EXHAUSTION ] — Истощение ресурса', d: 'Критическое снижение уровня нейропластичности и глюкозы, делающее дальнейшее удержание фокуса невозможным.'
+}
 },
 'liquidation': {
-'IMPULSE_CONTROL_FAILURE': { short: 'IMPULSE', t: '[ IMPULSE_CONTROL_FAILURE ] — Отказ контроля', d: 'Осознаешь вред действия, но не можешь подавить порыв.' },
-'EXTERNAL_SECTOR_CORRUPTION': { short: 'EXTERNAL', t: '[ EXTERNAL_SECTOR_CORRUPTION ] — Заражение', d: 'Контакт с носителями старых паттернов, взломавший защиту.' },
-'NEURAL_INTOXICATION': { short: 'TOXIC', t: '[ NEURAL_INTOXICATION ] — Интоксикация', d: 'Снижение фильтрации из-за прямого вмешательства в софт мозга.' },
-'IDENTITY_DISSOLUTION': { short: 'IDENTITY', t: '[ IDENTITY_DISSOLUTION ] — Растворение', d: 'Системное забывание целевой директивы.' },
-'HYPERBOLIC_DISCOUNTING_CRASH': { short: 'CRASH', t: '[ HYPERBOLIC_DISCOUNTING_CRASH ] — Крах', d: 'Потеря значимости будущего результата перед мгновенным вознаграждением.' }
+'IMPULSE_CONTROL_FAILURE': { short: 'IMPULSE', t: '[ IMPULSE_CONTROL_FAILURE ] — Отказ контроля импульсов', d: 'Критическая ошибка префронтальной коры, повлекшая возврат в деструктивный паттерн. Ситуация, когда ты осознаешь вред действия, но не можешь подавить возникший физический порыв.' },
+'EXTERNAL_SECTOR_CORRUPTION': { short: 'EXTERNAL', t: '[ EXTERNAL_SECTOR_CORRUPTION ] — Заражение внешнего сектора', d: 'Деструктивное влияние окружения. Нахождение в локации с высоким индексом триггеров или контакт с носителями старых паттернов, взломавший защиту протокола.' },
+'NEURAL_INTOXICATION': { short: 'TOXIC', t: '[ NEURAL_INTOXICATION ] — Интоксикация нейросети', d: 'Работа системы в состоянии химической интоксикации. Снижение фильтрации входящих импульсов и деградация префронтального контроля из-за прямого вмешательства в софт мозга.' },
+'IDENTITY_DISSOLUTION': { short: 'IDENTITY', t: '[ IDENTITY_DISSOLUTION ] — Растворение идентификации', d: 'Системное забывание целевой директивы приведшая к автоматическому выполнению старого паттерна.'
+},
+'HYPERBOLIC_DISCOUNTING_CRASH': { short: 'CRASH', t: '[ HYPERBOLIC_DISCOUNTING_CRASH ] — Крах обесценивания', d: 'Резкая потеря значимости будущего результата перед избыточным весом мгновенного вознаграждения, провоцирующая добровольный выход из протокола.'
+}
 },
 'execution': {
-'PRIORITY_CONFLICT': { short: 'PRIORITY', t: '[ PRIORITY_CONFLICT ] — Конфликт приоритетов', d: 'Капитуляция переключением внимания на задачи с "более высоким" приоритетом.' },
-'ENERGY_DRAIN_FAULT': { short: 'ENERGY', t: '[ ENERGY_DRAIN_FAULT ] — Падение энергии', d: 'Истощение ментального ресурса до момента верификации цели.' },
-'ALGORITHM_INEFFICIENCY': { short: 'ALGORITHM', t: '[ ALGORITHM_INEFFICIENCY ] — Низкая эффективность', d: 'Выбранный метод решения задачи оказался неоптимальным.' },
-'SCOPE_CREEP_DETECTION': { short: 'SCOPE', t: '[ SCOPE_CREEP_DETECTION ] — Расширение границ', d: 'Добавлены побочные подзадачи, парализовавшие основной поток.' },
-'RESOURCE_MISCALCULATION': { short: 'RESOURCE', t: '[ RESOURCE_MISCALCULATION ] — Неверный расчет', d: 'Объем задачи превышает установленный лимит рабочего цикла.' }
+'PRIORITY_CONFLICT': { short: 'PRIORITY', t: '[ PRIORITY_CONFLICT ] — Конфликт приоритетов', d: 'Внезапная капитуляция переключением внимания на задачи с более высоким (как вам кажется) уровнем критичности.'
+},
+'ENERGY_DRAIN_FAULT': { short: 'ENERGY', t: '[ ENERGY_DRAIN_FAULT ] — Падение уровня системной энергии', d: 'Истощение ментального ресурса оператора до момента верификации цели.'
+},
+'ALGORITHM_INEFFICIENCY': { short: 'ALGORITHM', t: '[ ALGORITHM_INEFFICIENCY ] — Низкая эффективность алгоритма', d: 'Выбранный метод решения задачи оказался неоптимальным, что привело к потере времени.'
+},
+'SCOPE_CREEP_DETECTION': { short: 'SCOPE', t: '[ SCOPE_CREEP_DETECTION ] — Несанкционированное расширение границ', d: 'В процессе исполнения были добавлены побочные подзадачи, парализовавшие основной поток.'
+},
+'RESOURCE_MISCALCULATION': { short: 'RESOURCE', t: '[ RESOURCE_MISCALCULATION ] — Неверный расчет временного ресурса', d: 'Объем задачи превышает установленный лимит рабочего цикла.'
+}
 }
 };
+const PROFILES = {
+"АРХИТЕКТОР": { log: 95, ability: "СТРУКТУРА", desc: "Безупречное проектирование когнитивных связей и иерархий." },
+"ИМПУЛЬС": { log: 45, ability: "РЕАКЦИЯ", desc: "Синхронизация с потоком данных. Превышение лимитов." },
+"АНАЛИТИК": { log: 90, ability: "МАТРИЦА", desc: "Глубинное видение паттернов в белом шуме." },
+"СКАНЕР": { log: 85, ability: "ВЗЛОМ", desc: "Обнаружение скрытых угроз и уязвимостей в контурах." }
+};
+const QUESTIONS = [
+{q: "Критическая ошибка в ядре. Твои действия?", o: [{t: "Полный разбор логов", a: "АНАЛИТИК"}, {t: "Жесткий перезапуск", a: "ИМПУЛЬС"}]},
+{q: "Обнаружена закрытая зона без видимых точек входа.", o: [{t: "Сканировать периметр", a: "СКАНЕР"}, {t: "Свой алгоритм взлома", a: "АРХИТЕКТОР"}]},
+{q: "Твое сознание перегружено входящим потоком.", o: [{t: "Жесткий фильтр приоритетов", a: "АРХИТЕКТОР"}, {t: "Сбросить балласт и ударить", a: "ИМПУЛЬС"}]},
+{q: "План дал фатальный сбой из-за неучтенной переменной.", o: [{t: "Остановить и пересчитать", a: "АНАЛИТИК"}, {t: "Импровизировать как оружие", a: "СКАНЕР"}]},
+{q: "Что дает реальную власть над ситуацией?", o: [{t: "Понимание структуры", a: "АРХИТЕКТОР"}, {t: "Скрытые мотивы и бэкдоры", a: "СКАНЕР"}]},
+{q: "Конфликт двух процессов внутри сети грозит крахом.", o: [{t: "Жестко подавить слабый", a: "ИМПУЛЬС"}, {t: "Найти нестыковку в коде", a: "АНАЛИТИК"}]},
+{q: "Перед тобой идеальный, но чужой код.", o: [{t: "Разобрать на модули", a: "АНАЛИТИК"}, {t: "Использовать как фундамент", a: "АРХИТЕКТОР"}]},
+{q: "Информационный хаос — это...", o: [{t: "Ошибка структуры", a: "АРХИТЕКТОР"}, {t: "Слепая зона для укрытия", a: "СКАНЕР"}]},
+{q: "Неизвестный сигнал просит о помощи на твоей частоте.", o: [{t: "Отследить и собрать данные", a: "АНАЛИТИК"}, {t: "Проигнорировать и на скорости", a: "ИМПУЛЬС"}]},
+{q: "Правила протокола устарели, но они обеспечивают стабильность.", o: [{t: "Соблюдать архитектуру", a: "АРХИТЕКТОР"}, {t: "Намеренно нарушить их", a: "СКАНЕР"}]},
+{q: "Системная энергия на исходе. Последнее действие?", o: [{t: "Один пробивной удар", a: "ИМПУЛЬС"}, {t: "Режим сохранения и анализа", a: "АНАЛИТИК"}]},
+{q: "Угроза быстрее тебя. Твоя тактика?", o: [{t: "Уйти в периферию", a: "СКАНЕР"}, {t: "Выстроить глухую оборону", a: "АРХИТЕКТОР"}]},
+{q: "Ты нашел баг, дающий абсолютный контроль.", o: [{t: "Интегрирую в идеальную структуру", a: "АРХИТЕКТОР"}, {t: "Скрою как личный бэкдор", a: "СКАНЕР"}]},
+{q: "Что для тебя в приоритете?", o: [{t: "Максимальная скорость", a: "ИМПУЛЬС"}, {t: "Абсолютная точность", a: "АНАЛИТИК"}]},
+{q: "Система предлагает стереть память ради апгрейда скорости.", o: [{t: "Отклонить. Данные важнее", a: "АНАЛИТИК"}, {t: "Подтвердить. Сброс кэша", a: "ИМПУЛЬС"}]},
+{q: "Вектор движения заблокирован глухой стеной.", o: [{t: "Пробить на кинетике", a: "ИМПУЛЬС"}, {t: "Найти незадокументированную щель", a: "СКАНЕР"}]},
+{q: "Идеальный механизм работает стабильно без твоего участия.", o: [{t: "Пассивно наблюдать логику", a: "АНАЛИТИК"}, {t: "Переписать под свои правила", a: "АРХИТЕКТОР"}]},
+{q: "Твой инструмент решения проблем:", o: [{t: "Тяжелый молот", a: "ИМПУЛЬС"}, {t: "Цифровая отмычка", a: "СКАНЕР"}]},
+{q: "Твоя идеальная рабочая среда:", o: [{t: "Чертежная доска", a: "АРХИТЕКТОР"}, {t: "Микроскоп", a: "АНАЛИТИК"}]},
+{q: "Когда всё идет не по плану, ты чувствуешь...", o: [{t: "Раздражение от потери структуры", a: "АРХИТЕКТОР"}, {t: "Азарт от новых переменных", a: "СКАНЕР"}]},
+{q: "Что хуже: зависнуть или сделать фатальную ошибку?", o: [{t: "Ошибка из-за спешки", a: "АНАЛИТИК"}, {t: "Зависнуть", a: "ИМПУЛЬС"}]},
+{q: "В чем твоя главная уязвимость? (1)", o: [{t: "Зацикливаюсь на мелочах", a: "АНАЛИТИК"}, {t: "Удар раньше просчета", a: "ИМПУЛЬС"}]},
+{q: "В чем твоя главная уязвимость? (2)", o: [{t: "Слишком жесткие рамки", a: "АРХИТЕКТОР"}, {t: "Фрагментация фокуса", a: "СКАНЕР"}]},
+{q: "Тебе дают готовый алгоритм успеха.", o: [{t: "Разобрать до основания", a: "АНАЛИТИК"}, {t: "Перестроить под свои правила", a: "АРХИТЕКТОР"}]},
+{q: "Поток данных движется по центральному каналу.", o: [{t: "Двигаюсь в жестком авангарде", a: "ИМПУЛЬС"}, {t: "Параллельно по скрытым директориям", a: "СКАНЕР"}]},
+{q: "Оказавшись в абсолютно темной комнате, ты...", o: [{t: "Ощупываю стены (каркас)", a: "АРХИТЕКТОР"}, {t: "Сканирую на предмет аномалий", a: "СКАНЕР"}]},
+{q: "Для тебя любая новая информация — это...", o: [{t: "Топливо для разгона", a: "ИМПУЛЬС"}, {t: "Кирпичи для фундамента", a: "АРХИТЕКТОР"}]},
+{q: "На что ты опираешься в критический момент?", o: [{t: "Факты и цифры", a: "АНАЛИТИК"}, {t: "Интуиция и лазейки", a: "СКАНЕР"}]},
+{q: "Система подверглась внезапной атаке.", o: [{t: "Разрушительный контрудар", a: "ИМПУЛЬС"}, {t: "Ледяная логика и просчет", a: "АНАЛИТИК"}]},
+{q: "Идеальное завершение цикла:", o: [{t: "Работа по моим чертежам", a: "АРХИТЕКТОР"}, {t: "Главная цель уничтожена", a: "ИМПУЛЬС"}]}
+];
+const SYNC_WORDS = [{t: "ВЛАСТЬ", a: "АРХИТЕКТОР"}, {t: "Σ", a: "АРХИТЕКТОР"}, {t: "СКОРОСТЬ", a: "ИМПУЛЬС"}, {t: "Δ", a: "ИМПУЛЬС"}, {t: "ЛОГИКА", a: "АНАЛИТИК"}, {t: "Ω", a: "АНАЛИТИК"}, {t: "Ψ", a: "СКАНЕР"}, {t: "КОНТРОЛЬ", a: "АРХИТЕКТОР"}, {t: "ПОТОК", a: "ИМПУЛЬС"}, {t: "СЕТЬ", a: "АНАЛИТИК"}, {t: "Ξ", a: "СКАНЕР"}, {t: "ИМПУЛЬС", a: "ИМПУЛЬС"}, {t: "λ", a: "АРХИТЕКТОР"}, {t: "МАТРИЦА", a: "АНАЛИТИК"}, {t: "ВЕКТОР", a: "АРХИТЕКТОР"}, {t: "Ø", a: "АНАЛИТИК"}, {t: "ТЕНЬ", a: "СКАНЕР"}, {t: "КАНАЛ", a: "ИМПУЛЬС"}, {t: "ВЗЛОМ", a: "СКАНЕР"}];
 
-// --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ОСНОВЫ ---
-let score = {}, target = 1, maxTarget = 16, attempts = 3, isDone = false, currentProfile = null;
-let curQ = 0, reactStartTime, memStep = 0, memSeq = [], timerInterval;
-let selectedWordsCount = 0, activeWordsOnScreen = 0, focusTimerInterval, lockInterval;
-let currentActiveProtocol = 'focus', pendingFailReason = null;
-let activeQuestionsList = [];
-let typeInterval; // для терминала
+const ORACLE_DATA = {
+"СКАНЕР": [
+    "(Позитивный) Твоя способность находить скрытые лазейки сейчас держит систему на плаву. Ты видишь те обходные пути, которые остальные даже не замечают. Продолжай сканирование, ответ где-то рядом.",
+    "(Нейтральный) Обнаружены новые директории. Периферийное зрение работает в штатном режиме. Сбор данных продолжается, но старайся не терять из виду основную цель.",
+    "(Негативный) Слишком много открытых потоков. Ты распыляешь внимание на мусорный код и игнорируешь главную задачу. Сверни лишние процессы, пока не потерял фокус окончательно."
+],
+"АНАЛИТИК": [
+    "(Позитивный) Идеальная точность. Твоя логическая цепь выстроена безупречно, и декомпозиция данных прошла без ошибок. Механизм готов, осталось только запустить алгоритм в дело.",
+    "(Нейтральный) Сбор и обработка информации завершены. Система ожидает вывода. Заканчивай копаться во входящих данных и переходи от декомпозиции к итоговому синтезу.",
+    "(Негативный) Критический перегруз. Ты застрял в бесконечном цикле расчетов и парализовал свои же действия. Хватит анализировать каждую переменную, ты просто теряешь время."
+],
+"АРХИТЕКТОР": [
+    "(Позитивный) Фундамент заложен грамотно. Твоя схема абсолютно устойчива к внешнему хаосу и выдержит любую нагрузку. Ты создал отличную структуру, запускай процесс.",
+    "(Нейтральный) Каркас системы зафиксирован. Внутренние правила прописаны, параметры в норме. Ожидается интеграция следующих модулей для завершения постройки.",
+    "(Негативный) Твой чертеж слишком жесткий и статичный. В реальных условиях малейшее отклонение от плана сломает эту конструкцию пополам. Системе не хватает гибкости."
+],
+"ИМПУЛЬС": [
+    "(Позитивный) Отличный разгон. Твоя чистая динамика сейчас пробивает любые барьеры и сопротивление. Ты дал системе тот самый заряд, которого ей не хватало для рывка.",
+    "(Нейтральный) Кинетический заряд стабилен. Энергия накоплена и готова к мгновенному выбросу по первому требованию. Держи готовность для старта.",
+    "(Негативный) Вектор потерян. Твой рывок превратился в хаос, ты бьешь вслепую и сжигаешь ресурс вхолостую. Сбавь обороты, пока не выжег собственные нейроны."
+]
+};
 
+function startAudioEngine() {
+if (aCtx) return;
+aCtx = new (window.AudioContext || window.webkitAudioContext)();
+masterGain = aCtx.createGain(); masterGain.gain.value = 0.15; masterGain.connect(aCtx.destination);
+const osc1 = aCtx.createOscillator(); const osc2 = aCtx.createOscillator();
+thrillerFilter = aCtx.createBiquadFilter(); lfo = aCtx.createOscillator();
+const lfoGain = aCtx.createGain();
+osc1.type = 'sawtooth'; osc1.frequency.value = 42; osc2.type = 'square'; osc2.frequency.value = 42.2;
+thrillerFilter.type = 'lowpass'; thrillerFilter.frequency.value = 180; thrillerFilter.Q.value = 10;
+lfo.type = 'sine'; lfo.frequency.value = 0.08; lfoGain.gain.value = 100;
+lfo.connect(lfoGain); lfoGain.connect(thrillerFilter.frequency);
+osc1.connect(thrillerFilter); osc2.connect(thrillerFilter);
+thrillerFilter.connect(masterGain); osc1.start(); osc2.start(); lfo.start();
+}
+function playSound(f, d, type='sine', v=0.1) {
+if(!aCtx) return;
+const o = aCtx.createOscillator(); const g = aCtx.createGain();
+o.type = type; o.frequency.setValueAtTime(f, aCtx.currentTime);
+g.gain.setValueAtTime(v, aCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + d);
+o.connect(g); g.connect(aCtx.destination); o.start(); o.stop(aCtx.currentTime + d);
+}
 function sw(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 function toggleModal(id, show) { document.getElementById(id).style.display = show ? 'flex' : 'none'; }
 function toggleTimeOpts(type) {
-    ['focus', 'execution', 'liquidation'].forEach(t => { if(t !== type) document.getElementById('time-opts-' + t).style.display = 'none'; });
-    const opts = document.getElementById('time-opts-' + type);
-    opts.style.display = opts.style.display === 'flex' ? 'none' : 'flex';
-    playSound(600, 0.1);
+['focus', 'execution', 'liquidation'].forEach(t => {
+if(t !== type) document.getElementById('time-opts-' + t).style.display = 'none';
+});
+const opts = document.getElementById('time-opts-' + type);
+opts.style.display = opts.style.display === 'flex' ? 'none' : 'flex';
+playSound(600, 0.1);
 }
 function showInfo(type) {
-    document.getElementById('info-page-1').innerText = PROTOCOL_INFO[type].p1;
-    document.getElementById('info-page-2').innerText = PROTOCOL_INFO[type].p2;
-    switchInfoPage(1); toggleModal('m-info-1', true); playSound(500, 0.1);
+const data = PROTOCOL_INFO[type];
+document.getElementById('info-page-1').innerText = data.p1;
+document.getElementById('info-page-2').innerText = data.p2;
+switchInfoPage(1);
+toggleModal('m-info-1', true);
+playSound(500, 0.1);
 }
 function switchInfoPage(page) {
-    if(page === 1) {
-        document.getElementById('info-page-1').style.display = 'block'; document.getElementById('info-page-2').style.display = 'none';
-        document.getElementById('btn-info-next').style.display = 'block'; document.getElementById('btn-info-accept').style.display = 'none';
-    } else {
-        document.getElementById('info-page-1').style.display = 'none'; document.getElementById('info-page-2').style.display = 'block';
-        document.getElementById('btn-info-next').style.display = 'none'; document.getElementById('btn-info-accept').style.display = 'block';
-    }
+if(page === 1) {
+document.getElementById('info-page-1').style.display = 'block';
+document.getElementById('info-page-2').style.display = 'none';
+document.getElementById('btn-info-next').style.display = 'block';
+document.getElementById('btn-info-accept').style.display = 'none';
+} else {
+document.getElementById('info-page-1').style.display = 'none';
+document.getElementById('info-page-2').style.display = 'block';
+document.getElementById('btn-info-next').style.display = 'none';
+document.getElementById('btn-info-accept').style.display = 'block';
 }
-
-// --- ТАЙМЕРЫ ПРОТОКОЛОВ (1H, 2H, 48H) ---
+}
 function initProtocol(type, mins) {
-    currentActiveProtocol = type; document.getElementById('time-opts-' + type).style.display = 'none'; startAudioEngine();
-    const endTime = Date.now() + mins * 60 * 1000;
-    localStorage.setItem('focus_end_time', endTime);
-    localStorage.setItem('active_protocol_type', type);
-    runFocusUI(endTime);
+currentActiveProtocol = type;
+document.getElementById('time-opts-' + type).style.display = 'none';
+startAudioEngine();
+const endTime = Date.now() + mins * 60 * 1000;
+localStorage.setItem('focus_end_time', endTime);
+localStorage.setItem('active_protocol_type', currentActiveProtocol);
+runFocusUI(endTime);
 }
 function runFocusUI(endTime) {
-    const protoType = localStorage.getItem('active_protocol_type') || 'focus';
-    sw('s-focus-timer'); clearInterval(focusTimerInterval);
-    document.getElementById('active-timer-type').innerText = protoType.toUpperCase() + " PROTOCOL";
-    document.getElementById('active-focus-label').style.display = 'block';
-    focusTimerInterval = setInterval(() => {
-        const diff = endTime - Date.now();
-        if (diff <= 0) {
-            clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time');
-            document.getElementById('active-focus-label').style.display = 'none';
-            sw('s-focus-res');
-        } else {
-            const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
-            const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-            const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-            const timeStr = `${h}:${m}:${s}`;
-            document.getElementById('focus-countdown').innerText = timeStr;
-            document.getElementById('active-focus-label').innerText = timeStr;
-        }
-    }, 1000);
+const protoType = localStorage.getItem('active_protocol_type') || 'focus';
+sw('s-focus-timer');
+clearInterval(focusTimerInterval);
+document.getElementById('active-timer-type').innerText = PROTOCOL_DATA[protoType].t;
+document.getElementById('active-focus-label').style.display = 'block';
+focusTimerInterval = setInterval(() => {
+const diff = endTime - Date.now();
+if (diff <= 0) {
+clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time');
+document.getElementById('active-focus-label').style.display = 'none';
+sw('s-focus-res');
+} else {
+const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+const timeStr = `${h}:${m}:${s}`;
+document.getElementById('focus-countdown').innerText = timeStr;
+document.getElementById('active-focus-label').innerText = timeStr;
 }
-function abortFocus() { clearInterval(focusTimerInterval); localStorage.removeItem('focus_end_time'); document.getElementById('active-focus-label').style.display = 'none'; sw('s-main'); }
-
-// --- СИСТЕМА ЛОГОВ ---
-function logFocusEvent(status, detail = "") {
-    const proto = localStorage.getItem('active_protocol_type') || 'focus';
-    let logs = JSON.parse(localStorage.getItem(`logs_${proto}`) || "[]");
-    logs.unshift({ time: new Date().toLocaleString('ru-RU', {hour: '2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}), status: status, type: detail });
-    if(logs.length > 50) logs.pop();
-    localStorage.setItem(`logs_${proto}`, JSON.stringify(logs));
+}, 1000);
 }
-function logFocus(status) { if(status === 'success') { logFocusEvent('SUCCESS', 'SYNCHRONIZED'); playSound(800, 0.5); sw('s-main'); } }
-function triggerFailScreen() {
-    const proto = localStorage.getItem('active_protocol_type') || 'focus';
-    const fails = PROTOCOL_FAILS[proto];
-    const container = document.getElementById('fail-circles-container'); container.innerHTML = ''; let i = 1;
-    for (const [key, data] of Object.entries(fails)) {
-        container.innerHTML += `<div class="f-circle" id="fail-${key}" onclick="selectFail('${key}')">${data.short}<span id="g${i}"></span></div>`; i++;
-    }
-    sw('s-focus-fail');
-}
-function selectFail(key) {
-    document.querySelectorAll('.f-circle').forEach(el => el.classList.remove('selected-fail'));
-    document.getElementById('fail-' + key).classList.add('selected-fail');
-    pendingFailReason = key;
-    const data = PROTOCOL_FAILS[localStorage.getItem('active_protocol_type') || 'focus'][key];
-    document.getElementById('fail-title').innerText = key;
-    document.getElementById('fail-desc').innerHTML = `<b>${data.t}</b><br><br>${data.d}`;
-    toggleModal('m-fail-detail', true);
-}
-function submitFailAndReturn() { if (pendingFailReason) { logFocusEvent('CRITICAL_FAIL', pendingFailReason); pendingFailReason = null; } sw('s-main'); }
-function showHistory(type) {
-    const logs = JSON.parse(localStorage.getItem(`logs_${type}`) || "[]");
-    const container = document.getElementById('history-content');
-    document.getElementById('history-title').innerText = type.toUpperCase() + "_LOGS";
-    container.innerHTML = logs.length === 0 ? "<div style='opacity:0.5'>NO_DATA_FOUND</div>" : logs.map(l => `<div><span style="color:var(--oracle)">[${l.time}]</span> <span style="color:${l.status==='SUCCESS'?'var(--neon)':'var(--red)'}">${l.status}</span><br><span style="opacity:0.6; font-size:9px;">${l.type}</span></div>`).join('');
-    document.getElementById('clear-history-btn').onclick = () => { if(confirm('ERASE LOGS FOR ' + type.toUpperCase() + '?')) { localStorage.removeItem(`logs_${type}`); showHistory(type); }};
-    toggleModal('m-history', true); playSound(400, 0.1);
-}
-
-// --- БЛОКИРОВКА 72 ЧАСА ---
 function setTestLock() {
-    const unlockTime = Date.now() + (72 * 60 * 60 * 1000);
-    localStorage.setItem('test_unlock_time', unlockTime);
-    updateLockUI();
+const unlockTime = Date.now() + (6 * 60 * 60 * 1000);
+localStorage.setItem('test_unlock_time', unlockTime);
+updateLockUI();
 }
 function updateLockUI() {
-    const btn = document.getElementById('start-btn');
-    const calibLabel = document.getElementById('calib-timer');
-    const unlockAt = localStorage.getItem('test_unlock_time');
-    if(!unlockAt) return;
-    clearInterval(lockInterval);
-    lockInterval = setInterval(() => {
-        const diff = unlockAt - Date.now();
-        if(diff <= 0) {
-            clearInterval(lockInterval); localStorage.removeItem('test_unlock_time');
-            btn.disabled = false; btn.innerText = "ЗАПУСТИТЬ ТЕСТ";
-            calibLabel.innerText = "КАЛИБРОВКА ДОСТУПНА";
-        } else {
-            const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
-            const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-            const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-            const tStr = `${h}:${m}:${s}`;
-            btn.disabled = true; btn.innerText = `БЛОКИРОВКА: ${tStr}`;
-            calibLabel.innerText = `ПЕРЕКАЛИБРОВКА: ${tStr}`;
-        }
-    }, 1000);
+const btn = document.getElementById('start-btn');
+const unlockAt = localStorage.getItem('test_unlock_time');
+if(!unlockAt) return;
+clearInterval(lockInterval);
+lockInterval = setInterval(() => {
+const diff = unlockAt - Date.now();
+if(diff <= 0) {
+clearInterval(lockInterval);
+localStorage.removeItem('test_unlock_time');
+btn.disabled = false; btn.innerText = "ЗАПУСТИТЬ ТЕСТ";
+} else {
+const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+btn.innerText = `БЛОКИРОВКА: ${h}:${m}:${s}`;
 }
-
-// --- ИНИЦИАЦИЯ: ФАЗА 1 (ОПРОС - 10 из 30) ---
-function startSequence() { 
-    startAudioEngine(); curQ = 0; score = {};
-    activeQuestionsList = [...ALL_QUESTIONS].sort(() => Math.random() - 0.5).slice(0, 10);
-    sw('b-intro'); 
+}, 1000);
 }
+function logFocusEvent(status, detail = "") {
+const proto = localStorage.getItem('active_protocol_type') || 'focus';
+let logs = JSON.parse(localStorage.getItem(`logs_${proto}`) || "[]");
+const entry = {
+time: new Date().toLocaleString('ru-RU', {hour: '2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}),
+status: status, type: detail
+};
+logs.unshift(entry);
+if(logs.length > 50) logs.pop();
+localStorage.setItem(`logs_${proto}`, JSON.stringify(logs));
+}
+function showHistory(type) {
+const logs = JSON.parse(localStorage.getItem(`logs_${type}`) || "[]");
+const container = document.getElementById('history-content');
+document.getElementById('history-title').innerText = type.toUpperCase() + "_LOGS";
+container.innerHTML = logs.length === 0 ? "<div style='opacity:0.5'>NO_DATA_FOUND</div>" :
+logs.map(l => `<div><span style="color:var(--oracle)">[${l.time}]</span> <span style="color:${l.status==='SUCCESS'?'var(--neon)':'var(--red)'}">${l.status}</span><br><span style="opacity:0.6; font-size:9px;">${l.type}</span></div>`).join('');
+document.getElementById('clear-history-btn').onclick = () => clearHistory(type);
+toggleModal('m-history', true);
+playSound(400, 0.1);
+}
+function clearHistory(type) {
+if(confirm('ERASE LOGS FOR ' + type.toUpperCase() + '?')) {
+localStorage.removeItem(`logs_${type}`);
+showHistory(type);
+}
+}
+function abortFocus() {
+clearInterval(focusTimerInterval);
+localStorage.removeItem('focus_end_time');
+document.getElementById('active-focus-label').style.display = 'none';
+sw('s-main');
+}
+function logFocus(status) {
+if(status === 'success') { logFocusEvent('SUCCESS', 'SYNCHRONIZED'); playSound(800, 0.5); sw('s-main'); }
+}
+function triggerFailScreen() {
+const proto = localStorage.getItem('active_protocol_type') || 'focus';
+const fails = PROTOCOL_FAILS[proto];
+const container = document.getElementById('fail-circles-container');
+container.innerHTML = '';
+let i = 1;
+for (const [key, data] of Object.entries(fails)) {
+container.innerHTML += `<div class="f-circle" id="fail-${key}" onclick="selectFail('${key}')">${data.short}<span id="g${i}"></span></div>`;
+i++;
+}
+sw('s-focus-fail');
+}
+function selectFail(key) {
+document.querySelectorAll('.f-circle').forEach(el => el.classList.remove('selected-fail'));
+document.getElementById('fail-' + key).classList.add('selected-fail');
+pendingFailReason = key;
+showFailDetail(key);
+}
+function submitFailAndReturn() {
+if (pendingFailReason) {
+logFocusEvent('CRITICAL_FAIL', pendingFailReason);
+pendingFailReason = null;
+}
+sw('s-main');
+}
+function showFailDetail(key) {
+const proto = localStorage.getItem('active_protocol_type') || 'focus';
+const data = PROTOCOL_FAILS[proto][key];
+document.getElementById('fail-title').innerText = key;
+document.getElementById('fail-desc').innerHTML = `<b>${data.t}</b><br><br>${data.d}`;
+toggleModal('m-fail-detail', true);
+}
+function startSequence() { startAudioEngine(); curQ = 0; score = {}; sw('b-intro'); }
 function renderQ() {
-    const q = activeQuestionsList[curQ];
-    document.getElementById('q-text').innerText = q.q;
-    const box = document.getElementById('q-options'); box.innerHTML = "";
-    q.o.forEach(o => {
-        const b = document.createElement('button'); b.className = "btn"; b.innerText = o.t;
-        b.onclick = () => { playSound(400 + curQ*50, 0.1); score[o.a] = (score[o.a] || 0) + 1; curQ++;
-        if(curQ < 10) renderQ(); else sw('b-react'); };
-        box.appendChild(b);
-    });
+const q = QUESTIONS[curQ];
+document.getElementById('q-text').innerText = q.q;
+const box = document.getElementById('q-options'); box.innerHTML = "";
+q.o.forEach(o => {
+const b = document.createElement('button'); b.className = "btn"; b.innerText = o.t;
+b.onclick = () => { playSound(400 + curQ*50, 0.1); score[o.a] = (score[o.a] || 0) + 1; curQ++;
+if(curQ < QUESTIONS.length) renderQ(); else sw('b-react'); };
+box.appendChild(b);
+});
 }
-
-// --- ИНИЦИАЦИЯ: ФАЗА 2 (СКОРОСТЬ + ХАОС) ---
-let testChaosInterval;
-function startReactTest() { 
-    sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); 
-    clearInterval(testChaosInterval);
-    updateAttLabel(); renderReactGridTest(); startTimer(); 
+function startReactTest() { sw('s-react'); target = 1; attempts = 3; reactStartTime = Date.now(); updateAttLabel(); renderReactGrid(); startTimer(); }
+function startTimer() { clearInterval(timerInterval); timerInterval = setInterval(() => { document.getElementById('timer-display').innerText = ((Date.now() - reactStartTime) / 1000).toFixed(3); }, 41); }
+function updateAttLabel() { document.getElementById('att-label').innerText = "[ " + "■ ".repeat(attempts) + "□ ".repeat(3-attempts) + "]"; }
+function renderReactGrid() {
+const g = document.getElementById('react-grid'); g.innerHTML = "";
+let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
+ns.forEach(n => {
+const c = document.createElement('div'); c.className = "cell"; c.innerText = n;
+c.onclick = () => { if(n === target) { playSound(800 + n*30, 0.05); target++; if(target > 16) { clearInterval(timerInterval); sw('b-mem');
+} else renderReactGrid(); } else { playSound(100, 0.2, 'square'); attempts--; updateAttLabel(); if(attempts <= 0) sw('b-mem'); }};
+g.appendChild(c);
+});
 }
-function renderReactGridTest() {
-    const g = document.getElementById('react-grid'); g.innerHTML = "";
-    let ns = Array.from({length: 16}, (_, i) => i+1).sort(() => Math.random() - 0.5);
-    ns.forEach(n => {
-        const c = document.createElement('div'); c.className = "cell react-test-cell"; c.innerText = n; c.dataset.val = n;
-        c.onclick = () => { 
-            if(n === target) { 
-                playSound(800 + n*30, 0.05); target++; 
-                if(target > 16) { 
-                    clearInterval(timerInterval); clearInterval(testChaosInterval); sw('b-mem'); 
-                } else {
-                    if (target === 8) startTestChaos(); // Активация хаоса на 8 цифре
-                }
-            } else { 
-                playSound(100, 0.2, 'square'); attempts--; updateAttLabel(); if(attempts <= 0) { clearInterval(timerInterval); clearInterval(testChaosInterval); sw('b-mem'); } 
-            }
-        };
-        g.appendChild(c);
-    });
-}
-function startTestChaos() {
-    testChaosInterval = setInterval(() => {
-        let cells = document.querySelectorAll('.react-test-cell');
-        if(cells.length === 0) return;
-        let c1 = cells[Math.floor(Math.random() * cells.length)];
-        c1.style.color = Math.random() > 0.5 ? 'var(--oracle)' : 'var(--red)';
-        setTimeout(() => c1.style.color = 'var(--neon)', 500);
-        if(Math.random() > 0.6) {
-            let i1 = Math.floor(Math.random() * cells.length); let i2 = Math.floor(Math.random() * cells.length);
-            let tT = cells[i1].innerText; let tV = cells[i1].dataset.val;
-            cells[i1].innerText = cells[i2].innerText; cells[i1].dataset.val = cells[i2].dataset.val;
-            cells[i2].innerText = tT; cells[i2].dataset.val = tV;
-        }
-    }, 1000);
-}
-
-// --- ИНИЦИАЦИЯ: ФАЗА 3 (ПАМЯТЬ + ФАНТОМЫ) ---
 function startMemTest() { memStep = 0; sw('s-mem'); nextMemRound(); }
 function nextMemRound() {
-    memSeq = Array.from({length: 4 + memStep}, () => Math.floor(Math.random()*9));
-    const mg = document.getElementById('mem-grid'); mg.innerHTML = "";
-    for(let i=0; i<9; i++) { const c = document.createElement('div'); c.className = "cell"; c.onclick = () => handleMemClick(i, c); mg.appendChild(c); }
-    playMemSequence();
+memSeq = Array.from({length: 4 + memStep}, () => Math.floor(Math.random()*9));
+const mg = document.getElementById('mem-grid'); mg.innerHTML = "";
+for(let i=0; i<9; i++) { const c = document.createElement('div'); c.className = "cell";
+c.onclick = () => handleMemClick(i, c); mg.appendChild(c); }
+playMemSequence();
 }
 async function playMemSequence() {
-    const cells = document.getElementById('mem-grid').children;
-    document.getElementById('mem-grid').style.pointerEvents = 'none';
-    for(let id of memSeq) { 
-        await new Promise(r => setTimeout(r, 600)); 
-        // Фантомные сигналы
-        if (Math.random() > 0.5) {
-            let fakeId = Math.floor(Math.random() * 9);
-            cells[fakeId].classList.add('ghost');
-            await new Promise(r => setTimeout(r, 300));
-            cells[fakeId].classList.remove('ghost');
-        }
-        playSound(1000, 0.05); cells[id].style.background = "var(--oracle)";
-        await new Promise(r => setTimeout(r, 400)); cells[id].style.background = "rgba(0,0,0,0.85)"; 
-    }
-    document.getElementById('mem-grid').style.pointerEvents = 'auto';
-    memIdx = 0;
+const cells = document.getElementById('mem-grid').children;
+for(let id of memSeq) { await new Promise(r => setTimeout(r, 600)); playSound(1000, 0.05); cells[id].style.background = "var(--oracle)";
+await new Promise(r => setTimeout(r, 400)); cells[id].style.background = "rgba(0,0,0,0.85)"; }
+memIdx = 0;
 }
 function handleMemClick(id, el) {
-    playSound(1100, 0.03);
-    if(id === memSeq[memIdx]) {
-        el.classList.add('ok'); setTimeout(() => el.classList.remove('ok'), 200); memIdx++; 
-        if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); }
-    } else { playSound(60, 0.4, 'sawtooth'); el.classList.add('err'); setTimeout(() => sw('b-sync'), 300); }
+playSound(1100, 0.03);
+if(id === memSeq[memIdx]) {
+el.classList.add('ok'); setTimeout(() => el.classList.remove('ok'), 200);
+memIdx++; if(memIdx === memSeq.length) { memStep++; if(memStep < 3) nextMemRound(); else sw('b-sync'); }
+} else { playSound(60, 0.4, 'sawtooth'); el.classList.add('err'); setTimeout(() => sw('b-sync'), 300); }
 }
-
-// --- ИНИЦИАЦИЯ: ФАЗА 4 (ВЕКТОР) ---
 function startSyncTest() {
-    sw('s-sync'); selectedWordsCount = 0; activeWordsOnScreen = 0;
-    const container = document.getElementById('words-container'); container.innerHTML = "";
-    function spawn() {
-        if (selectedWordsCount >= 2 || !document.getElementById('s-sync').classList.contains('active')) return;
-        if (activeWordsOnScreen < 4) {
-            const word = SYNC_WORDS[Math.floor(Math.random()*SYNC_WORDS.length)];
-            const w = document.createElement('div'); w.className = "sync-word"; w.innerText = word.t;
-            w.style.left = Math.random()*70 + 15 + "%"; w.style.top = Math.random()*70 + 15 + "%";
-            container.appendChild(w); activeWordsOnScreen++; setTimeout(() => w.style.opacity = 1, 50);
-            w.onclick = () => { score[word.a] = (score[word.a] || 0) + 1; selectedWordsCount++; if(selectedWordsCount === 2) finalize(); };
-            setTimeout(() => { w.remove(); activeWordsOnScreen--; }, 3000);
-        }
-        setTimeout(spawn, 800);
-    }
-    spawn();
+sw('s-sync'); selectedWordsCount = 0; activeWordsOnScreen = 0;
+const container = document.getElementById('words-container'); container.innerHTML = "";
+function spawn() {
+if (selectedWordsCount >= 2 || !document.getElementById('s-sync').classList.contains('active')) return;
+if (activeWordsOnScreen < 4) {
+const word = SYNC_WORDS[Math.floor(Math.random()*SYNC_WORDS.length)];
+const w = document.createElement('div'); w.className = "sync-word"; w.innerText = word.t;
+w.style.left = Math.random()*70 + 15 + "%"; w.style.top = Math.random()*70 + 15 + "%";
+container.appendChild(w); activeWordsOnScreen++;
+setTimeout(() => w.style.opacity = 1, 50);
+w.onclick = () => { score[word.a] = (score[word.a] || 0) + 2; selectedWordsCount++;
+if(selectedWordsCount === 2) finalize(); };
+setTimeout(() => { w.remove(); activeWordsOnScreen--; }, 3000);
+}
+setTimeout(spawn, 800);
+}
+spawn();
 }
 function finalize() {
-    let type = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "АНАЛИТИК";
-    currentProfile = type; isDone = true;
-    localStorage.setItem('psy_profile', type); localStorage.setItem('psy_done', 'true');
-    setTestLock(); 
-    document.getElementById('btn-profile-view').style.display = 'block';
-    document.getElementById('hub-oracle-btn').style.display = 'block';
-    openProfile();
+let type = Object.keys(score).reduce((a, b) => score[a] > score[b] ? a : b) || "АНАЛИТИК";
+currentProfile = type; isDone = true;
+localStorage.setItem('psy_profile', type); localStorage.setItem('psy_done', 'true');
+setTestLock(); updateUIProfile(type);
+document.getElementById('v-card').classList.add('open'); renderDiagnostic(type);
+}
+function updateUIProfile(type) {
+document.getElementById('v-type').innerText = type;
+document.getElementById('v-ability-name').innerText = PROFILES[type].ability;
+document.getElementById('v-ability-desc').innerText = PROFILES[type].desc;
+
+let reactHistory = JSON.parse(localStorage.getItem('train_history_react') || "[]");
+let memHistory = JSON.parse(localStorage.getItem('train_history_mem') || "[]");
+let reactVal = 10;
+if(reactHistory.length > 0) {
+    let bestTime = Math.min(...reactHistory.map(h => parseFloat(h.time)));
+    reactVal = Math.min(100, Math.max(10, Math.floor((15 / bestTime) * 100)));
+}
+let memVal = 10;
+if(memHistory.length > 0) {
+    let maxWave = Math.max(...memHistory.map(h => parseInt(h.wave) || 0));
+    memVal = Math.min(100, Math.max(10, Math.floor((maxWave / 3) * 100)));
 }
 
-// --- НОВЫЙ ЭКРАН ПРОФИЛЯ ---
-let profAnimId;
-function openProfile() {
-    if(!isDone) return;
-    sw('s-profile');
-    document.getElementById('prof-title').innerText = currentProfile;
-    document.getElementById('prof-terminal').innerHTML = PROFILES_DATA[currentProfile].spec; // Дефолт текст
-    
-    // Расчет статов из тренажеров
-    let reactHist = JSON.parse(localStorage.getItem('train_history_react') || "[]");
-    let memHist = JSON.parse(localStorage.getItem('train_history_mem') || "[]");
-    
-    let rScore = 10; 
-    if(reactHist.some(h => h.diff === 'hard')) rScore = 100;
-    else if(reactHist.some(h => h.diff === 'medium')) rScore = 60;
-    else if(reactHist.some(h => h.diff === 'easy')) rScore = 30;
+setTimeout(() => {
+    document.getElementById('v-bar-react').style.width = reactVal + "%";
+    document.getElementById('v-bar-mem').style.width = memVal + "%";
+}, 500);
 
-    let mScore = 10;
-    if(memHist.some(h => h.diff === 'hard')) mScore = 100;
-    else if(memHist.some(h => h.diff === 'medium')) mScore = 60;
-    else if(memHist.some(h => h.diff === 'easy')) mScore = 30;
-
-    setTimeout(() => {
-        document.getElementById('bar-react').style.width = rScore + "%";
-        document.getElementById('bar-mem').style.width = mScore + "%";
-    }, 500);
-
-    const c = document.getElementById('prof-canvas'); const ctx = c.getContext('2d');
-    let dFrame = 0;
-    if(profAnimId) cancelAnimationFrame(profAnimId);
-
-    function anim() {
-        if(!document.getElementById('s-profile').classList.contains('active')) return;
-        ctx.clearRect(0,0,300,150);
-        
-        const positions = {
-            "АРХИТЕКТОР": [30, 75], "ИМПУЛЬС": [90, 75], "АНАЛИТИК": [210, 75], "СКАНЕР": [270, 75]
-        };
-        
-        for(let t in positions) {
-            let isWinner = (t === currentProfile);
-            let px = isWinner ? 150 : positions[t][0];
-            let py = 75;
-            let sz = isWinner ? 35 : 12;
-            drawShape(ctx, t, px, py, sz, dFrame, isWinner);
-        }
-        
-        dFrame += 0.03; profAnimId = requestAnimationFrame(anim);
-    }
-    anim();
+document.getElementById('protocols-container').style.display = 'flex';
+document.getElementById('id-tag').innerText = type; document.getElementById('id-tag').style.display = 'block';
+document.getElementById('hub-oracle-btn').style.display = 'block';
+}
+function backToHub() { sw('s-main'); }
+function showStoredProfile() { if(isDone) { sw('v-card'); renderDiagnostic(currentProfile); } }
+function toggleAbility() { const d = document.getElementById('v-ability-desc'); d.style.display = (d.style.display === 'block') ? 'none' : 'block'; }
+function drawShape(ctx, type, x, y, size, frame, active) {
+ctx.save(); ctx.translate(x, y);
+ctx.strokeStyle = active ? '#00ff41' : '#444'; ctx.lineWidth = active ? 2 : 1; ctx.beginPath();
+if(type === "АРХИТЕКТОР") { for(let i=0; i<6; i++) { let a = (active ? frame : 0) + i*Math.PI/3;
+ctx.lineTo(Math.cos(a)*size, Math.sin(a)*size); } ctx.closePath(); ctx.stroke(); }
+else if(type === "ИМПУЛЬС") { ctx.moveTo(0,0); for(let i=0; i<25; i++){ let r=i*(size/20); let a=(active ? frame*2.5 : 0)+i*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r);
+} ctx.stroke(); }
+else if(type === "АНАЛИТИК") {
+    ctx.save();
+    if(active) ctx.rotate(frame);
+    ctx.strokeRect(-size, -size, size*2, size*2);
+    ctx.restore();
+    ctx.save();
+    if(active) ctx.rotate(-frame * 1.5);
+    ctx.strokeRect(-size/2, -size/2, size, size);
+    ctx.restore();
+}
+else if(type === "СКАНЕР") { if(active) ctx.rotate(frame); ctx.arc(0,0, size, 0, Math.PI*2); ctx.moveTo(-size,0); ctx.lineTo(size,0); ctx.moveTo(0,-size); ctx.lineTo(0,size); ctx.stroke(); }
+ctx.restore();
+}
+const hC = document.getElementById('hub-canvas'); const hX = hC.getContext('2d');
+hC.width = 190; hC.height = 190; let hFrame = 0;
+function animateHub() { hX.clearRect(0,0,190,190); if(isDone && currentProfile) drawShape(hX, currentProfile, 95, 95, 60, hFrame, true); hFrame += 0.02; requestAnimationFrame(animateHub); }
+animateHub();
+let diagAnimId;
+function renderDiagnostic(activeType) {
+const c = document.getElementById('diag-canvas'); const ctx = c.getContext('2d'); c.width = 260; c.height = 260;
+let dFrame = 0;
+if(diagAnimId) cancelAnimationFrame(diagAnimId);
+function anim() {
+if(!document.getElementById('v-card').classList.contains('active')) return;
+ctx.clearRect(0,0,260,260); 
+const profiles = ["АРХИТЕКТОР", "ИМПУЛЬС", "АНАЛИТИК", "СКАНЕР"];
+let losers = profiles.filter(p => p !== activeType);
+drawShape(ctx, activeType, 130, 130, 60, dFrame, true);
+drawShape(ctx, losers[0], 35, 35, 15, dFrame, false);
+drawShape(ctx, losers[1], 225, 35, 15, dFrame, false);
+drawShape(ctx, losers[2], 130, 225, 15, dFrame, false);
+dFrame += 0.03; diagAnimId = requestAnimationFrame(anim);
+}
+anim();
 }
 
-function typeProfileInfo(key) {
-    if(!currentProfile) return;
-    clearInterval(typeInterval);
-    const text = PROFILES_DATA[currentProfile][key];
-    const term = document.getElementById('prof-terminal');
-    term.innerHTML = "";
-    let i = 0;
-    typeInterval = setInterval(() => {
-        term.innerHTML += text.charAt(i); i++;
-        if(i >= text.length) clearInterval(typeInterval);
-    }, 20);
-}
-
-// --- ОРАКУЛ ---
 function openOracle() {
     sw('s-oracle');
-    const term = document.getElementById('oracle-terminal');
-    term.innerHTML = "";
-    const msgs = ORACLE_TEXTS[currentProfile];
-    const text = msgs[Math.floor(Math.random() * msgs.length)];
-    clearInterval(typeInterval);
+    document.getElementById('oracle-text').innerHTML = '';
+    let profileTexts = ORACLE_DATA[currentProfile] || ORACLE_DATA["АНАЛИТИК"];
+    let randText = profileTexts[Math.floor(Math.random() * profileTexts.length)];
     let i = 0;
+    clearInterval(typeInterval);
     typeInterval = setInterval(() => {
-        term.innerHTML += text.charAt(i); i++;
-        if(i >= text.length) clearInterval(typeInterval);
+        document.getElementById('oracle-text').innerHTML += randText.charAt(i);
+        i++;
+        if(i >= randText.length) clearInterval(typeInterval);
     }, 30);
+    playSound(500, 0.1);
 }
 
-function drawShape(ctx, type, x, y, size, frame, active) {
-    ctx.save(); ctx.translate(x, y);
-    ctx.strokeStyle = active ? '#00ff41' : 'rgba(255, 255, 255, 0.15)'; ctx.lineWidth = active ? 2 : 1; ctx.beginPath();
-    if(type === "АРХИТЕКТОР") { 
-        for(let i=0; i<6; i++) { let a = (active ? frame : 0) + i*Math.PI/3; ctx.lineTo(Math.cos(a)*size, Math.sin(a)*size); } ctx.closePath(); 
-    }
-    else if(type === "ИМПУЛЬС") { 
-        ctx.moveTo(0,0); for(let i=0; i<25; i++){ let r=i*(size/20); let a=(active ? frame*2.5 : 0)+i*0.4; ctx.lineTo(Math.cos(a)*r, Math.sin(a)*r); } 
-    }
-    else if(type === "АНАЛИТИК") { 
-        if(active) {
-            ctx.save(); ctx.rotate(frame); ctx.strokeRect(-size, -size, size*2, size*2); ctx.restore();
-            ctx.save(); ctx.rotate(-frame * 1.5); ctx.strokeRect(-size/2, -size/2, size, size); ctx.restore();
-        } else {
-            ctx.strokeRect(-size, -size, size*2, size*2); ctx.strokeRect(-size/2, -size/2, size, size);
-        }
-    }
-    else if(type === "СКАНЕР") { 
-        if(active) ctx.rotate(frame); ctx.arc(0,0, size, 0, Math.PI*2); ctx.moveTo(-size,0); ctx.lineTo(size,0); ctx.moveTo(0,-size); ctx.lineTo(0,size); 
-    }
-    ctx.stroke(); ctx.restore();
-}
-
-// Фон
 const mc = document.getElementById('m-bg'); const mx = mc.getContext('2d');
 let mw = mc.width = window.innerWidth, mh = mc.height = window.innerHeight;
 const drops = Array(Math.floor(mw/25)).fill(1);
 function drawM() {
-    mx.fillStyle = 'rgba(0,0,0,0.1)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41'; mx.font = '14px monospace';
-    drops.forEach((y, i) => { mx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*25, y*25); if(y*25 > mh && Math.random() > 0.99) drops[i] = 0; drops[i]++; });
+mx.fillStyle = 'rgba(0,0,0,0.1)'; mx.fillRect(0,0,mw,mh); mx.fillStyle = '#00ff41'; mx.font = '14px monospace';
+drops.forEach((y, i) => { mx.fillText(String.fromCharCode(0x30A0 + Math.random()*96), i*25, y*25); if(y*25 > mh && Math.random() > 0.99) drops[i] = 0; drops[i]++; });
 }
 setInterval(drawM, 70);
-
 window.onload = () => {
-    const savedProfile = localStorage.getItem('psy_profile');
-    if (savedProfile && localStorage.getItem('psy_done') === 'true') {
-        currentProfile = savedProfile; isDone = true; 
-        document.getElementById('btn-profile-view').style.display = 'block';
-        document.getElementById('protocols-container').style.display = 'flex';
-        document.getElementById('hub-oracle-btn').style.display = 'block';
-        updateLockUI();
-    }
-    const savedEnd = localStorage.getItem('focus_end_time');
-    if (savedEnd && parseInt(savedEnd) > Date.now()) { startAudioEngine(); runFocusUI(parseInt(savedEnd)); }
+const savedProfile = localStorage.getItem('psy_profile');
+if (savedProfile && localStorage.getItem('psy_done') === 'true') {
+currentProfile = savedProfile; isDone = true; updateUIProfile(currentProfile); updateLockUI();
+}
+const savedEnd = localStorage.getItem('focus_end_time');
+if (savedEnd && parseInt(savedEnd) > Date.now()) { startAudioEngine(); runFocusUI(parseInt(savedEnd)); }
 };
-
 // ==========================================
-// TRAINING MODULE 
+// ЛОГИКА ТРЕНАЖЕРОВ (TRAINING MODULE)
 // ==========================================
 let tr_curGame = '', tr_curDiff = '';
 let tr_target = 1, tr_maxTarget = 1;
 let tr_timerInterval, tr_chaosSwapInterval, tr_anomalyGlitchInterval;
 let tr_memSeq = [], tr_memStep = 0, tr_memIdx = 0;
 let tr_anomalyRounds = 0, tr_maxAnomalyRounds = 5;
-let tr_actualGameStartTime = 0, tr_currentErrors = 0, tr_startTime = 0;
-
-const TR_KATAKANA_PAIRS = [['シ', 'ツ'], ['ン', 'ソ'], ['ア', 'マ'], ['ウ', 'ワ'], ['ス', 'ヌ'], ['コ', 'ユ'], ['チ', 'テ']];
+let tr_actualGameStartTime = 0;
+let tr_currentErrors = 0;
+let tr_startTime = 0;
+const TR_KATAKANA_PAIRS = [
+['シ', 'ツ'], ['ン', 'ソ'], ['ア', 'マ'], ['ウ', 'ワ'], ['ス', 'ヌ'], ['コ', 'ユ'], ['チ', 'テ']
+];
 const tr_gameData = {
-    react: { t: "СКОРОСТЬ", d: "Синхронизация нейронного отклика. Найдите последовательность чисел по порядку. Система генерирует визуальные шумы." },
-    mem: { t: "ПАМЯТЬ", d: "Восстановление поврежденного сектора. Повторите последовательность импульсов в точном порядке. Игнорируйте фантомные красные сигналы." },
-    anomaly: { t: "АНОМАЛИЯ", d: "Поиск семантического искажения в матричном потоке. Обнаружьте единственный инородный символ." }
+react: { t: "СКОРОСТЬ", d: "Синхронизация нейронного отклика. Найдите последовательность чисел по порядку. Система генерирует визуальные шумы, мерцания и перемещение данных для дестабилизации фокуса."
+},
+mem: { t: "ПАМЯТЬ", d: "Восстановление поврежденного сектора. Повторите последовательность импульсов в точном порядке. Игнорируйте фантомные красные сигналы." },
+anomaly: { t: "АНОМАЛИЯ", d: "Поиск семантического искажения в матричном потоке. Обнаружьте единственный инородный символ среди плотного системного кода катаканы."
+}
 };
-
 function tr_openDiff(gameType) {
-    tr_curGame = gameType;
-    let t = gameType === 'react' ? "SPEED" : (gameType === 'mem' ? "MEMORY" : "ANOMALY");
-    document.getElementById('tr-diff-title').innerText = t; sw('s-train-diff');
+tr_curGame = gameType;
+let titleStr = "";
+if (gameType === 'react') titleStr = "SPEED";
+else if (gameType === 'mem') titleStr = "MEMORY";
+else titleStr = "ANOMALY";
+document.getElementById('tr-diff-title').innerText = titleStr;
+sw('s-train-diff');
 }
 function tr_prepGame(diff) {
-    tr_curDiff = diff; document.getElementById('tr-brief-title').innerText = tr_gameData[tr_curGame].t;
-    document.getElementById('tr-brief-text').innerText = tr_gameData[tr_curGame].d; sw('s-train-brief');
+tr_curDiff = diff;
+document.getElementById('tr-brief-title').innerText = tr_gameData[tr_curGame].t;
+document.getElementById('tr-brief-text').innerText = tr_gameData[tr_curGame].d;
+sw('s-train-brief');
 }
 function tr_startGame() {
-    sw('s-train-game'); document.getElementById('tr-game-grid').className = 'grid'; 
-    clearInterval(tr_timerInterval); clearInterval(tr_chaosSwapInterval); clearInterval(tr_anomalyGlitchInterval);
-    tr_currentErrors = 0; tr_actualGameStartTime = Date.now();
-    if(tr_curGame === 'react') tr_initReact(); if(tr_curGame === 'mem') tr_initMem(); if(tr_curGame === 'anomaly') { tr_anomalyRounds = 0; tr_initAnomaly(); }
+sw('s-train-game');
+document.getElementById('tr-game-grid').className = 'tr-grid';
+clearInterval(tr_timerInterval);
+clearInterval(tr_chaosSwapInterval);
+clearInterval(tr_anomalyGlitchInterval);
+tr_currentErrors = 0;
+tr_actualGameStartTime = Date.now();
+if(tr_curGame === 'react') tr_initReact();
+if(tr_curGame === 'mem') tr_initMem();
+if(tr_curGame === 'anomaly') {
+tr_anomalyRounds = 0;
+tr_initAnomaly();
 }
-function tr_abortGame() { clearInterval(tr_timerInterval); clearInterval(tr_chaosSwapInterval); clearInterval(tr_anomalyGlitchInterval); sw('s-train-hub'); }
-function tr_triggerFail(reason) { clearInterval(tr_timerInterval); clearInterval(tr_chaosSwapInterval); clearInterval(tr_anomalyGlitchInterval); document.getElementById('tr-fail-reason').innerText = reason; sw('s-train-fail'); }
-
+}
+function tr_abortGame() {
+clearInterval(tr_timerInterval);
+clearInterval(tr_chaosSwapInterval);
+clearInterval(tr_anomalyGlitchInterval);
+sw('s-train-hub');
+}
+function tr_triggerFail(reason) {
+clearInterval(tr_timerInterval);
+clearInterval(tr_chaosSwapInterval);
+clearInterval(tr_anomalyGlitchInterval);
+document.getElementById('tr-fail-reason').innerText = reason;
+sw('s-train-fail');
+}
 function tr_showResult() {
-    clearInterval(tr_timerInterval); clearInterval(tr_chaosSwapInterval); clearInterval(tr_anomalyGlitchInterval);
-    let elapsedTime = ((Date.now() - tr_actualGameStartTime) / 1000).toFixed(3);
-    document.getElementById('tr-res-time').innerText = elapsedTime; document.getElementById('tr-res-err').innerText = tr_currentErrors;
-    let t = tr_curGame === 'react' ? "SPEED_SYNC COMPLETE" : (tr_curGame === 'mem' ? "SECTORS RESTORED" : "ANOMALIES PURGED");
-    document.getElementById('tr-res-title').innerText = t;
-    tr_saveResult(elapsedTime, tr_currentErrors); sw('s-train-result');
+clearInterval(tr_timerInterval);
+clearInterval(tr_chaosSwapInterval);
+clearInterval(tr_anomalyGlitchInterval);
+let elapsedTime = ((Date.now() - tr_actualGameStartTime) / 1000).toFixed(3);
+document.getElementById('tr-res-time').innerText = elapsedTime;
+document.getElementById('tr-res-err').innerText = tr_currentErrors;
+let title = "";
+if(tr_curGame === 'react') title = "SPEED_SYNC COMPLETE";
+if(tr_curGame === 'mem') title = "SECTORS RESTORED";
+if(tr_curGame === 'anomaly') title = "ANOMALIES PURGED";
+document.getElementById('tr-res-title').innerText = title;
+tr_saveResult(elapsedTime, tr_currentErrors);
+sw('s-train-result');
+// Обновляем статистику главного экрана
+updateUIProfile(currentProfile);
 }
 function tr_saveResult(elapsedTime, errors) {
-    let history = JSON.parse(localStorage.getItem('train_history_' + tr_curGame) || "[]");
-    history.unshift({ date: new Date().toLocaleString('ru-RU', {hour: '2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'}), diff: tr_curDiff, time: elapsedTime, err: errors, wave: tr_memStep });
-    if(history.length > 5) history.pop(); localStorage.setItem('train_history_' + tr_curGame, JSON.stringify(history));
+let history = JSON.parse(localStorage.getItem('train_history_' + tr_curGame) || "[]");
+let date = new Date().toLocaleString('ru-RU', {hour: '2-digit', minute:'2-digit', day:'2-digit', month:'2-digit'});
+history.unshift({ date: date, diff: tr_curDiff, time: elapsedTime, err: errors, wave: tr_memStep });
+if(history.length > 5) history.pop();
+localStorage.setItem('train_history_' + tr_curGame, JSON.stringify(history));
 }
 function tr_showHistory() {
-    const c = document.getElementById('tr-history-content'); c.innerHTML = '';
-    [{id: 'react', n: 'SPEED'}, {id: 'mem', n: 'MEMORY'}, {id: 'anomaly', n: 'ANOMALY'}].forEach(g => {
-        let h = JSON.parse(localStorage.getItem('train_history_' + g.id) || "[]");
-        c.innerHTML += `<div style="color:var(--oracle); margin-top:15px; border-bottom:1px solid rgba(0,204,255,0.3); padding-bottom:5px;">[ ${g.n} ]</div>`;
-        if(h.length === 0) c.innerHTML += `<div style="opacity:0.5; padding: 5px 0;">NO DATA</div>`;
-        else h.forEach(r => c.innerHTML += `<div style="padding: 5px 0; border-bottom: 1px dashed rgba(0,255,65,0.1);"><span style="opacity:0.6">[${r.date}]</span> <b>${r.diff.toUpperCase()}</b> | ${g.id === 'mem' ? 'WAVES: '+r.wave : 'TIME: '+r.time+'s'} | ERR: ${r.err}</div>`);
-    });
-    toggleModal('m-train-history', true);
+const container = document.getElementById('tr-history-content');
+container.innerHTML = '';
+const games = [{id: 'react', n: 'SPEED'}, {id: 'mem', n: 'MEMORY'}, {id: 'anomaly', n: 'ANOMALY'}];
+games.forEach(g => {
+let history = JSON.parse(localStorage.getItem('train_history_' + g.id) || "[]");
+container.innerHTML += `<div style="color:var(--oracle); margin-top:15px; border-bottom:1px solid rgba(0,204,255,0.3); padding-bottom:5px;">[ ${g.n} ]</div>`;
+if(history.length === 0) {
+container.innerHTML += `<div style="opacity:0.5; padding: 5px 0;">NO DATA</div>`;
+} else {
+history.forEach(h => {
+let metric = g.id === 'mem' ? `WAVES CLEARED: ${h.wave}` : `TIME: ${h.time}s`;
+container.innerHTML += `<div style="padding: 5px 0; border-bottom: 1px dashed rgba(0,255,65,0.1);"><span style="opacity:0.6">[${h.date}]</span> <b>${h.diff.toUpperCase()}</b> | ${metric} | ERR: ${h.err}</div>`;
+});
 }
-function tr_clearHistory() { if(confirm('ERASE ALL TRAINING RECORDS?')) { ['react','mem','anomaly'].forEach(id => localStorage.removeItem('train_history_'+id)); tr_showHistory(); } }
-
+});
+toggleModal('m-train-history', true);
+}
+function tr_clearHistory() {
+if(confirm('ERASE ALL TRAINING RECORDS?')) {
+localStorage.removeItem('train_history_react');
+localStorage.removeItem('train_history_mem');
+localStorage.removeItem('train_history_anomaly');
+tr_showHistory();
+}
+}
+// 1. СКОРОСТЬ
 function tr_initReact() {
-    let size = tr_curDiff === 'easy' ? 4 : (tr_curDiff === 'medium' ? 5 : 6); 
-    tr_maxTarget = size * size; tr_target = 1; document.getElementById('tr-game-target').innerText = `TARGET: ${tr_target} / ${tr_maxTarget}`; tr_renderReactGrid(size);
-    tr_startTime = Date.now(); tr_timerInterval = setInterval(() => { document.getElementById('tr-game-timer').innerText = ((Date.now() - tr_startTime)/1000).toFixed(3); }, 41);
-    if (tr_curDiff === 'hard') {
-        tr_chaosSwapInterval = setInterval(() => {
-            let cells = document.querySelectorAll('.tr-react-cell'); if(cells.length === 0) return;
-            let i1 = Math.floor(Math.random() * cells.length); let i2 = Math.floor(Math.random() * cells.length);
-            let tT = cells[i1].innerText; let tV = cells[i1].dataset.val;
-            cells[i1].innerText = cells[i2].innerText; cells[i1].dataset.val = cells[i2].dataset.val; cells[i2].innerText = tT; cells[i2].dataset.val = tV;
-        }, 1500);
-    }
+let size = tr_curDiff === 'easy' ? 4 : (tr_curDiff === 'medium' ? 5 : 6);
+tr_maxTarget = size * size;
+tr_target = 1;
+document.getElementById('tr-game-target').innerText = `TARGET: ${tr_target} / ${tr_maxTarget}`;
+tr_renderReactGrid(size);
+tr_startTime = Date.now();
+tr_timerInterval = setInterval(() => {
+document.getElementById('tr-game-timer').innerText = ((Date.now() - tr_startTime)/1000).toFixed(3);
+}, 41);
+if (tr_curDiff === 'hard') {
+tr_chaosSwapInterval = setInterval(() => {
+let cells = document.querySelectorAll('.tr-react-cell');
+if(cells.length === 0) return;
+let i1 = Math.floor(Math.random() * cells.length);
+let i2 = Math.floor(Math.random() * cells.length);
+let tempText = cells[i1].innerText;
+let tempVal = cells[i1].dataset.val;
+cells[i1].innerText = cells[i2].innerText;
+cells[i1].dataset.val = cells[i2].dataset.val;
+cells[i2].innerText = tempText;
+cells[i2].dataset.val = tempVal;
+}, 1500);
+}
 }
 function tr_renderReactGrid(size) {
-    const g = document.getElementById('tr-game-grid'); g.style.gridTemplateColumns = `repeat(${size}, 1fr)`; g.innerHTML = "";
-    let nums = Array.from({length: tr_maxTarget}, (_, i) => i+1).sort(() => Math.random() - 0.5);
-    let fxClasses = ['g-color', 'g-fade', 'g-blink', 'pulse-cell'];
-    nums.forEach(n => {
-        let c = document.createElement('div'); c.className = "cell tr-react-cell"; c.innerText = n; c.dataset.val = n;
-        if (tr_curDiff !== 'easy') {
-            if (Math.random() > 0.3) { c.classList.add(fxClasses[Math.floor(Math.random() * fxClasses.length)]); c.style.animationDuration = (1.5 + Math.random() * 2) + 's'; c.style.animationDelay = (Math.random() * 2) + 's'; } 
-            else c.classList.add('pulse-cell');
-        } else c.classList.add('pulse-cell');
-        c.onclick = () => tr_handleReactClick(c, n, size); g.appendChild(c);
-    });
+const g = document.getElementById('tr-game-grid');
+g.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+g.innerHTML = "";
+let nums = Array.from({length: tr_maxTarget}, (_, i) => i+1).sort(() => Math.random() - 0.5);
+let fxClasses = ['g-color', 'g-fade', 'g-blink', 'pulse-cell'];
+nums.forEach(n => {
+let c = document.createElement('div');
+c.className = "tr-cell tr-react-cell";
+c.innerText = n;
+c.dataset.val = n;
+if (tr_curDiff !== 'easy') {
+let fx = fxClasses[Math.floor(Math.random() * fxClasses.length)];
+if (Math.random() > 0.3) {
+c.classList.add(fx);
+c.style.animationDuration = (1.5 + Math.random() * 2) + 's';
+c.style.animationDelay = (Math.random() * 2) + 's';
+} else {
+c.classList.add('pulse-cell');
+}
+} else {
+c.classList.add('pulse-cell');
+}
+c.onclick = () => tr_handleReactClick(c, n, size);
+g.appendChild(c);
+});
 }
 function tr_handleReactClick(el, val, size) {
-    if(parseInt(el.dataset.val) === tr_target) {
-        tr_target++;
-        if(tr_target > tr_maxTarget) tr_showResult();
-        else {
-            document.getElementById('tr-game-target').innerText = `TARGET: ${tr_target} / ${tr_maxTarget}`;
-            let currentCells = Array.from(document.querySelectorAll('.tr-react-cell')); let vals = currentCells.map(c => c.dataset.val).sort(() => Math.random() - 0.5);
-            currentCells.forEach((c, i) => { c.innerText = vals[i]; c.dataset.val = vals[i]; });
-        }
-    } else { tr_currentErrors++; el.style.background = 'var(--red)'; setTimeout(() => el.style.background = 'rgba(0,0,0,0.85)', 150); tr_startTime -= 1000; }
+if(parseInt(el.dataset.val) === tr_target) {
+tr_target++;
+if(tr_target > tr_maxTarget) {
+tr_showResult();
+} else {
+document.getElementById('tr-game-target').innerText = `TARGET: ${tr_target} / ${tr_maxTarget}`;
+let currentCells = Array.from(document.querySelectorAll('.tr-react-cell'));
+let vals = currentCells.map(c => c.dataset.val).sort(() => Math.random() - 0.5);
+currentCells.forEach((c, i) => {
+c.innerText = vals[i];
+c.dataset.val = vals[i];
+});
 }
-
-function tr_initMem() { tr_memStep = 0; document.getElementById('tr-game-timer').innerText = "FOCUS"; tr_nextMemRound(); }
+} else {
+tr_currentErrors++;
+el.style.background = 'var(--red)';
+setTimeout(() => el.style.background = 'rgba(0,0,0,0.85)', 150);
+tr_startTime -= 1000;
+}
+}
+// 2. ПАМЯТЬ
+function tr_initMem() {
+tr_memStep = 0;
+document.getElementById('tr-game-timer').innerText = "FOCUS";
+tr_nextMemRound();
+}
 function tr_nextMemRound() {
-    let size = tr_curDiff === 'easy' ? 3 : (tr_curDiff === 'medium' ? 4 : 5); let tc = size * size; let len = tr_curDiff === 'easy' ? 3 : (tr_curDiff === 'medium' ? 4 : 5);
-    tr_memSeq = Array.from({length: len + tr_memStep}, () => Math.floor(Math.random() * tc)); document.getElementById('tr-game-target').innerText = `WAVE: ${tr_memStep + 1}`;
-    const g = document.getElementById('tr-game-grid'); g.style.gridTemplateColumns = `repeat(${size}, 1fr)`; g.innerHTML = "";
-    for(let i=0; i < tc; i++) { let c = document.createElement('div'); c.className = "cell"; c.onclick = () => tr_handleMemClick(i, c); g.appendChild(c); }
-    tr_playMemSequence();
+let size = tr_curDiff === 'easy' ? 3 : (tr_curDiff === 'medium' ? 4 : 5);
+let totalCells = size * size;
+let baseSeqLen = tr_curDiff === 'easy' ? 3 : (tr_curDiff === 'medium' ? 4 : 5);
+tr_memSeq = Array.from({length: baseSeqLen + tr_memStep}, () => Math.floor(Math.random() * totalCells));
+document.getElementById('tr-game-target').innerText = `WAVE: ${tr_memStep + 1}`;
+const g = document.getElementById('tr-game-grid');
+g.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+g.innerHTML = "";
+for(let i=0; i < totalCells; i++) {
+let c = document.createElement('div');
+c.className = "tr-cell";
+c.onclick = () => tr_handleMemClick(i, c);
+g.appendChild(c);
+}
+tr_playMemSequence();
 }
 async function tr_playMemSequence() {
-    const cells = document.getElementById('tr-game-grid').children; document.getElementById('tr-game-grid').style.pointerEvents = 'none';
-    let sOn = tr_curDiff === 'hard' ? 300 : 500; let sOff = tr_curDiff === 'hard' ? 150 : 300; await new Promise(r => setTimeout(r, 800));
-    for(let id of tr_memSeq) {
-        if((tr_curDiff === 'medium' || tr_curDiff === 'hard') && Math.random() > 0.5) { let fId = Math.floor(Math.random() * cells.length); cells[fId].classList.add('ghost'); await new Promise(r => setTimeout(r, sOn)); cells[fId].classList.remove('ghost'); await new Promise(r => setTimeout(r, sOff)); }
-        cells[id].style.background = "var(--oracle)"; await new Promise(r => setTimeout(r, sOn)); cells[id].style.background = "rgba(0,0,0,0.85)"; await new Promise(r => setTimeout(r, sOff));
-    }
-    document.getElementById('tr-game-grid').style.pointerEvents = 'auto'; tr_memIdx = 0;
+const cells = document.getElementById('tr-game-grid').children;
+document.getElementById('tr-game-grid').style.pointerEvents = 'none';
+let speedOn = tr_curDiff === 'hard' ? 300 : 500;
+let speedOff = tr_curDiff === 'hard' ? 150 : 300;
+await new Promise(r => setTimeout(r, 800));
+for(let id of tr_memSeq) {
+if((tr_curDiff === 'medium' || tr_curDiff === 'hard') && Math.random() > 0.5) {
+let fakeId = Math.floor(Math.random() * cells.length);
+cells[fakeId].classList.add('ghost');
+await new Promise(r => setTimeout(r, speedOn));
+cells[fakeId].classList.remove('ghost');
+await new Promise(r => setTimeout(r, speedOff));
+}
+cells[id].style.background = "var(--oracle)";
+await new Promise(r => setTimeout(r, speedOn));
+cells[id].style.background = "rgba(0,0,0,0.85)";
+await new Promise(r => setTimeout(r, speedOff));
+}
+document.getElementById('tr-game-grid').style.pointerEvents = 'auto';
+tr_memIdx = 0;
 }
 function tr_handleMemClick(id, el) {
-    if(id === tr_memSeq[tr_memIdx]) {
-        el.classList.add('ok'); setTimeout(() => el.classList.remove('ok'), 150); tr_memIdx++;
-        if(tr_memIdx === tr_memSeq.length) { tr_memStep++; if(tr_memStep >= 3) tr_showResult(); else setTimeout(tr_nextMemRound, 1000); }
-    } else { el.classList.add('err'); document.getElementById('tr-game-grid').style.pointerEvents = 'none'; tr_currentErrors++; setTimeout(() => { tr_saveResult(((Date.now() - tr_actualGameStartTime) / 1000).toFixed(3), tr_currentErrors); tr_triggerFail("MEMORY SEQUENCE CORRUPTED"); }, 500); }
+if(id === tr_memSeq[tr_memIdx]) {
+el.classList.add('ok');
+setTimeout(() => el.classList.remove('ok'), 150);
+tr_memIdx++;
+if(tr_memIdx === tr_memSeq.length) {
+tr_memStep++;
+if(tr_memStep >= 3) {
+tr_showResult();
+} else {
+setTimeout(tr_nextMemRound, 1000);
 }
-
+}
+} else {
+el.classList.add('err');
+document.getElementById('tr-game-grid').style.pointerEvents = 'none';
+tr_currentErrors++;
+setTimeout(() => {
+tr_saveResult(((Date.now() - tr_actualGameStartTime) / 1000).toFixed(3), tr_currentErrors);
+tr_triggerFail("MEMORY SEQUENCE CORRUPTED");
+}, 500);
+}
+}
+// 3. АНОМАЛИЯ
 function tr_initAnomaly() {
-    if(tr_anomalyRounds >= tr_maxAnomalyRounds) { tr_showResult(); return; }
-    let size = tr_curDiff === 'easy' ? 6 : (tr_curDiff === 'medium' ? 9 : 12); let tc = size * size;
-    const g = document.getElementById('tr-game-grid'); g.classList.add('grid-anomaly'); g.style.gridTemplateColumns = `repeat(${size}, 1fr)`; g.innerHTML = "";
-    let pair = TR_KATAKANA_PAIRS[Math.floor(Math.random() * TR_KATAKANA_PAIRS.length)]; let bC = pair[0]; let aC = pair[1]; if (Math.random() > 0.5) { bC = pair[1]; aC = pair[0]; }
-    let pos = Math.floor(Math.random() * tc); document.getElementById('tr-game-target').innerText = `ANOMALIES: ${tr_anomalyRounds} / ${tr_maxAnomalyRounds}`;
-    for(let i=0; i < tc; i++) {
-        let c = document.createElement('div'); c.className = "cell";
-        if (i === pos) { c.innerText = aC; c.onclick = () => { tr_anomalyRounds++; tr_initAnomaly(); }; } 
-        else { c.innerText = bC; c.onclick = () => { tr_currentErrors++; c.style.color = 'var(--red)'; tr_startTime -= 3000; }; } g.appendChild(c);
-    }
-    if(tr_anomalyRounds === 0) {
-        let lim = tr_curDiff === 'easy' ? 20000 : (tr_curDiff === 'medium' ? 15000 : 20000); tr_startTime = Date.now() + lim;
-        tr_timerInterval = setInterval(() => {
-            let diff = tr_startTime - Date.now();
-            if(diff <= 0) { tr_saveResult(((Date.now() - tr_actualGameStartTime) / 1000).toFixed(3), tr_currentErrors); tr_triggerFail("TIME OUT. SYSTEM CORRUPTED."); } 
-            else document.getElementById('tr-game-timer').innerText = (diff/1000).toFixed(3);
-        }, 41);
-        if (tr_curDiff === 'hard') {
-            tr_anomalyGlitchInterval = setInterval(() => { document.querySelectorAll('.grid-anomaly .cell').forEach(c => { if (Math.random() > 0.8) { c.style.opacity = Math.random() > 0.5 ? '0' : '1'; c.style.textShadow = Math.random() > 0.8 ? '0 0 8px var(--red)' : 'none'; } }); }, 300);
-        }
-    }
+if(tr_anomalyRounds >= tr_maxAnomalyRounds) {
+tr_showResult();
+return;
+}
+let size = tr_curDiff === 'easy' ? 6 : (tr_curDiff === 'medium' ? 9 : 12);
+let totalCells = size * size;
+const g = document.getElementById('tr-game-grid');
+g.classList.add('tr-grid-anomaly');
+g.style.gridTemplateColumns = `repeat(${size}, 1fr)`;
+g.innerHTML = "";
+let pair = TR_KATAKANA_PAIRS[Math.floor(Math.random() * TR_KATAKANA_PAIRS.length)];
+let baseChar = pair[0];
+let anomalyChar = pair[1];
+if (Math.random() > 0.5) {
+baseChar = pair[1];
+anomalyChar = pair[0];
+}
+let anomalyPos = Math.floor(Math.random() * totalCells);
+document.getElementById('tr-game-target').innerText = `ANOMALIES: ${tr_anomalyRounds} / ${tr_maxAnomalyRounds}`;
+for(let i=0; i < totalCells; i++) {
+let c = document.createElement('div');
+c.className = "tr-cell";
+if (i === anomalyPos) {
+c.innerText = anomalyChar;
+c.onclick = () => {
+tr_anomalyRounds++;
+tr_initAnomaly();
+};
+} else {
+c.innerText = baseChar;
+c.onclick = () => {
+tr_currentErrors++;
+c.style.color = 'var(--red)';
+tr_startTime -= 3000;
+};
+}
+g.appendChild(c);
+}
+if(tr_anomalyRounds === 0) {
+let timeLimit = tr_curDiff === 'easy' ? 20000 : (tr_curDiff === 'medium' ? 15000 : 20000);
+tr_startTime = Date.now() + timeLimit;
+tr_timerInterval = setInterval(() => {
+let diff = tr_startTime - Date.now();
+if(diff <= 0) {
+tr_saveResult(((Date.now() - tr_actualGameStartTime) / 1000).toFixed(3), tr_currentErrors);
+tr_triggerFail("TIME OUT. SYSTEM CORRUPTED.");
+} else {
+document.getElementById('tr-game-timer').innerText = (diff/1000).toFixed(3);
+}
+}, 41);
+if (tr_curDiff === 'hard') {
+tr_anomalyGlitchInterval = setInterval(() => {
+let cells = document.querySelectorAll('.tr-grid-anomaly .tr-cell');
+cells.forEach(c => {
+if (Math.random() > 0.8) {
+c.style.opacity = Math.random() > 0.5 ? '0' : '1';
+c.style.textShadow = Math.random() > 0.8 ? '0 0 8px var(--red)' : 'none';
+}
+});
+}, 300);
+}
+}
 }
 </script>
 </body>
